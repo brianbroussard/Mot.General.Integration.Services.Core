@@ -40,7 +40,9 @@ using NLog;
 namespace MotCommonLib
 {
 #pragma warning disable 1591
+    public delegate string StringStringDelegate(string data);
     public delegate void VoidStringDelegate(string data);
+    public delegate byte[] ByteByteDelegate(byte[] data);
     public delegate void VoidByteDelegate(byte[] data);
     public delegate bool BoolStringDelegate(string data);
     public delegate bool BoolByteDelegate(byte[] data);
@@ -118,13 +120,13 @@ namespace MotCommonLib
         /// <c>StringArgCallback</c>
         /// Callback delegate returning void taking a string argument used to call parsers
         /// </summary>
-        public VoidStringDelegate StringArgCallback { get; set; }
+        public StringStringDelegate StringArgCallback { get; set; }
 
         /// <summary>
         /// <c>ByteArgCallback</c>
         /// Callback delegate returning void taking a byte[] argument used to call parsers
         /// </summary>
-        public VoidByteDelegate ByteArgCallback { get; set; }
+        public ByteByteDelegate ByteArgCallback { get; set; }
 
         /// <summary>
         /// <c>StringArgProtocolProcessor</c>
@@ -209,7 +211,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="stringArgCallback"></param>
-        public MotSocket(int port, VoidStringDelegate stringArgCallback = null)
+        public MotSocket(int port, StringStringDelegate stringArgCallback = null)
         {
             StartUp(port, stringArgCallback);
         }
@@ -219,7 +221,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="byteArgCallback"></param>
-        public MotSocket(int port, VoidByteDelegate byteArgCallback = null)
+        public MotSocket(int port, ByteByteDelegate byteArgCallback = null)
         {
             StartUp(port, byteArgCallback);
         }
@@ -229,7 +231,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="byteArgCallback"></param>
-        public MotSocket(string port, VoidByteDelegate byteArgCallback = null)
+        public MotSocket(string port, ByteByteDelegate byteArgCallback = null)
         {
             StartUp(Convert.ToInt32(port), byteArgCallback);
         }
@@ -239,7 +241,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="stringArgCallback"></param>
-        public MotSocket(string port, VoidStringDelegate stringArgCallback = null)
+        public MotSocket(string port, StringStringDelegate stringArgCallback = null)
         {
             StartUp(Convert.ToInt32(port), stringArgCallback);
         }
@@ -249,7 +251,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="stringArgCallback"></param>
-        public void StartUp(int port, VoidStringDelegate stringArgCallback = null)
+        public void StartUp(int port, StringStringDelegate stringArgCallback = null)
         {
             openForListening = true;
             eventLogger = LogManager.GetLogger("motCommonLib.Socket");
@@ -282,7 +284,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="port"></param>
         /// <param name="byteArgCallback"></param>
-        public void StartUp(int port, VoidByteDelegate byteArgCallback = null)
+        public void StartUp(int port, ByteByteDelegate byteArgCallback = null)
         {
             openForListening = true;
             eventLogger = LogManager.GetLogger("motCommonLib.Socket");
@@ -455,10 +457,10 @@ namespace MotCommonLib
                                 byteIoBuffer = new byte[512];
                                 stringIoBuffer = "";
 
-                                while (bytesIn > 0)
-                                {
+                                while (localStream.DataAvailable)
+                                {                                 
                                     bytesIn = localStream.Read(byteIoBuffer, 0, byteIoBuffer.Length);
-
+                                    
                                     if (!doBinaryIo)
                                     {
                                         stringIoBuffer += Encoding.UTF8.GetString(byteIoBuffer, 0, bytesIn);
@@ -487,16 +489,24 @@ namespace MotCommonLib
                             {
                                 // Assign the local stream to the global and process
                                 netStream = localStream;
-
+                                
                                 if (!doBinaryIo)
                                 {
-                                    StringArgCallback?.Invoke(stringIoBuffer);
+                                   var resp = StringArgCallback?.Invoke(stringIoBuffer);
+                                    if(!string.IsNullOrEmpty(resp))
+                                    {
+                                        localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                                    }
                                 }
                                 else
                                 {
                                     // Resize the byte array to match the data size
                                     Array.Resize(ref bytesRead, totalBytes);
-                                    ByteArgCallback?.Invoke(bytesRead);
+                                    var resp = ByteArgCallback?.Invoke(bytesRead);
+                                    if(resp.Length > 0)
+                                    {
+                                        localStream.Write(resp, 0, resp.Length);
+                                    }
                                 }
                             }
 
@@ -585,6 +595,12 @@ namespace MotCommonLib
                         {
                             //__ssl_stream = __lstream;
                             StringArgCallback?.Invoke(stringIoBuffer);
+                            var resp = StringArgCallback?.Invoke(stringIoBuffer);
+
+                            if (!string.IsNullOrEmpty(resp))
+                            {
+                                sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                            }
                         }
 
                         //SslStream.Close();

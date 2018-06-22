@@ -72,7 +72,7 @@ namespace MotHL7Lib
                 throw new ArgumentNullException(nameof(xmlDoc));
             }
 
-            MessageStore = messageStore ?? throw new ArgumentNullException(nameof(messageStore));
+           // MessageStore = messageStore ?? throw new ArgumentNullException(nameof(messageStore));
 
             OBX = new List<OBX>();
             AL1 = new List<AL1>();

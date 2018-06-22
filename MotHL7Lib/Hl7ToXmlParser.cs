@@ -109,6 +109,10 @@ namespace MotHL7Lib
                         }
                         else if (component != null)
                         {
+                            if(lastWasSplit) // PJ did this, if the indax wasn't reset to 1 the sequance skipped an element and then reset, e.g. 15.1, 15.3, 15.1
+                            {
+                                componentIndex = 1;
+                            }
                             component = new XElement(segmentName + "." + fieldIndex + "." + componentIndex,
                                 token + val.Token);
                             field.Add(component);

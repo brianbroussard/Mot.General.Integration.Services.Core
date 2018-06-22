@@ -14,10 +14,11 @@ namespace MotListenerLib
         public bool AutoTruncate { get; set; }
         public bool Listening { get; set; }
         public bool RunAsTask { get; set; }
+        public bool RunAsService {get;set;}
         public string DirName { get; set; }
         public string TargetIp { get; set; }
         public int TargetPort { get; set; }
-        public VoidStringDelegate StringProcessor { get; set; }
+        public StringStringDelegate StringProcessor { get; set; }
         private readonly Logger _eventLogger;
 
         public void WriteData()
@@ -193,7 +194,7 @@ namespace MotListenerLib
 
             t.Wait();
         }
-        public void Go(VoidStringDelegate stringProcessor = null, string dirName = null)
+        public void Go(StringStringDelegate stringProcessor = null, string dirName = null)
         {
             if (dirName != null)
             {
@@ -207,7 +208,7 @@ namespace MotListenerLib
 
             if (RunAsTask)
             {
-                if (stringProcessor != null)
+                if (StringProcessor != null)
                 {
                     WaitForWork();
                 }
@@ -222,6 +223,10 @@ namespace MotListenerLib
             }
 
         }
+        public void ShutDown()
+        {
+            Listening = false;
+        }
         public FilesystemListener()
         {
             Listening = false;
@@ -232,7 +237,7 @@ namespace MotListenerLib
         /// Set up listener to run as a task with a processor callback
         /// <param name="dirName">The directory to monitor</param>
         /// <param name="stringProcessor">The method to call to process files</param>
-        public FilesystemListener(string dirName, VoidStringDelegate stringProcessor, bool RunAsTask = true)
+        public FilesystemListener(string dirName, StringStringDelegate stringProcessor, bool RunAsTask = true)
         {
             this.RunAsTask = RunAsTask;
 

@@ -121,6 +121,11 @@ namespace MotParserLib
         /// </summary>
         public bool SendEof { get; set; }
         /// <summary>
+        /// <c>RunAsService</c>
+        /// Flag to tell if the process is running as a service
+        /// </summary>
+        public bool RunAsService { get; set; }
+        /// <summary>
         /// <c>Dispose</c>
         /// </summary>
         /// <param name="disposing"></param>

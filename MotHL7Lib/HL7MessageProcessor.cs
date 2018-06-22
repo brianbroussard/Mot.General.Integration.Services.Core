@@ -36,19 +36,63 @@ namespace MotHL7Lib
     public delegate void MotHl7OutputChangeEventHandler(object sender, HL7Event7MessageArgs e);
     public delegate void MotHl7ErrorEventHandler(object sender, HL7Event7MessageArgs e);
 
-    public class MotHl7MessageProcessor : IDisposable
+    public class HL7TransformerBase : IDisposable
     {
-        #region variables
+        public HL7Event7MessageArgs Hl7Event7MessageArgs { get; set; }
         public bool service { get; set; }
-        private string data { get; set; }
-        private bool encrypt { get; set; }
-        protected readonly Logger EventLogger;
-
+        protected string data { get; set; }
+        protected bool encrypt { get; set; }
         public string ResponseMessage { get; set; }
+
+#region CommonVariables
+        public Logger EventLogger;
         public bool AutoTruncate { get; set; }
         public bool SendEof { get; set; }
         public bool DebugMode { get; set; }
         public MotSocket Socket { get; set; }
+#endregion
+
+#region Listener
+        public Hl7SocketListener dataIn;
+        public bool startListener;
+        protected string gatewayAddress { get; set; }
+        protected int gatewayPort { get; set; }
+        protected int returnPort { get; set; }
+#endregion
+
+        public HL7TransformerBase(string data)
+        {
+            this.data = data;
+            EventLogger = LogManager.GetLogger("MotHL7MessageProcessor.Library");
+            Hl7Event7MessageArgs = new HL7Event7MessageArgs();
+        }
+
+        ~HL7TransformerBase()
+        {
+            EventLogger.Info("Shutting down MotHl7MessageProcessor");
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                dataIn?.ShutDown();
+            }
+        }
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+    }
+    public class MotHl7MessageProcessor : HL7TransformerBase
+    {
+        #region variables
+ 
+      
 
         private HL7SendingApplication Hl7SendingApp { get; set; }
         private int FirstDoW { get; set; }
@@ -94,26 +138,9 @@ namespace MotHL7Lib
         };
 
         #endregion
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                dataIn?.ShutDown();
-                //Socket?.Dispose();
-                //Socket = null;
-            }
-        }
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+
 
         #region Messaging     
-        private HL7Event7MessageArgs Hl7Event7MessageArgs { get; set; }
         public event MotHl7OutputChangeEventHandler OutputTextChanged;
         public event MotHl7ErrorEventHandler OutputErrorText;
         /// <summary>
@@ -132,25 +159,22 @@ namespace MotHL7Lib
         }
         #endregion
 
-        #region Listener
-        public Hl7SocketListener dataIn;
-        private string gatewayAddress { get; set; }
-        private int gatewayPort { get; set; }
-        private int returnPort { get; set; }
-        #endregion
-
-        public MotHl7MessageProcessor(int port, bool service, bool encrypt)
+        public MotHl7MessageProcessor(string data) : base(data)
+        {
+            dataInputType = DataInputType.Unknown;
+        }
+        public MotHl7MessageProcessor(string data,int port, bool service, bool encrypt) : base(data)
         {
             dataInputType = DataInputType.WebService;
         }
-        public MotHl7MessageProcessor(string data, string dirName, bool service, bool encrypt)
+        public MotHl7MessageProcessor(string data, string dirName, bool service, bool encrypt) : base(data)
         {
             dataInputType = DataInputType.File;
         }
         /// <inheritdoc />
-        public MotHl7MessageProcessor(string data, string gatewayAddress, int gatewayPort, bool service, bool encrypt)
+        public MotHl7MessageProcessor(bool startListener, string data, string gatewayAddress, int gatewayPort, bool service, bool encrypt) : base(data)
         {
-            this.data = data;
+            this.startListener = startListener;
             this.gatewayAddress = gatewayAddress;
             this.gatewayPort = gatewayPort;
             this.service = service;
@@ -170,12 +194,13 @@ namespace MotHL7Lib
 
             try
             {           
-                EventLogger = LogManager.GetLogger("MotHL7MessageProcessor.Library");
-                Hl7Event7MessageArgs = new HL7Event7MessageArgs();
-                dataIn = new Hl7SocketListener(gatewayAddress, gatewayPort, Go, encrypt)
+                if (startListener)
                 {
-                    RunAsService = service
-                };
+                    dataIn = new Hl7SocketListener(gatewayAddress, gatewayPort, Go, encrypt)
+                    {
+                        RunAsService = service
+                    };
+                }
             }
             catch (Exception ex)
             {          
@@ -238,16 +263,16 @@ namespace MotHL7Lib
 
             if (!string.IsNullOrEmpty(sender))
             {
-                Organization = _msh.Get("MSH.3.1");
-                Processor = _msh.Get("MSH.4.1");
+                Processor = _msh.Get("MSH.3.1");
+                Organization = _msh.Get("MSH.4.1");
                 return sender;
             }
 
             sender = _msh.Get("MSH.3");
             if (!string.IsNullOrEmpty(sender))
             {
-                Organization = _msh.Get("MSH.3");
-                Processor = _msh.Get("MSH.4");
+                Processor = _msh.Get("MSH.3");
+                Organization = _msh.Get("MSH.4");
                 return sender;
             }
 
@@ -327,7 +352,7 @@ namespace MotHL7Lib
                     break;
 
                 case DataInputType.Socket:
-                    dataIn.WriteMessageToEndpoint(message, returnPort);
+                   // dataIn.WriteMessageToEndpoint(message, returnPort);
                     break;
 
                 case DataInputType.WebService:
@@ -339,8 +364,6 @@ namespace MotHL7Lib
         }
         public void Go(string inputStream = null)
         {
-
-
             if (inputStream != null)
             {
                 data = inputStream;

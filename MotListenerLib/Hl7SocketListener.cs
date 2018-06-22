@@ -43,12 +43,12 @@ namespace MotListenerLib
         private MotSocket ListenerSocket;
         public MotSocket WorkerSocket;
         private Thread WorkerThread;
-        private VoidStringDelegate stringCallback;
+        private StringStringDelegate stringCallback;
 
         public string SenderAddress { get; set; }
         public string SenderPort { get; set; }
 
-        public Hl7SocketListener(string httpUrl, string address, int port, VoidStringDelegate callback, bool useSSL)
+        public Hl7SocketListener(string httpUrl, int port, VoidStringDelegate callback, bool useSSL)
         {
             List<string> prefixes = new List<string>
             {
@@ -62,7 +62,7 @@ namespace MotListenerLib
 
             //Hl7FhirListner.StartListener(prefixes, ParseHl7Message);
         }
-        public Hl7SocketListener(string address, int port, VoidStringDelegate callback, bool useSSL)
+        public Hl7SocketListener(int port, StringStringDelegate callback, bool useSSL = false)
         {
             try
             {
@@ -72,12 +72,23 @@ namespace MotListenerLib
                 {
                     UseSsl = UseSsl
                 };
-
+            }
+            catch (Exception e)
+            {
+                var errString = $"An error occurred while attempting to start the HL7 Listener: {e.Message}";
+                EventLogger.Error(errString);
+                throw;
+            }
+        }
+        public void Go()
+        {
+            try
+            {
                 if (UseSsl)
                 {
                     WorkerThread = new Thread(() => ListenerSocket.SecureListenAsync())
                     {
-                        Name = "Encrypted HL7 Listener"
+                        Name = "Encrypted Listener"
                     };
                     WorkerThread.Start();
                 }
@@ -85,15 +96,14 @@ namespace MotListenerLib
                 {
                     WorkerThread = new Thread(() => ListenerSocket.ListenAsync())
                     {
-                        Name = "HL7 Listener"
+                        Name = "Listener"
                     };
                     WorkerThread.Start();
                 }
             }
-            catch (Exception e)
+            catch(Exception ex)
             {
-                var errString = $"An error occurred while attempting to start the HL7 Listener: {e.Message}";
-                EventLogger.Error(errString);
+                EventLogger.Error($"An error occurred while attempting to start the socket listener: {ex.Message}");
                 throw;
             }
         }

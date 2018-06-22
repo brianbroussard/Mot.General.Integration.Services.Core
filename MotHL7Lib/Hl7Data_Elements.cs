@@ -76,13 +76,13 @@ namespace MotHL7Lib
             var n = s.Split(c);
             return n.Length;
         }
-        /// <summary>
+                /// <summary>
         /// <c>Get</c>
         /// Gets the value of a sp
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string Get(string key)
+        public string Get(string key, object Element = null)
         {
             string retVal = string.Empty;
 
@@ -91,26 +91,40 @@ namespace MotHL7Lib
                 return retVal;
             }
 
-
-            // The parser is a little flakey when t comes to the root ID and a .1
-            // Sometimes if the request comes in with a .1, which is correct in most cases, the parser may have just
-            // put it in the root, so try what was passwed and if it fails and there's at least 1 '.', strip off the last 2 chars and try again
-
-
-            retVal = (from elem in Hl7XmLset.Descendants(key) select elem.Value).FirstOrDefault();
-
-
-            if (string.IsNullOrEmpty(retVal))
+            try
             {
-                var Tag = Hl7XmLset.Descendants().SingleOrDefault(p => p.Name.LocalName == key);
+                // The parser is a little flakey when t comes to the root ID and a .1
+                // Sometimes if the request comes in with a .1, which is correct in most cases, the parser may have just
+                // put it in the root, so try what was passwed and if it fails and there's at least 1 '.', strip off the last 2 chars and try again
+                retVal = (from elem in Hl7XmLset.Descendants(key) select elem.Value).FirstOrDefault();
 
-                if (Tag == null && NumOf('.', key) > 1 && key.Last() == '1')
+
+
+                if (string.IsNullOrEmpty(retVal))
                 {
+                    var Tag = Hl7XmLset.Descendants().SingleOrDefault(p => p.Name.LocalName == key);
 
-                    retVal = (from elem in Hl7XmLset.Descendants(key.Substring(0, key.LastIndexOf('.'))) select elem.Value).FirstOrDefault();
-                    if (!string.IsNullOrEmpty(retVal))
+                    if (Tag == null && NumOf('.', key) > 1 && key.Last() == '1')
                     {
-                        return retVal;
+                        retVal = (from elem in Hl7XmLset.Descendants(key.Substring(0, key.LastIndexOf('.'))) select elem.Value).FirstOrDefault();
+                        if (!string.IsNullOrEmpty(retVal))
+                        {
+                            return retVal;
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                var itemList = GetList(key);
+                if(itemList.Count > 0)
+                {
+                    foreach(var segment in itemList)
+                    {
+                        if (!string.IsNullOrEmpty(segment))
+                        {
+                            retVal += $"{segment}\n";
+                        }
                     }
                 }
             }
