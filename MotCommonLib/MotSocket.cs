@@ -375,6 +375,7 @@ namespace MotCommonLib
             Address = targetAddress;
             ByteArgProtocolProcessor = byteProtocolProcessor ?? DefaultProtocolProcessor;
             openForListening = false;
+			eventLogger = LogManager.GetLogger("motCommonLib.Socket");
 
             MotSetCertificate();
 
@@ -382,8 +383,6 @@ namespace MotCommonLib
             {
                 SocketMutex = new Mutex();
             }
-
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
 
             OpenAsClient();
         }
@@ -432,6 +431,11 @@ namespace MotCommonLib
         {
             try
             {
+
+				// While testing on a Linux VM, if we didn't slow things down it jumpped right out of 
+				// the method whithout processing anything.  Adding the sleep slowed it down enough
+				Thread.Sleep(50);
+
                 Thread.CurrentThread.Name = "IAsyncHandler (" + Thread.CurrentThread.ManagedThreadId + ")";
                 TcpListener localListener = (TcpListener)asyncResult.AsyncState;
 
@@ -515,15 +519,16 @@ namespace MotCommonLib
                         else
                         {
                             TcpClientConnected.Set();
-                            throw new Exception("FileStream is unreadable");
+                            throw new Exception("Input stream is unreadable");
                         }
                     }
                 }
             }
-            catch
-            {
-                TcpClientConnected.Set();
-            }
+            catch(Exception ex)
+			{
+				eventLogger.Error($"Async I/O handler{ex.Message}");
+				TcpClientConnected.Set();
+			}           
         }
 
         /// <summary>
