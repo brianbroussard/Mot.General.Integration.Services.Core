@@ -9,9 +9,21 @@ using NLog;
 using MotCommonLib;
 using MotListenerLib;
 using MotParserLib;
+using System.Runtime.InteropServices;
 
 namespace TransformerService
 {
+    public enum PlatformOs
+    {
+        Unknown,
+        Windows,
+        Unix,
+        macOS,
+        Linux,
+        Android,
+        iOS
+    };
+
     public class MotTransformerInterface
     {
         private Logger EventLogger;
@@ -20,9 +32,31 @@ namespace TransformerService
         private string GatewayAddress;
         private int GatewayPort;
         private int ListenerPort;
-        private string MonitorDirectory;
+        private string WinMonitorDirectory;
+        private string NixMonitorDirectory;
         private bool WatchFileSystem;
         private bool WatchSocket;
+
+        PlatformOs Platform;
+
+        private PlatformOs GetOs()
+        {
+            // just worry about Nix and Win for now
+            if (RuntimeInformation.OSDescription.Contains("Unix"))
+            {
+                Platform = PlatformOs.Unix;
+            }
+            else if (RuntimeInformation.OSDescription.Contains("Windows"))
+            {
+                Platform = PlatformOs.Windows;
+            }
+            else
+            {
+                Platform = PlatformOs.Unknown;
+            }
+
+            return Platform;
+        }
 
         private void LoadConfiguration()
         {
@@ -31,10 +65,14 @@ namespace TransformerService
             ListenerPort = Convert.ToInt32(appSettings["ListenerPort"] ?? "24025");
             GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
             GatewayAddress = appSettings["GatewayAddress"] ?? "127.0.0.1";
-            MonitorDirectory = appSettings["MonitorDirectory"] ?? @"c:\motnext\io";
+
+            WinMonitorDirectory = appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io";
+            NixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
 
             WatchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
             WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
+
+
         }
         private string Parse(string data)
         {
@@ -82,7 +120,7 @@ namespace TransformerService
 
             if (WatchFileSystem)
             {
-                FilesystemListener = new FilesystemListener(MonitorDirectory, Parse);
+                FilesystemListener = new FilesystemListener((GetOs() == PlatformOs.Windows) ? WinMonitorDirectory : NixMonitorDirectory, Parse);
                 FilesystemListener.RunAsService = true;
                 FilesystemListener.Go();
             }
