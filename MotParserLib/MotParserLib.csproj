@@ -2,15 +2,35 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackOnBuild>true</PackOnBuild>
+    <PackageId>MotGatewayTooling1.0</PackageId>
+    <PackageVersion>1.0</PackageVersion>
+    <Authors>Pete Jenney</Authors>
+    <Owners>Pete Jenney</Owners>
+    <PackageProjectUrl>https://github.com/pjenney58/Mot-Integration-Support</PackageProjectUrl>
+    <Summary>Objects to support Pharmacy Management System Interface Development</Summary>
+    <Title>Medicine-On-Time Gateway Interface Tooling</Title>
+    <Description>Libraries to support interfacing Pharmacy Management Systems etceterra with Medicine-On-Time's Legacy (MOTALL.EXE) and motNext's Legacy Doppleganger gateways.</Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <CustomCommands>
+      <CustomCommands>
+        <Command>
+          <type>AfterBuild</type>
+        </Command>
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
     <ProjectReference Include="..\MotHL7Lib\MotHL7Lib.csproj" />
+    <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
   </ItemGroup>
 
 </Project>

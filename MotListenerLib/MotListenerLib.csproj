@@ -8,4 +8,8 @@
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+  </ItemGroup>
 </Project>

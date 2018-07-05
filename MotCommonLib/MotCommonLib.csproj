@@ -3,15 +3,24 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
-    <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
+    <PackageId>MOT00000001</PackageId>
+    <PackageVersion>1.0</PackageVersion>
+    <Authors>Pete Jenney</Authors>
+    <Owners>Pete Jenney</Owners>
+    <PackageProjectUrl>https://github.com/pjenney58/Mot-Integration-Support/tree/master/MotCommonLib</PackageProjectUrl>
+    <Summary>Medicine-On-Time Interface Building Tools</Summary>
+    <PackageTags>MOT</PackageTags>
+    <Title>MotCommonLib</Title>
+    <Description>Medicine-On-Time common objects to feed the motLegacy (MOTALL.EXE) and motNext doppleganger gateway interface.</Description>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="NLog" Version="4.5.6" />
-    <PackageReference Include="Npgsql" Version="4.0.0" />
     <PackageReference Include="System.Data.Odbc" Version="4.5.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.5.0" />
+    <PackageReference Include="Npgsql" Version="4.0.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
   </ItemGroup>
 
 </Project>
