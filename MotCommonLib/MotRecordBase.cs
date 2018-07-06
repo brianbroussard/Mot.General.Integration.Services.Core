@@ -334,6 +334,60 @@ namespace MotCommonLib
             WriteQueue(socket);
         }
 
+        private string[] datePatterns =  // Hope I got them all
+        {
+            "yyyyMMdd",
+            "yyyyMMd",
+            "yyyyMdd",
+            "yyyyMd",
+
+            "yyyyddMM",
+            "yyyyddM",
+            "yyyydMM",
+            "yyyydM",
+
+            "ddMMyyyy",
+            "ddMyyyy",
+            "dMMyyyy",
+            "dMyyyy",
+
+            "MMddyyyy",
+            "MMdyyyy",
+            "Mddyyyy",
+            "Mdyyyy",
+
+            "dd/MM/yyyy",
+            "dd/M/yyyy",
+            "d/MM/yyyy",
+            "d/M/yyyy",
+
+            "MM/dd/yyyy",
+            "MM/dd/yyyy hh:mm:ss tt",
+            "MM/dd/yyyy h:mm:ss tt",
+            "MM/dd/yyyy hh:m:ss tt",
+            "MM/dd/yyyy h:m:ss tt",
+            "MM/dd/yyyyhhmmss",            // HL7 Full Date Format 20110802085759
+            "yyyyMMddhhmmss",
+
+            "MM/d/yyyy",
+            "MM/d/yyyy hh:mm:ss tt",
+
+            "M/dd/yyyy",
+            "M/dd/yyyy hh:mm:ss tt",
+
+            "M/d/yyyy",
+            "M/d/yyyy hh:mm:ss tt",
+
+            "yyyy-MM-dd",
+            "yyyy-M-dd",
+            "yyyy-MM-d",
+            "yyyy-M-d",
+
+            "yyyy-dd-MM",
+            "yyyy-d-MM",
+            "yyyy-dd-M",
+            "yyyy-d-M"
+        };
         /// <summary>
         /// <c>NormalizeDate</c>
         /// Convers a bunch of different date formats into the one motLegacy understands
@@ -350,62 +404,7 @@ namespace MotCommonLib
             // Extract the date pard
             var dateOnly = origDate.Split(' ');
 
-            string[] DatePatterns =  // Hope I got them all
-            {
-                "yyyyMMdd",
-                "yyyyMMd",
-                "yyyyMdd",
-                "yyyyMd",
-
-                "yyyyddMM",
-                "yyyyddM",
-                "yyyydMM",
-                "yyyydM",
-
-                "ddMMyyyy",
-                "ddMyyyy",
-                "dMMyyyy",
-                "dMyyyy",
-
-                "MMddyyyy",
-                "MMdyyyy",
-                "Mddyyyy",
-                "Mdyyyy",
-
-                "dd/MM/yyyy",
-                "dd/M/yyyy",
-                "d/MM/yyyy",
-                "d/M/yyyy",
-
-                "MM/dd/yyyy",
-                "MM/dd/yyyy hh:mm:ss tt",
-                "MM/dd/yyyy h:mm:ss tt",
-                "MM/dd/yyyy hh:m:ss tt",
-                "MM/dd/yyyy h:m:ss tt",
-                "MM/dd/yyyyhhmmss",            // HL7 Full Date Format 20110802085759
-                "yyyyMMddhhmmss",
-
-                "MM/d/yyyy",
-                "MM/d/yyyy hh:mm:ss tt",
-
-                "M/dd/yyyy",
-                "M/dd/yyyy hh:mm:ss tt",
-
-                "M/d/yyyy",
-                "M/d/yyyy hh:mm:ss tt",
-
-                "yyyy-MM-dd",
-                "yyyy-M-dd",
-                "yyyy-MM-d",
-                "yyyy-M-d",
-
-                "yyyy-dd-MM",
-                "yyyy-d-MM",
-                "yyyy-dd-M",
-                "yyyy-d-M"
-            };
-
-            if (DateTime.TryParseExact(dateOnly[0], DatePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
+            if (DateTime.TryParseExact(dateOnly[0], datePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime dt))
             {
                 return dt.ToString("yyyy-MM-dd"); // return MOT Legacy Gateway Format
             }
@@ -416,6 +415,23 @@ namespace MotCommonLib
             return dateOnly[0];
         }
 
+        public DateTime TransformDate(string date)
+        {
+            DateTime dateOut;
+
+            try
+            {
+                DateTime.TryParseExact(date, datePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateOut);                                                   
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+            return dateOut;
+        }
+        
         /// <summary>
         /// <c>NormalizeString</c>
         /// Scrubs unneeded junk out of data 
@@ -592,7 +608,9 @@ namespace MotCommonLib
                      val == null ||
                      tag == null)
             {
-                throw new ArgumentNullException();
+                EventLogger.Warn($"Null value in SetField: tag = {tag ?? "tag"}");
+                return false;
+                //throw new ArgumentNullException();
             }
 
             var f = fieldSet?.Find(x => x.tagName.ToLower().Contains((tag.ToLower())));

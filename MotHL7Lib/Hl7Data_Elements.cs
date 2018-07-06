@@ -129,7 +129,8 @@ namespace MotHL7Lib
                 }
             }
 
-            return retVal ?? string.Empty;
+            // Make sure it returns null.  Empty strings mess up Convert.To<T>()
+            return string.IsNullOrEmpty(retVal) ? null : retVal;
         }
         /// <summary>
         /// <c>GetList</c>

@@ -583,7 +583,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains((("cycledate"))));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set
@@ -783,7 +783,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dob")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set
@@ -983,7 +983,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("admitdate")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set

@@ -338,7 +338,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstartdate")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "RxStartDate");
@@ -355,7 +355,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstopdate")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
@@ -372,7 +372,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("discontinuedate")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "DiscontinueDate");
@@ -653,7 +653,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("anchordate")));
-                return DateTime.Parse(f?.tagData);
+                return TransformDate(f?.tagData);
             }
 
             set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "AnchorDate");

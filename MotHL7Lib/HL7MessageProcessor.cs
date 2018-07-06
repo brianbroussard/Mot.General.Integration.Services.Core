@@ -90,10 +90,7 @@ namespace MotHL7Lib
     }
     public class MotHl7MessageProcessor : HL7TransformerBase
     {
-        #region variables
-
-
-
+ #region variables
         private HL7SendingApplication Hl7SendingApp { get; set; }
         private int FirstDoW { get; set; }
         private HL7SendingApplication RxHl7SendingApp { get; set; }
@@ -137,10 +134,10 @@ namespace MotHL7Lib
             {HL7SendingApplication.Unknown, "Unknown" }
         };
 
-        #endregion
+#endregion
 
 
-        #region Messaging     
+ #region Messaging     
         public event MotHl7OutputChangeEventHandler OutputTextChanged;
         public event MotHl7ErrorEventHandler OutputErrorText;
         /// <summary>
@@ -901,8 +898,8 @@ namespace MotHL7Lib
                 recBundle.Scrip.PrescriptionID = orc.Get("ORC.2.1");
             }
 
-            recBundle.Scrip.RxStartDate = DateTime.Parse(orc.Get("ORC.11.19") ?? "1970-01-01");
-            recBundle.Scrip.RxStopDate = DateTime.Parse(orc.Get("ORC.11.20") ?? "1970-01-01");
+            recBundle.Scrip.RxStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.19") ?? "1970-01-01");
+            recBundle.Scrip.RxStopDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.20") ?? "1970-01-01");
 
             recBundle.Location.LocationName = orc.Get("ORC.21.1");
             recBundle.Location.Address1 = orc.Get("ORC.22.1");
@@ -997,7 +994,8 @@ namespace MotHL7Lib
             recBundle.Patient.FirstName = pid.Get("PID.5.2");
             recBundle.Patient.MiddleInitial = pid.Get("PID.5.3");
 
-            recBundle.Patient.DOB = DateTime.Parse((pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7")) ?? "1970-01-01");
+            var date = pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7");
+            recBundle.Patient.DOB = recBundle.Patient.TransformDate(date);
 
             if (!string.IsNullOrEmpty(pid.Get("PID.8")))
             {
@@ -1479,8 +1477,8 @@ namespace MotHL7Lib
             recBundle.Scrip.RxType = 0; // Default Type
             recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : "CUSTOM";
 
-            var tqStartDate = DateTime.Parse(tq1.Get("TQ1.7") ?? "1970-01-01");
-            var tqStopDate = DateTime.Parse(tq1.Get("TQ1.8") ?? "1970-01-01");
+            var tqStartDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.7") ?? "1970-01-01");
+            var tqStopDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.8") ?? "1970-01-01");
 
 
             if (tqStartDate.ToString("yyyy-MM-dd") != "1970-01-01")
