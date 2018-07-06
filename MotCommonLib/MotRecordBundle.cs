@@ -42,7 +42,7 @@ namespace MotCommonLib
         public MotFacilityRecord Location;
         public MotStoreRecord Store;
         public MotDrugRecord Drug;
-        public List<MotTimeQtysRecord> TQList;
+        public List<MotTimesQtysRecord> TQList;
 
         public List<MotStoreRecord> StoreList;
         public List<MotPrescriberRecord> PrescriberList;
@@ -86,7 +86,7 @@ namespace MotCommonLib
             Store = new MotStoreRecord("Add", autoTruncate);
             Drug = new MotDrugRecord("Add", autoTruncate);
 
-            TQList = new List<MotTimeQtysRecord>();
+            TQList = new List<MotTimesQtysRecord>();
             StoreList = new List<MotStoreRecord>();
             PrescriberList = new List<MotPrescriberRecord>();
 
@@ -155,7 +155,7 @@ namespace MotCommonLib
                             Store.AddToQueue(WriteQueue);
                         }
 
-                        foreach (MotTimeQtysRecord TQ in TQList)
+                        foreach (MotTimesQtysRecord TQ in TQList)
                         {
                             TQ.SendEof = SendEof;
                             TQ.AddToQueue(WriteQueue);

@@ -253,23 +253,23 @@ namespace MotParserLib
             {
                 var mtsRecord = new MtsRecord();
 
-                mtsRecord.Patient.ID = mtsData.PatientNum;
+                mtsRecord.Patient.PatientID = mtsData.PatientNum;
                 mtsRecord.Patient.LastName = mtsData.LastName;
                 mtsRecord.Patient.FirstName = mtsData.FirstName;
                 mtsRecord.Patient.MiddleInitial = mtsData.MiddleInitial;
                 mtsRecord.Patient.Room = mtsData.Room;
                 mtsRecord.Patient.ResponisbleName = mtsData.RphName;
 
-                mtsRecord.Scrip.RxSys_DrugID = mtsData.OrderedItemCode;
+                mtsRecord.Scrip.DrugID = mtsData.OrderedItemCode;
                 mtsRecord.Scrip.RxSys_RxNum = mtsData.RxOrderNum;
-                mtsRecord.Scrip.RxStartDate = mtsData.FillStartDate.ToString("yyyy-MM-dd");
+                mtsRecord.Scrip.RxStartDate = mtsData.FillStartDate;
                 //mtsRecord.Scrip.DoseTimesQtys = mtsData.MedAdminTime.ToString("HHmm") + mtsData.Dose.ToString("00");
                 //mtsRecord.Scrip.QtyPerDose = mtsData.Dose.ToString();
-                mtsRecord.Scrip.Refills = mtsData.RefillsRemaining;
+                mtsRecord.Scrip.Refills = Convert.ToInt32(mtsData.RefillsRemaining ?? "0");
                 mtsRecord.Scrip.Sig = $"{mtsData.SigDirections}\n{mtsData.ExpandedDirections}";
                 mtsRecord.Scrip.Comments = mtsData.DrugCautionMessages;
 
-                mtsRecord.Facility.RxSys_LocID = mtsData.FacilityNum;
+                mtsRecord.Facility.LocationID = mtsData.FacilityNum;
 
                 mtsRecord.Doc.LastName = mtsData.PhysicianLastName;
                 mtsRecord.Doc.FirstName = mtsData.PhysicianFirstName;

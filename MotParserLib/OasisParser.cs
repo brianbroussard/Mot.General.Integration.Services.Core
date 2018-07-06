@@ -183,22 +183,22 @@ namespace MotParserLib
                 ediRecord.Patient.FirstName = ediData.PatientFirstName;
                 ediRecord.Patient.MiddleInitial = ediData.PatientMiddleInitial;
 
-                ediRecord.Scrip.RxSys_DrugID = ediData.Ndc11;
-                ediRecord.Scrip.RxSys_RxNum = ediData.RxOrderNumber;
-                ediRecord.Scrip.RxStartDate = ediData.MedAdminDate.ToString("yyyy-MM-dd");
+                ediRecord.Scrip.DrugID = ediData.Ndc11;
+                ediRecord.Scrip.PrescriptionID = ediData.RxOrderNumber;
+                ediRecord.Scrip.RxStartDate = ediData.MedAdminDate;
                 ediRecord.Scrip.DoseTimesQtys = ediData.MedAdminTime.ToString("HHmm") + ediData.Dose.ToString("00");
-                ediRecord.Scrip.QtyPerDose = ediData.Dose.ToString();
-                ediRecord.Scrip.Refills = ediData.RefillsRemaining;
+                ediRecord.Scrip.QtyPerDose = Convert.ToDouble(ediData.Dose);
+                ediRecord.Scrip.Refills = Convert.ToInt32(ediData.RefillsRemaining ?? "0");
                 ediRecord.Scrip.Sig = $"{ediData.Sig}\n{ediData.ExpandedDirections}";
 
-                ediRecord.Facility.RxSys_LocID = ediData.FacilityId;
+                ediRecord.Facility.LocationID = ediData.FacilityId;
                 ediRecord.Facility.LocationName = ediData.FacilityName;
 
                 //
                 // Apparently the system will send over a record per dose.  We'll treat the first data found as the start date
                 // and carry on from there.
                 //
-                if (_recordList.Find(x => x.Scrip.RxSys_RxNum == ediRecord.Scrip.RxSys_RxNum) == null)
+                if (_recordList.Find(x => x.Scrip.PrescriptionID == ediRecord.Scrip.PrescriptionID) == null)
                 {
                     _recordList.Add(ediRecord);
                 }

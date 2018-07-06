@@ -27,12 +27,14 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using Newtonsoft.Json;
 
 namespace MotCommonLib
 {
     /// <summary>
     /// Prescription Record  (Key == G)
     /// </summary>
+    [Serializable]
     [XmlRoot("MotPrescriptionRecord")]
     public class MotPrescriptionRecord : MotRecordBase
     {
@@ -75,7 +77,11 @@ namespace MotCommonLib
                 throw;
             }
         }
-#pragma warning disable 1591
+
+        /// <summary>
+        /// Shallow copy.
+        /// </summary>
+        /// <returns>The copy.</returns>
         public MotPrescriptionRecord ShallowCopy()
         {
             return (MotPrescriptionRecord)this.MemberwiseClone();
@@ -91,11 +97,19 @@ namespace MotCommonLib
                 return (MotPrescriptionRecord)formatter.Deserialize(ms);
             }
         }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:MotCommonLib.MotPrescriptionRecord"/> class.
+        /// </summary>
         public MotPrescriptionRecord()
         {
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:MotCommonLib.MotPrescriptionRecord"/> class.
+        /// </summary>
+        /// <param name="action">Action.</param>
+        /// <param name="autoTruncate">If set to <c>true</c> auto truncate.</param>
         public MotPrescriptionRecord(string action, bool autoTruncate = false)
         {
             AutoTruncate = autoTruncate;
@@ -112,6 +126,13 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
+        /// <summary>
+        /// Sets the field.
+        /// </summary>
+        /// <param name="fieldName">Field name.</param>
+        /// <param name="val">Value.</param>
+        /// <param name="OverrideTruncation">If set to <c>true</c> override truncation.</param>
         public void SetField(string fieldName, string val, bool OverrideTruncation = false)
         {
             if (fieldName == null)
@@ -133,6 +154,11 @@ namespace MotCommonLib
                 throw;
             }
         }
+
+        /// <summary>
+        /// Adds to queue.
+        /// </summary>
+        /// <param name="newQueue">New queue.</param>
         public void AddToQueue(MotWriteQueue newQueue = null)
         {
             if (newQueue != null)
@@ -143,6 +169,11 @@ namespace MotCommonLib
             AddToQueue("G", _fieldList);
         }
 
+        /// <summary>
+        /// Write the specified socket and doLogging.
+        /// </summary>
+        /// <param name="socket">Socket.</param>
+        /// <param name="doLogging">If set to <c>true</c> do logging.</param>
         public void Write(MotSocket socket, bool doLogging = false)
         {
             if (socket == null)
@@ -168,6 +199,12 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
+        /// <summary>
+        /// Write the specified stream and DoLogging.
+        /// </summary>
+        /// <param name="stream">Stream.</param>
+        /// <param name="DoLogging">If set to <c>true</c> do logging.</param>
         public void Write(NetworkStream stream, bool DoLogging = false)
         {
             if (stream == null)
@@ -193,13 +230,23 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
+        /// <summary>
+        /// Clear this instance.
+        /// </summary>
         public void Clear()
         {
             Clear(_fieldList);
         }
 
-        [XmlElement("RxSys_RxNum")]
-        public string RxSys_RxNum
+
+        /// <summary>
+        /// Gets or sets the rx sys rx number.
+        /// </summary>
+        /// <value>The rx sys rx number.</value>
+        [JsonProperty("PrescriptionID")]
+        [XmlElement("PrescriptionID")]
+        public string PrescriptionID
         {
             get
             {
@@ -209,6 +256,13 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_RxNum");
         }
+
+
+        /// <summary>
+        /// Gets or sets the patient identifier.
+        /// </summary>
+        /// <value>The patient identifier.</value>
+        [JsonProperty("PatientID")]
         [XmlElement("PatientID")]
         public string PatientID
         {
@@ -220,17 +274,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_PatID");
         }
-        [XmlElement("RxSys_PatID")]
-        public string RxSys_PatID
-        {
-            get
-            {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_patid")));
-                return f?.tagData;
-            }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_PatID");
-        }
+        /// <summary>
+        /// Gets or sets the prescriber identifier.
+        /// </summary>
+        /// <value>The prescriber identifier.</value>
+        [JsonProperty("PrescriberID")]
         [XmlElement("PrescriberID")]
         public string PrescriberID
         {
@@ -242,29 +291,30 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
         }
-        [XmlElement("RxSys_DocID")]
-        public string RxSys_DocID
+
+        /// <summary>
+        /// Gets or sets the drug identifier.
+        /// </summary>
+        /// <value>The rx sys drug identifier.</value>
+        [JsonProperty("DrugID")]
+        [XmlElement("DrugID")]
+        public string DrugID
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_docid")));
-                return f?.tagData;
-            }
-
-            set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
-        }
-        [XmlElement("RxSys_DrugID")]
-        public string RxSys_DrugID
-        {
-            get
-            {
-
+                
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_drugid")));
                 return f?.tagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DrugID");
         }
+
+        /// <summary>
+        /// Gets or sets the sig.
+        /// </summary>
+        /// <value>The sig.</value>
+        [JsonProperty("Sig")]
         [XmlElement("Sig")]
         public string Sig
         {
@@ -276,39 +326,75 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "Empty Sig", "Sig");
         }
-        [XmlElement("RxStartDate")]
-        public string RxStartDate
+
+        /// <summary>
+        /// Gets or sets the rx start date.
+        /// </summary>
+        /// <value>The rx start date.</value>
+        [JsonProperty("RxStartDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("RxStartDate", typeof(DateTime))]
+        public DateTime RxStartDate
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstartdate")));
-                return f?.tagData;
+                return DateTime.Parse(f?.tagData);
             }
 
-            set => SetField(_fieldList, NormalizeDate(value ?? "1970-01-01"), "RxStartDate");
+            set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "RxStartDate");
         }
-        [XmlElement("RxStopDate")]
-        public string RxStopDate
+
+        /// <summary>
+        /// Gets or sets the rx stop date.
+        /// </summary>
+        /// <value>The rx stop date.</value>
+        [JsonProperty("RxStopDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("RxStopDate", typeof(DateTime))]
+        public DateTime RxStopDate
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstopdate")));
-                return f?.tagData;
+                return DateTime.Parse(f?.tagData);
             }
 
-            set => SetField(_fieldList, NormalizeDate(value ?? ""), "RxStopDate");
+            set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
         }
-        [XmlElement("DiscontinueDate")]
-        public string DiscontinueDate
+
+        /// <summary>
+        /// Gets or sets the discontinue date.
+        /// </summary>
+        /// <value>The discontinue date.</value>
+        [JsonProperty("DiscontinueDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("DiscontinueDate", typeof(DateTime))]
+        public DateTime DiscontinueDate
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("discontinuedate")));
-                return f?.tagData;
+                return DateTime.Parse(f?.tagData);
             }
 
-            set => SetField(_fieldList, NormalizeDate(value ?? "1970-01-01"), "DiscontinueDate");
+            set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "DiscontinueDate");
         }
+
+        /// <summary>
+        /// Gets or sets the discontinue date.
+        /// </summary>
+        /// <value>The discontinue date.</value>
+        [JsonProperty("DCDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("DCDate", typeof(DateTime))]
+        public DateTime DCDate
+        {
+            get { return DiscontinueDate; }
+            set => DiscontinueDate = value;
+        }
+
+        /// <summary>
+        /// Gets or sets the name of the dose schedule.
+        /// </summary>
+        /// <value>The name of the dose schedule.</value>
+        [JsonProperty("DoseScheduleName")]
         [XmlElement("DoseScheduleName")]
         public string DoseScheduleName
         {
@@ -320,6 +406,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, NormalizeString(value ?? "MissingName"), "DoseScheduleName");
         }
+
+        /// <summary>
+        /// Gets or sets the comments.
+        /// </summary>
+        /// <value>The comments.</value>
+        [JsonProperty("Comments")]
         [XmlElement("Comments")]
         public string Comments
         {
@@ -331,17 +423,29 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? " ", "Comments");
         }
-        [XmlElement("Refills")]
-        public string Refills
+
+        /// <summary>
+        /// Gets or sets the refills.
+        /// </summary>
+        /// <value>The refills.</value>
+        [JsonProperty("Refills", ItemConverterType = typeof(int))]
+        [XmlElement("Refills", typeof(int))]
+        public int Refills
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("refills")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "0", "Refills");
+            set => SetField(_fieldList, value.ToString(), "Refills");
         }
+
+        /// <summary>
+        /// Gets or sets the rx sys new rx number.
+        /// </summary>
+        /// <value>The rx sys new rx number.</value>
+        [JsonProperty("RxSys_NewRxNum")]
         [XmlElement("RxSys_NewRxNum")]
         public string RxSys_NewRxNum
         {
@@ -353,6 +457,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_NewRxNum");
         }
+
+        /// <summary>
+        /// Gets or sets the isolate.
+        /// </summary>
+        /// <value>The isolate.</value>
+        [JsonProperty("Isolate")]
         [XmlElement("Isolate")]
         public string Isolate
         {
@@ -364,17 +474,30 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "1", "Isolate");
         }
-        [XmlElement("RxType")]
-        public string RxType
+
+        /// <summary>
+        /// Gets or sets the type of the rx.
+        /// </summary>
+        /// <value>The type of the rx.</value>
+        [JsonProperty("RxType", ItemConverterType = typeof(int))]
+        [XmlElement("RxType", typeof(int))]
+        public int RxType
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxtype")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "1", "RxType");
+            set => SetField(_fieldList, value.ToString(), "RxType");
         }
+
+
+        /// <summary>
+        /// Gets or sets the MDOMS tart.
+        /// </summary>
+        /// <value>The MDOMS tart.</value>
+        [JsonProperty("MDOMStart")]
         [XmlElement("MDOMStart")]
         public string MDOMStart
         {
@@ -386,6 +509,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "MDOMStart");
         }
+
+        /// <summary>
+        /// Gets or sets the MDOME nd.
+        /// </summary>
+        /// <value>The MDOME nd.</value>
+        [JsonProperty("MDOMEnd")]
         [XmlElement("MDOMEnd")]
         public string MDOMEnd
         {
@@ -397,39 +526,63 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "28", "MDOMEnd");
         }
-        [XmlElement("QtyPerDose")]
-        public string QtyPerDose
+
+        /// <summary>
+        /// Gets or sets the qty per dose.
+        /// </summary>
+        /// <value>The qty per dose.</value>
+        [JsonProperty("QtyPerDose", ItemConverterType = typeof(double))]
+        [XmlElement("QtyPerDose", typeof(double))]
+        public double QtyPerDose
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("qtyperdose")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToDouble(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "0", "QtyPerDose");
+            set => SetField(_fieldList, value.ToString(), "QtyPerDose");
         }
-        [XmlElement("QtyDispensed")]
-        public string QtyDispensed
+
+        /// <summary>
+        /// Gets or sets the qty dispensed.
+        /// </summary>
+        /// <value>The qty dispensed.</value>
+        [JsonProperty("QtyDispensed", ItemConverterType = typeof(double))]
+        [XmlElement("QtyDispensed", typeof(double))]
+        public double QtyDispensed
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("qtydispensed")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToDouble(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "0", "QtyDispensed");
+            set => SetField(_fieldList, value.ToString(), "QtyDispensed");
         }
-        [XmlElement("Status")]
-        public string Status
+
+        /// <summary>
+        /// Gets or sets the status.
+        /// </summary>
+        /// <value>The status.</value>
+        [JsonProperty("Status", ItemConverterType = typeof(int))]
+        [XmlElement("Status", typeof(int))]
+        public int Status
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("status")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "0", "Status");
+            set => SetField(_fieldList, value.ToString(), "Status");
         }
+
+        /// <summary>
+        /// Gets or sets the do w.
+        /// </summary>
+        /// <value>The do w.</value>
+        [JsonProperty("DoW")]
         [XmlElement("DoW")]
         public string DoW
         {
@@ -441,6 +594,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0000000", "DoW");
         }
+
+        /// <summary>
+        /// Gets or sets the special doses.
+        /// </summary>
+        /// <value>The special doses.</value>
+        [JsonProperty("SpecialDoses")]
         [XmlElement("SpecialDoses")]
         public string SpecialDoses
         {
@@ -452,7 +611,13 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "SpecialDoses");
         }
-        [XmlElement("doseTimesQtys")]
+
+        /// <summary>
+        /// Gets or sets the dose times qtys.
+        /// </summary>
+        /// <value>The dose times qtys.</value>
+        [JsonProperty("DoseTimesQtys")]
+        [XmlElement("DoseTimesQtys")]
         public string DoseTimesQtys
         {
             get
@@ -463,28 +628,37 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "00.00", "DoseTimesQtys");
         }
-        [XmlElement("ChartOnly")]
-        public string ChartOnly
+
+        /// <summary>
+        /// Gets or sets the chart only.
+        /// </summary>
+        /// <value>The chart only.</value>
+        [JsonProperty("ChartOnly", ItemConverterType = typeof(int))]
+        [XmlElement("ChartOnly", typeof(int))]
+        public int ChartOnly
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("chartonly")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "1", "ChartOnly");
+            set => SetField(_fieldList, value.ToString(), "ChartOnly");
         }
-        [XmlElement("AnchorDate")]
-        public string AnchorDate
+
+        [JsonProperty("AnchorDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("AnchorDate", typeof(DateTime))]
+        public DateTime AnchorDate
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("anchordate")));
-                return f?.tagData;
+                return DateTime.Parse(f?.tagData);
             }
 
-            set => SetField(_fieldList, NormalizeDate(value ?? "1970-01-01"), "AnchorDate");
+            set => SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? "1970-01-01"), "AnchorDate");
         }
+
+        public string RxSys_RxNum { get; set; }
     }
 }
-#pragma warning restore 1591

@@ -165,12 +165,12 @@ namespace MotParserLib
                                 LocalWriteQueue = writeQueue,
                                 QueueWrites = true,
 
-                                RxSys_StoreID = f1[0].Replace(" ", ""),
+                                StoreID = f1[0].Replace(" ", ""),
                                 StoreName = f1[0],
                                 Address1 = f1[1],
                                 Address2 = f1[2],
                                 City = f1[3],
-                                Zip = f1[4],
+                                Zipcode = f1[4],
                                 Phone = f1[5]
                             };
 
@@ -185,17 +185,17 @@ namespace MotParserLib
                                 LocalWriteQueue = writeQueue,
                                 QueueWrites = true,
 
-                                ID = lastPatId = f2[0],
+                                PatientID = lastPatId = f2[0],
                                 LastName = f2[1],
                                 FirstName = f2[2],
-                                DOB = f2[4],
+                                DOB = DateTime.Parse(f2[4] ?? "1970-01-01"),
                                 Address1 = f2[5],
                                 Address2 = f2[6],
                                 City = f2[7],
                                 State = f2[8],
-                                Zip = f2[9],
+                                Zipcode = f2[9],
                                 Phone1 = f2[10],
-                                CycleDate = f2[11],
+                                CycleDate = DateTime.Parse(f2[11] ?? "1970-01-01"),
                                 CycleDays = Convert.ToInt16(f2[12]),
                                 Room = f2[14]
                             };
@@ -213,7 +213,7 @@ namespace MotParserLib
                             rx.LocalWriteQueue = doc.LocalWriteQueue = drug.LocalWriteQueue = writeQueue;
                             rx.QueueWrites = doc.QueueWrites = drug.QueueWrites = true;
 
-                            doc.ID = f3[15]?.Substring(0, 3) + f3[16]?.Substring(0, 3);
+                            doc.PrescriberID = f3[15]?.Substring(0, 3) + f3[16]?.Substring(0, 3);
                             doc.FirstName = f3[15];
                             doc.LastName = f3[16];
                             doc.MiddleInitial = f3[17];
@@ -221,12 +221,12 @@ namespace MotParserLib
                             doc.Address2 = f3[19];
                             doc.City = f3[20];
                             doc.State = f3[21];
-                            doc.Zip = f3[22];
+                            doc.Zipcode = f3[22];
                             doc.Phone = f3[23];
 
                             // M8880338,DECADRON TAB .75 MG 100,TAB,,30,TAKE 1 TABLET DAILY|TOME 1 TABLET DAILY,JACK GERARD,00;00;01;00,000060063,4,,,,,,JACK,GERARD,,599 SO.FEDERAL HWY,,CHICAGO,IL,60601,773-222-9999,,
 
-                            drug.RxSys_DrugID = f3[8];
+                            drug.DrugID = f3[8];
 
                             if (f3[8].Length > 9)
                             {
@@ -246,14 +246,14 @@ namespace MotParserLib
                             drug.VisualDescription = f3[3];
                             drug.TradeName = f3[12];
 
-                            rx.RxSys_RxNum = f3[0];
-                            rx.RxSys_DrugID = drug.RxSys_DrugID;
-                            rx.RxSys_DocID = doc.ID;
-                            rx.RxSys_PatID = lastPatId;
+                            rx.PrescriptionID = f3[0];
+                            rx.DrugID = drug.DrugID;
+                            rx.PrescriberID = doc.PrescriberID;
+                            rx.PatientID = lastPatId;
                             rx.Sig = f3[5];
-                            rx.QtyDispensed = f3[4];
-                            rx.Refills = f3[9];
-                            rx.RxStopDate = f3[14]; // Actually the Expire Date
+                            rx.QtyDispensed = Convert.ToDouble(f3[4] ?? "0.00");
+                            rx.Refills = Convert.ToInt32(f3[9] ?? "0");
+                            rx.RxStopDate = DateTime.Parse(f3[14] ?? "1970-01-01"); // Actually the Expire Date
 
                             // Intake Code - 00,00,00,00 = 0800[q], 1200[q], 1800[q], 2100[q]
                             var dq = f3[7].Split(';');

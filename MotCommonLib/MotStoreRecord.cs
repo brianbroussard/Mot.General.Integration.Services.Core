@@ -26,12 +26,14 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace MotCommonLib
 {
     /// <summary>
     /// Store Record (Key == A)
     /// </summary>
+    [Serializable]
     [XmlRoot("MotStoreRecord")]
     public class MotStoreRecord : MotRecordBase
     {
@@ -100,6 +102,7 @@ namespace MotCommonLib
                 throw;
             }
         }
+
         /// <summary>
         /// AddToQueue
         /// </summary>
@@ -145,6 +148,7 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
         /// <summary>
         /// Write
         /// </summary>
@@ -171,6 +175,7 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
         /// <summary>
         /// Clear
         /// </summary>
@@ -179,8 +184,13 @@ namespace MotCommonLib
             Clear(_fieldList);
         }
 
-        [XmlElement("RxSys_StoreID")]
-        public string RxSys_StoreID
+        /// <summary>
+        /// Gets or sets the store identifier.
+        /// </summary>
+        /// <value>The store identifier.</value>
+        [JsonProperty("StoreID")]
+        [XmlElement("StoreID")]
+        public string StoreID
         {
             get
             {
@@ -190,6 +200,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_StoreID");
         }
+
+        /// <summary>
+        /// Gets or sets the name of the store.
+        /// </summary>
+        /// <value>The name of the store.</value>
+        [JsonProperty("StoreName")]
         [XmlElement("StoreName")]
         public string StoreName
         {
@@ -201,6 +217,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "StoreName");
         }
+
+        /// <summary>
+        /// Gets or sets the address1.
+        /// </summary>
+        /// <value>The address1.</value>
+        [JsonProperty("Address1")]
         [XmlElement("Address1")]
         public string Address1
         {
@@ -212,6 +234,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Address1");
         }
+
+        /// <summary>
+        /// Gets or sets the address2.
+        /// </summary>
+        /// <value>The address2.</value>
+        [JsonProperty("Address2")]
         [XmlElement("Address2")]
         public string Address2
         {
@@ -224,6 +252,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Address2");
         }
+
+        /// <summary>
+        /// Gets or sets the city.
+        /// </summary>
+        /// <value>The city.</value>
+        [JsonProperty("City")]
         [XmlElement("City")]
         public string City
         {
@@ -235,6 +269,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "City");
         }
+
+        /// <summary>
+        /// Gets or sets the state.
+        /// </summary>
+        /// <value>The state.</value>
+        [JsonProperty("State")]
         [XmlElement("State")]
         public string State
         {
@@ -251,8 +291,14 @@ namespace MotCommonLib
                 }
             }
         }
-        [XmlElement("Zip")]
-        public string Zip
+
+        /// <summary>
+        /// Gets or sets the zipcode.
+        /// </summary>
+        /// <value>The zipcode.</value>
+        [JsonProperty("Zipcode")]
+        [XmlElement("Zipcode")]
+        public string Zipcode
         {
             get
             {
@@ -273,6 +319,12 @@ namespace MotCommonLib
                 SetField(_fieldList, NormalizeString(value), "Zip");
             }
         }
+
+        /// <summary>
+        /// Gets or sets the phone.
+        /// </summary>
+        /// <value>The phone.</value>
+        [JsonProperty("Phone")]
         [XmlElement("Phone")]
         public string Phone
         {
@@ -284,6 +336,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, NormalizeString(value ?? string.Empty), "Phone");
         }
+
+        /// <summary>
+        /// Gets or sets the fax.
+        /// </summary>
+        /// <value>The fax.</value>
+        [JsonProperty("Fax")]
         [XmlElement("Fax")]
         public string Fax
         {
@@ -295,6 +353,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Fax");
         }
+
+        /// <summary>
+        /// Gets or sets the DEAN um.
+        /// </summary>
+        /// <value>The DEAN um.</value>
+        [JsonProperty("DEANum")]
         [XmlElement("DEANum")]
         public string DEANum
         {
@@ -306,6 +370,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, ValidateDea(value), "DEANum");
         }
+
+        /// <summary>
+        /// Sets the web site.
+        /// </summary>
+        /// <value>The web site.</value>
+        [JsonProperty("WebSite")]
         [XmlElement("WebSite")]
         public string WebSite
         {
@@ -316,6 +386,12 @@ namespace MotCommonLib
             }
 
         }
+
+        /// <summary>
+        /// Sets the email.
+        /// </summary>
+        /// <value>The email.</value>
+        [JsonProperty("Email")]
         [XmlElement("Email")]
         public string Email
         {

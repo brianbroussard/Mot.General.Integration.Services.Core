@@ -44,21 +44,21 @@ namespace MotHL7Lib
         protected bool encrypt { get; set; }
         public string ResponseMessage { get; set; }
 
-#region CommonVariables
+        #region CommonVariables
         public Logger EventLogger;
         public bool AutoTruncate { get; set; }
         public bool SendEof { get; set; }
         public bool DebugMode { get; set; }
         public MotSocket Socket { get; set; }
-#endregion
+        #endregion
 
-#region Listener
+        #region Listener
         public Hl7SocketListener dataIn;
         public bool startListener;
         protected string gatewayAddress { get; set; }
         protected int gatewayPort { get; set; }
         protected int returnPort { get; set; }
-#endregion
+        #endregion
 
         public HL7TransformerBase(string data)
         {
@@ -91,8 +91,8 @@ namespace MotHL7Lib
     public class MotHl7MessageProcessor : HL7TransformerBase
     {
         #region variables
- 
-      
+
+
 
         private HL7SendingApplication Hl7SendingApp { get; set; }
         private int FirstDoW { get; set; }
@@ -109,7 +109,7 @@ namespace MotHL7Lib
             {HL7SendingApplication.Unknown, "Unknown" }
         };
 
-        private string Rnatq1DoseQty { get; set; } = "0";
+        private double Rnatq1DoseQty { get; set; }
         private string[] GlobalMonth;
 
         private string ProblemLocus { get; set; }
@@ -163,7 +163,7 @@ namespace MotHL7Lib
         {
             dataInputType = DataInputType.Unknown;
         }
-        public MotHl7MessageProcessor(string data,int port, bool service, bool encrypt) : base(data)
+        public MotHl7MessageProcessor(string data, int port, bool service, bool encrypt) : base(data)
         {
             dataInputType = DataInputType.WebService;
         }
@@ -193,7 +193,7 @@ namespace MotHL7Lib
             }
 
             try
-            {           
+            {
                 if (startListener)
                 {
                     dataIn = new Hl7SocketListener(gatewayAddress, gatewayPort, Go, encrypt)
@@ -203,7 +203,7 @@ namespace MotHL7Lib
                 }
             }
             catch (Exception ex)
-            {          
+            {
                 Console.WriteLine(ex);
                 throw;
             }
@@ -352,7 +352,7 @@ namespace MotHL7Lib
                     break;
 
                 case DataInputType.Socket:
-                   // dataIn.WriteMessageToEndpoint(message, returnPort);
+                    // dataIn.WriteMessageToEndpoint(message, returnPort);
                     break;
 
                 case DataInputType.WebService:
@@ -476,7 +476,7 @@ namespace MotHL7Lib
             }
         }
         //---------------------------------------------------------------
-        private string ParsePatternedDoseSchedule(string pattern, int thisRxType, TQ1 tq1, MotPrescriptionRecord scrip, string sStartDate, string sEndDate)
+        private string ParsePatternedDoseSchedule(string pattern, int thisRxType, TQ1 tq1, MotPrescriptionRecord scrip, DateTime StartDate, DateTime StopDate)
         {
             //  Frameworks repeat patterns are:
             //
@@ -484,8 +484,9 @@ namespace MotHL7Lib
             //  E (Every x Days)    Q#D e.g. Q2D is every 2nd s
             //  M (Monthly)         QL#,#,... e.g. QL3 QL1,15 QL1,5,10,20
 
-            DateTime.TryParseExact(sStartDate, "yyyyMMddhhmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime StartDate);
-            DateTime.TryParseExact(sEndDate, "yyyyMMddhhmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime StopDate);
+            //DateTime.TryParseExact(sStartDate, "yyyyMMddhhmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime StartDate);
+            //DateTime.TryParseExact(sEndDate, "yyyyMMddhhmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime StopDate);
+
 
             var startDoW = (int)StartDate.DayOfWeek;
             var tq14List = tq1.GetList("TQ1.4");
@@ -546,7 +547,7 @@ namespace MotHL7Lib
                 }
 
                 scrip.DoW = newPattern;
-                scrip.RxType = "5";
+                scrip.RxType = 5;
 
                 foreach (var tq14 in tq14List)
                 {
@@ -579,7 +580,7 @@ namespace MotHL7Lib
                     monthBuf[0] += monthBuf[i++];
                 }
 
-                scrip.RxType = "18";
+                scrip.RxType = 18;
                 scrip.MDOMStart = pattern.Substring(1, 1);  // Extract the number 
                 scrip.DoseScheduleName = pattern;           // => This is the key part.  The DoseScheduleName has to exist on MOTALL 
                 scrip.SpecialDoses = monthBuf[0];
@@ -618,7 +619,7 @@ namespace MotHL7Lib
                     GlobalMonth[Convert.ToInt16(d) - 1] = $"HHMM{Convert.ToDouble(CumulativeDoseCount):00.00}";
                 }
 
-                scrip.RxType = "20";  // Not Supported in Legacy -- Reported by PCHS 20160822, they "suggest" trying 18
+                scrip.RxType = 20;  // Not Supported in Legacy -- Reported by PCHS 20160822, they "suggest" trying 18
 
                 i = 1;
                 while (i < GlobalMonth.Length)
@@ -832,8 +833,8 @@ namespace MotHL7Lib
                     break;
 
                 case "DC":  // Discontinue order/service request
-                    recBundle.Scrip.DiscontinueDate = DateTime.Now.ToString();
-                    recBundle.Scrip.Status = "0";
+                    recBundle.Scrip.DiscontinueDate = DateTime.Now;
+                    recBundle.Scrip.Status = 0;
                     break;
 
                 case "RF":  // Refill order/service request                
@@ -842,7 +843,7 @@ namespace MotHL7Lib
 
                 case "XO":  // Change order/service request
                 case "CA":  // Change order/service request
-                    recBundle.Scrip.Status = "0";
+                    recBundle.Scrip.Status = 0;
                     recBundle.MakeDupScrip = true;
                     recBundle.NewStartDate = DateTime.Now;
                     break;
@@ -862,8 +863,8 @@ namespace MotHL7Lib
 
                 if (part.Count() >= 3)
                 {
-                    recBundle.Location.RxSys_LocID = part[0];
-                    recBundle.Scrip.RxSys_RxNum = part[2];
+                    recBundle.Location.LocationID = part[0];
+                    recBundle.Scrip.PrescriptionID = part[2];
                 }
             }
             else if (Hl7SendingApp == HL7SendingApplication.RNA)
@@ -881,34 +882,34 @@ namespace MotHL7Lib
                 // If ORC-4 has a value, this is a Renew event
                 if (string.IsNullOrEmpty(orc.Get("ORC.4.1")))
                 {
-                    recBundle.Scrip.RxSys_RxNum = orc.Get("ORC.3.1");
+                    recBundle.Scrip.PrescriptionID = orc.Get("ORC.3.1");
                 }
                 else
                 {
                     recBundle.Scrip.RxSys_NewRxNum = orc.Get("ORC.2.1");
-                    recBundle.Scrip.RxSys_RxNum = orc.Get("ORC.4.1");
-                    recBundle.Scrip.DiscontinueDate = DateTime.Today.ToString("yyyy-MM-dd");
-                    recBundle.Scrip.Status = "100";
+                    recBundle.Scrip.PrescriptionID = orc.Get("ORC.4.1");
+                    recBundle.Scrip.DiscontinueDate = DateTime.Today;
+                    recBundle.Scrip.Status = 100;
                 }
 
-                recBundle.Location.RxSys_LocID = orc.Get("ORC.21.3");
+                recBundle.Location.LocationID = orc.Get("ORC.21.3");
                 recBundle.Prescriber.TPID = orc.Get("ORC.12.10.1");
             }
             else
             {
-                recBundle.Location.RxSys_LocID = orc.Get("ORC.21.3");
-                recBundle.Scrip.RxSys_RxNum = orc.Get("ORC.2.1");
+                recBundle.Location.LocationID = orc.Get("ORC.21.3");
+                recBundle.Scrip.PrescriptionID = orc.Get("ORC.2.1");
             }
 
-            recBundle.Scrip.RxStartDate = orc.Get("ORC.11.19");
-            recBundle.Scrip.RxStopDate = orc.Get("ORC.11.20");
+            recBundle.Scrip.RxStartDate = DateTime.Parse(orc.Get("ORC.11.19") ?? "1970-01-01");
+            recBundle.Scrip.RxStopDate = DateTime.Parse(orc.Get("ORC.11.20") ?? "1970-01-01");
 
             recBundle.Location.LocationName = orc.Get("ORC.21.1");
             recBundle.Location.Address1 = orc.Get("ORC.22.1");
             recBundle.Location.Address2 = orc.Get("ORC.22.2");
             recBundle.Location.City = orc.Get("ORC.22.3");
             recBundle.Location.State = orc.Get("ORC.22.4");
-            recBundle.Location.Zip = orc.Get("ORC.22.5");
+            recBundle.Location.Zipcode = orc.Get("ORC.22.5");
             recBundle.Location.Phone = orc.Get("ORC.23.1");
 
             var temp = orc.Get("ORC.12.1");
@@ -921,17 +922,17 @@ namespace MotHL7Lib
                 }
             }
 
-            recBundle.Prescriber.ID = temp;
+            recBundle.Prescriber.PrescriberID = temp;
             recBundle.Prescriber.LastName = orc.Get("ORC.12.2");
             recBundle.Prescriber.FirstName = orc.Get("ORC.12.3");
             recBundle.Prescriber.Address1 = orc.Get("ORC.24.1");
             recBundle.Prescriber.Address2 = orc.Get("ORC.24.2");
             recBundle.Prescriber.City = orc.Get("ORC.24.3");
             recBundle.Prescriber.State = orc.Get("ORC.24.4");
-            recBundle.Prescriber.Zip = orc.Get("ORC.24.5");
+            recBundle.Prescriber.Zipcode = orc.Get("ORC.24.5");
 
-            recBundle.Patient.PrescriberID = temp;
-            recBundle.Scrip.RxSys_DocID = temp;
+            recBundle.Patient.PrimaryPrescriberID = temp;
+            recBundle.Scrip.PrescriberID = temp;
         }
         private void ProcessPID(RecordBundle recBundle, PID pid)
         {
@@ -967,7 +968,7 @@ namespace MotHL7Lib
                     if (part.Count() >= 2)
                     {
                         recBundle.Patient.LocationID = part[0];
-                        recBundle.Patient.ID = part[1];
+                        recBundle.Patient.PatientID = part[1];
                     }
                 }
             }
@@ -976,19 +977,19 @@ namespace MotHL7Lib
                 // Walk the potential types looking for the right one -- Generically 
                 if (!string.IsNullOrEmpty(pid.Get("PID.2.1")))
                 {
-                    recBundle.Patient.ID = pid.Get("PID.2.1");
+                    recBundle.Patient.PatientID = pid.Get("PID.2.1");
                 }
                 else if (!string.IsNullOrEmpty(pid.Get("PID.3.1")))
                 {
-                    recBundle.Patient.ID = pid.Get("PID.3.1");
+                    recBundle.Patient.PatientID = pid.Get("PID.3.1");
                 }
                 else if (!string.IsNullOrEmpty(pid.Get("PID.4.1")))
                 {
-                    recBundle.Patient.ID = pid.Get("PID.4.1");
+                    recBundle.Patient.PatientID = pid.Get("PID.4.1");
                 }
                 else
                 {
-                    recBundle.Patient.ID = "UnKnown";
+                    recBundle.Patient.PatientID = "UnKnown";
                 }
             }
 
@@ -996,7 +997,7 @@ namespace MotHL7Lib
             recBundle.Patient.FirstName = pid.Get("PID.5.2");
             recBundle.Patient.MiddleInitial = pid.Get("PID.5.3");
 
-            recBundle.Patient.DOB = pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7");
+            recBundle.Patient.DOB = DateTime.Parse((pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7")) ?? "1970-01-01");
 
             if (!string.IsNullOrEmpty(pid.Get("PID.8")))
             {
@@ -1007,7 +1008,7 @@ namespace MotHL7Lib
             recBundle.Patient.Address2 = pid.Get("PID.11.2");
             recBundle.Patient.City = pid.Get("PID.11.3");
             recBundle.Patient.State = pid.Get("PID.11.4");
-            recBundle.Patient.Zip = pid.Get("PID.11.5");
+            recBundle.Patient.Zipcode = pid.Get("PID.11.5");
             recBundle.Patient.Phone1 = pid.Get("PID.13.1");
             recBundle.Patient.WorkPhone = pid.Get("PID.14.1");
             recBundle.Patient.SSN = pid.Get("PID.19");
@@ -1036,7 +1037,7 @@ namespace MotHL7Lib
                 }
             }
 
-            recBundle.Prescriber.ID = Temp;
+            recBundle.Prescriber.PrescriberID = Temp;
             recBundle.Prescriber.LastName = pv1.Get("PV1.7.2");
             recBundle.Prescriber.FirstName = pv1.Get("PV1.7.3");
             recBundle.Prescriber.MiddleInitial = pv1.Get("PV1.7.4");
@@ -1045,9 +1046,9 @@ namespace MotHL7Lib
             recBundle.Prescriber.TPID = pv1.Get("PV1.7.9.2");
 
             // Check for the Patient DocID to match the Visit DocID, update as needed [Frameworks Message]
-            if (string.IsNullOrEmpty(recBundle.Patient.PrescriberID))
+            if (string.IsNullOrEmpty(recBundle.Patient.PrimaryPrescriberID))
             {
-                recBundle.Patient.PrescriberID = Temp;
+                recBundle.Patient.PrimaryPrescriberID = Temp;
             }
         }
         private void ProcessPV2(RecordBundle recBundle, PV2 pv2)
@@ -1092,7 +1093,7 @@ namespace MotHL7Lib
                 }
             }
 
-            tempDoc.ID = tempId;
+            tempDoc.PrescriberID = tempId;
             tempDoc.LastName = prt.Get("PRT.5.2");
             tempDoc.FirstName = prt.Get("PRT.5.3");
             tempDoc.MiddleInitial = prt.Get("PRT.5.4");
@@ -1100,18 +1101,18 @@ namespace MotHL7Lib
             tempDoc.Address2 = prt.Get("PRT.14.2");
             tempDoc.City = prt.Get("PRT.14.3");
             tempDoc.State = prt.Get("PRT.14.4");
-            tempDoc.Zip = prt.Get("PRT.14.5");
+            tempDoc.Zipcode = prt.Get("PRT.14.5");
             tempDoc.DEA_ID = "XD0123456";
 
 
             // Participant Organization
-            tempStore.RxSys_StoreID = prt.Get("PRT.7.1");
+            tempStore.StoreID = prt.Get("PRT.7.1");
             tempStore.StoreName = prt.Get("PRT.7.2");
             tempStore.Address1 = prt.Get("PRT.14.1");
             tempStore.Address2 = prt.Get("PRT.14.2");
             tempStore.City = prt.Get("PRT.14.3");
             tempStore.State = prt.Get("PRT.14.4");
-            tempStore.Zip = prt.Get("PRT.14.5");
+            tempStore.Zipcode = prt.Get("PRT.14.5");
             tempStore.DEANum = "XS0123456";
 
             var phoneList = prt.GetList("PRT.15.1");
@@ -1129,12 +1130,12 @@ namespace MotHL7Lib
                 }
             }
 
-            if (!string.IsNullOrEmpty(tempDoc.ID))
+            if (!string.IsNullOrEmpty(tempDoc.PrescriberID))
             {
                 recBundle.PrescriberList.Add(tempDoc);
             }
 
-            if (!string.IsNullOrEmpty(tempStore.RxSys_StoreID))
+            if (!string.IsNullOrEmpty(tempStore.StoreID))
             {
                 recBundle.StoreList.Add(tempStore);
             }
@@ -1167,13 +1168,13 @@ namespace MotHL7Lib
 
             ProblemLocus = "RXD";
 
-            recBundle.Scrip.RxSys_DrugID = rxd.Get("RXD.2.1");
-            recBundle.Scrip.QtyDispensed = rxd.Get("RXD.4");
-            recBundle.Scrip.RxSys_RxNum = rxd.Get("RXD.7");
+            recBundle.Scrip.DrugID = rxd.Get("RXD.2.1");
+            recBundle.Scrip.QtyDispensed = Convert.ToDouble(rxd.Get("RXD.4") ?? "0.00");
+            recBundle.Scrip.PrescriptionID = rxd.Get("RXD.7");
 
-            recBundle.Drug.RxSys_DrugID = rxd.Get("RXD.2.1");
+            recBundle.Drug.DrugID = rxd.Get("RXD.2.1");
             recBundle.Drug.DrugName = rxd.Get("RXD.2.2");
-            recBundle.Drug.Strength = rxd.Get("RXD.16");
+            recBundle.Drug.Strength = Convert.ToDouble(rxd.Get("RXD.16") ?? "0.00");
 
             // This  popped up in McKesson Pharmaserv.  RNA also sends over 4 extra 0's with each so we need to strip those off
             var tempDea = rxd.Get("RXD.10.1");
@@ -1217,7 +1218,7 @@ namespace MotHL7Lib
             // Test to make sure there's a valid DocID [Frameworks Doesn't Seem to send one in RXD]
             if (!string.IsNullOrEmpty(tempDocId))
             {
-                recBundle.Scrip.RxSys_DocID = tempDocId;
+                recBundle.Scrip.PrescriberID = tempDocId;
             }
 
             recBundle.Scrip.DoseScheduleName = rxd.Get("RXD.15.1");
@@ -1228,7 +1229,7 @@ namespace MotHL7Lib
                 recBundle.Scrip.Sig = rxd.Get("RXD.15.2");
             }
 
-            recBundle.Scrip.QtyPerDose = rxd.Get("RXD.12.1");
+            recBundle.Scrip.QtyPerDose = Convert.ToDouble(rxd.Get("RXD.12.1") ?? "0.00");
 
             if (string.IsNullOrEmpty(rxd.Get("RXD.9")))
             {
@@ -1237,8 +1238,8 @@ namespace MotHL7Lib
 
             recBundle.Scrip.Comments += "\n" + rxd.Get("RXD.9");
 
-            recBundle.Scrip.Refills = rxd.Get("RXD.8");
-            recBundle.Scrip.RxType = "0";
+            recBundle.Scrip.Refills = Convert.ToInt32(rxd.Get("RXD.8") ?? "0");
+            recBundle.Scrip.RxType = 0;
 
             recBundle.Drug.NDCNum = rxd.Get("RXD.2.1");
             recBundle.Drug.Unit = rxd.Get("RXD.5.1");
@@ -1246,7 +1247,7 @@ namespace MotHL7Lib
             recBundle.Drug.TradeName = rxd.Get("RXD.2.2");
 
             // Apparently the RXD doesn't identify the patient -- Assume a pid always comes first
-            recBundle.Scrip.RxSys_PatID = recBundle.Patient.ID;
+            recBundle.Scrip.PatientID = recBundle.Patient.PatientID;
         }
         private void ProcessRXE(RecordBundle recBundle, RXE rxe)
         {
@@ -1270,12 +1271,12 @@ namespace MotHL7Lib
             recBundle.Prescriber.DEA_ID = tempDea;
 
             // If there's no prescriber ID, use the DEA
-            if (string.IsNullOrEmpty(recBundle.Prescriber.ID))
+            if (string.IsNullOrEmpty(recBundle.Prescriber.PrescriberID))
             {
-                recBundle.Prescriber.ID = tempDea;
+                recBundle.Prescriber.PrescriberID = tempDea;
             }
 
-            recBundle.Drug.RxSys_DrugID = rxe.Get("RXE.2.1");
+            recBundle.Drug.DrugID = rxe.Get("RXE.2.1");
             recBundle.Drug.NDCNum = rxe.Get("RXE.2.1");
             recBundle.Drug.DrugName = rxe.Get("RXE.2.2");
             recBundle.Drug.TradeName = recBundle.Drug.DrugName;
@@ -1285,7 +1286,7 @@ namespace MotHL7Lib
             {
                 if (!string.IsNullOrEmpty(rxe.Get("RXE.25")))
                 {
-                    recBundle.Drug.Strength = rxe.Get("RXE.25");
+                    recBundle.Drug.Strength = Convert.ToDouble(rxe.Get("RXE.25") ?? "0.00");
                 }
             }
 
@@ -1302,13 +1303,13 @@ namespace MotHL7Lib
             }
             */
 
-            recBundle.Scrip.RxSys_DrugID = recBundle.Drug.NDCNum;
-            recBundle.Scrip.QtyPerDose = Rnatq1DoseQty = rxe.Get("RXE.3.1");
+            recBundle.Scrip.DrugID = recBundle.Drug.NDCNum;
+            recBundle.Scrip.QtyPerDose = Rnatq1DoseQty = Convert.ToDouble(rxe.Get("RXE.3.1") ?? "0.00");
 
             // This gets processed in ORC too but presumably RXE is preferred
-            if (string.IsNullOrEmpty(recBundle.Scrip.RxSys_RxNum))
+            if (string.IsNullOrEmpty(recBundle.Scrip.PrescriptionID))
             {
-                recBundle.Scrip.RxSys_RxNum = rxe.Get("RXE.15");
+                recBundle.Scrip.PrescriptionID = rxe.Get("RXE.15");
             }
 
             // Catch a Dose Schedule/Sig misplacement
@@ -1337,26 +1338,28 @@ namespace MotHL7Lib
                 recBundle.Scrip.DoseScheduleName = "CUSTOM";
             }
 
-            if (string.IsNullOrEmpty(recBundle.Scrip.QtyDispensed))
+
+            if (recBundle.Scrip.QtyDispensed == 0.00)
             {
-                recBundle.Scrip.QtyDispensed = rxe.Get("RXE.10");
+                recBundle.Scrip.QtyDispensed = Convert.ToDouble(rxe.Get("RXE.10") ?? "0.00");
             }
 
-            if (string.IsNullOrEmpty(recBundle.Scrip.Refills))
+
+            if (recBundle.Scrip.Refills == 0)
             {
-                recBundle.Scrip.Refills = rxe.Get("RXE.16");
+                recBundle.Scrip.Refills = Convert.ToInt32(rxe.Get("RXE.16") ?? "0");
             }
 
-            recBundle.Scrip.RxType = "0";
-            recBundle.Scrip.PrescriberID = recBundle.Prescriber.ID;
+            recBundle.Scrip.RxType = 0;
+            recBundle.Scrip.PrescriberID = recBundle.Prescriber.PrescriberID;
 
-            recBundle.Store.RxSys_StoreID = rxe.Get("RXE.40.1");
-            if (string.IsNullOrEmpty(recBundle.Store.RxSys_StoreID))
+            recBundle.Store.StoreID = rxe.Get("RXE.40.1");
+            if (string.IsNullOrEmpty(recBundle.Store.StoreID))
             {
-                recBundle.Store.RxSys_StoreID = "0";
+                recBundle.Store.StoreID = "0";
             }
 
-            recBundle.Location.RxSys_StoreID = recBundle.Store.RxSys_StoreID;
+            recBundle.Location.StoreID = recBundle.Store.StoreID;
 
             recBundle.Store.StoreName = rxe.Get("RXE.40.2");
 
@@ -1376,7 +1379,7 @@ namespace MotHL7Lib
 
             recBundle.Store.City = rxe.Get("RXE.41.3");
             recBundle.Store.State = rxe.Get("RXE.41.4");
-            recBundle.Store.Zip = rxe.Get("RXE.41.5");
+            recBundle.Store.Zipcode = rxe.Get("RXE.41.5");
         }
         private void ProcessRXO(RecordBundle recBundle, RXO rxo)
         {
@@ -1454,7 +1457,7 @@ namespace MotHL7Lib
                     tq141.Add("1200");
                     tq141.Add("1600");
                     tq2 = "1";
-                    recBundle.Scrip.QtyDispensed = "3";
+                    recBundle.Scrip.QtyDispensed = 3;
                 }
             }
 
@@ -1467,28 +1470,27 @@ namespace MotHL7Lib
             }
             else
             {
-                if (string.IsNullOrEmpty(Rnatq1DoseQty) || Rnatq1DoseQty == "0")
+                if (Rnatq1DoseQty == 0.00)
                 {
                     throw new Exception("RNA/TQ1 Processing Failure - Dose Quantity must be > 0");
                 }
             }
 
-            recBundle.Scrip.RxType = "0"; // Default Type
+            recBundle.Scrip.RxType = 0; // Default Type
             recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : "CUSTOM";
 
-            var tqStartDate = tq1.Get("TQ1.7");
-            var tqStopDate = tq1.Get("TQ1.8");
+            var tqStartDate = DateTime.Parse(tq1.Get("TQ1.7") ?? "1970-01-01");
+            var tqStopDate = DateTime.Parse(tq1.Get("TQ1.8") ?? "1970-01-01");
 
 
-            if (!string.IsNullOrEmpty(tqStartDate))
+            if (tqStartDate.ToString("yyyy-MM-dd") != "1970-01-01")
             {
                 recBundle.Scrip.RxStartDate = tqStartDate;
             }
 
-            if (!string.IsNullOrEmpty(tqStopDate))
-            {
-                recBundle.Scrip.RxStopDate = tqStopDate;
-            }
+
+            recBundle.Scrip.RxStopDate = tqStopDate;
+
 
             var tq111 = tq1.Get("TQ1.11");
 
@@ -1508,25 +1510,24 @@ namespace MotHL7Lib
                 }
             }
 
-            recBundle.Scrip.Status = "1";
+            recBundle.Scrip.Status = 1;
 
             // Get PRN's out of the way first
             if (doseScheduleName == "PRN")
             {
                 recBundle.Scrip.DoseScheduleName = "PRN";
-                recBundle.Scrip.RxType = "2";
+                recBundle.Scrip.RxType = 2;
 
                 //RNA never sends a dose count for PRNs. It might be in RXE
                 if (Hl7SendingApp == HL7SendingApplication.RNA)
                 {
                     recBundle.Scrip.QtyPerDose = Rnatq1DoseQty;
                     return recBundle.Scrip.DoseTimesQtys =
-                        $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(Rnatq1DoseQty) ? "E" : Rnatq1DoseQty):00.00}";
+                        $"{tq141.FirstOrDefault()}{Rnatq1DoseQty}";
                 }
 
-                recBundle.Scrip.QtyPerDose = tq2;
-                return recBundle.Scrip.DoseTimesQtys =
-                    $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(tq2) ? "E" : tq2):00.00}";
+                recBundle.Scrip.QtyPerDose = Convert.ToDouble(tq2 ?? "0.00");
+                return recBundle.Scrip.DoseTimesQtys =  $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(tq2) ? "E" : tq2):00.00}";
             }
 
 
@@ -1602,13 +1603,13 @@ namespace MotHL7Lib
 
             ProblemLocus = "ZFI";
 
-            recBundle.Drug.RxSys_DrugID = zfi.Get("ZF1.1");  // Item Id
+            recBundle.Drug.DrugID = zfi.Get("ZF1.1");  // Item Id
             recBundle.Drug.TradeName = zfi.Get("ZF1.1");  // Item Id
             recBundle.Drug.DrugName = zfi.Get("ZFI.4");
             recBundle.Drug.GenericFor = zfi.Get("ZFI-4");
             recBundle.Drug.DoseForm = zfi.Get("ZFI.5");
             //__recs.__drug.Strength = Convert.ToInt32(__zfi.Get("ZFI.6") == null ? "0" : __zfi.Get("ZFI.6"));
-            recBundle.Drug.Strength = zfi.Get("ZFI.6");
+            recBundle.Drug.Strength = Convert.ToDouble(zfi.Get("ZFI.6") ?? "0.00");
             recBundle.Drug.Unit = zfi.Get("ZFI.7");
             recBundle.Drug.NDCNum = zfi.Get("ZFI.8");
             //recBundle.Drug.DrugSchedule = Convert.ToInt32(_doseScheduleNameLookup.DrugSchedules[(zfi.Get("ZFI.10") ?? "0")]);
@@ -1675,11 +1676,11 @@ namespace MotHL7Lib
                 var ds = recBundle.Scrip.ShallowCopy();
                 ds.QueueWrites = false;
                 ds.RxStartDate = recBundle.Scrip.RxStartDate;
-                ds.DiscontinueDate = "";
-                ds.RxSys_RxNum = ds.RxSys_NewRxNum;
+                //ds.DiscontinueDate = DateTime.Today;
+                ds.PrescriptionID = ds.RxSys_NewRxNum;
                 ds.RxSys_NewRxNum = string.Empty;
-                ds.Status = "1";
-                ds.Refills = "100";
+                ds.Status = 1;
+                ds.Refills = 100;
                 ds.Write(Stream);
             }
         }
@@ -1711,10 +1712,10 @@ namespace MotHL7Lib
 
             foreach (var tq1 in newOrder.TQ1)
             {
-                var tempTq = new MotTimeQtysRecord("Add", AutoTruncate);
+                var tempTq = new MotTimesQtysRecord("Add", AutoTruncate);
 
-                var tq1RxType = !string.IsNullOrEmpty(recBundle.Location.RxSys_LocID) ? Convert.ToInt32(recBundle.Scrip.RxType) : 0;
-                tempTq.FacilityId = !string.IsNullOrEmpty(recBundle.Location.RxSys_LocID) ? recBundle.Location.RxSys_LocID : "Home Care";
+                var tq1RxType = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? Convert.ToInt32(recBundle.Scrip.RxType) : 0;
+                tempTq.LocationID = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? recBundle.Location.LocationID : "Home Care";
                 tempTq.DoseTimesQtys = ProcessTQ1(recBundle, tq1, newTq1Set, tq1RxType);
                 tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
                 recBundle.TQList.Add(tempTq);
@@ -1748,9 +1749,9 @@ namespace MotHL7Lib
             //    recBundle.Store.DEANum = "XX1234567";   // This should get the attention of the pharmacist
             //}
 
-            if (string.IsNullOrEmpty(recBundle.Scrip.RxSys_PatID))
+            if (string.IsNullOrEmpty(recBundle.Scrip.PatientID))
             {
-                recBundle.Scrip.RxSys_PatID = recBundle.Patient.ID;
+                recBundle.Scrip.PatientID = recBundle.Patient.PatientID;
             }
 
             // There's no place but the order to get the location ID, so grab it now

@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace MotCommonLib
 {
     /// <summary>
     ///  Drug Record (Key == E)
     /// </summary>
+    [Serializable]
     [XmlRoot("MotDrugRecord")]
+    [JsonObject(id: "MotDrugRecord")]
     public class MotDrugRecord : MotRecordBase
     {
         private readonly List<Field> _fieldList;
@@ -189,9 +192,13 @@ namespace MotCommonLib
             }
         }
 
-
-        [XmlElement("RxSys_DrugID")]
-        public string RxSys_DrugID
+        /// <summary>
+        /// Gets or sets the rx sys drug identifier.
+        /// </summary>
+        /// <value>The rx sys drug identifier.</value>
+        [JsonProperty("DrugID")]
+        [XmlElement("DrugID")]
+        public string DrugID
         {
             get
             {
@@ -206,6 +213,7 @@ namespace MotCommonLib
         /// <c>LabelCode</c>
         /// The label code portion of the NDC
         /// </summary>
+        [JsonProperty("LabelCodeName")]
         [XmlElement("LabelCodeName")]
         public string LabelCode
         {
@@ -222,6 +230,7 @@ namespace MotCommonLib
         /// <c>ProductCode</c>
         /// The product code part of the NDC
         /// </summary>
+        [JsonProperty("ProductCode")]
         [XmlElement("ProductCode")]
         public string ProductCode
         {
@@ -238,6 +247,7 @@ namespace MotCommonLib
         /// <c>TradeName</c>
         /// Common trade name for the drug
         /// </summary>
+        [JsonProperty("TradeName")]
         [XmlElement("TradeName")]
         public string TradeName
         {
@@ -254,22 +264,24 @@ namespace MotCommonLib
         /// <c>Strength</c>
         /// Number of units in he drug
         /// </summary>
-        [XmlElement("Strength")]
-        public string Strength
+        [JsonProperty("Strength", ItemConverterType = typeof(double))]
+        [XmlElement("Strength", typeof(double))]
+        public double Strength
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("strength")));
-                return f?.tagData;
+                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToDouble(f.tagData) : 0;
             }
 
-            set => SetField(_fieldList, value ?? "0", "Strength");
+            set => SetField(_fieldList, value.ToString(), "Strength");
         }
 
         /// <summary>
         /// <c>Unit</c>
         /// Type of units the drug strength is measured in
         /// </summary>
+        [JsonProperty("Unit")]
         [XmlElement("Unit")]
         public string Unit
         {
@@ -287,6 +299,7 @@ namespace MotCommonLib
         /// <c>RxOTC</c>
         /// True if the drug is available over the counter
         /// </summary>
+        [JsonProperty("RxOTC")]
         [XmlElement("RxOTC")]
         public string RxOTC
         {
@@ -303,6 +316,7 @@ namespace MotCommonLib
         /// <c>DoseForm</c>
         /// How the drug is delivered e.g. Tablet, Capsule, ...
         /// </summary>
+        [JsonProperty("DoseForm")]
         [XmlElement("DoseForm")]
         public string DoseForm
         {
@@ -319,6 +333,7 @@ namespace MotCommonLib
         /// <c>Route</c>
         /// How the drug is taken by a patient e.g. Oral, Injection, ...
         /// </summary>
+        [JsonProperty("Route")]
         [XmlElement("Route")]
         public string Route
         {
@@ -335,6 +350,7 @@ namespace MotCommonLib
         /// <c>DrugSchedule</c>
         /// The DEA Schedule number (1-7)
         /// </summary>
+        [JsonProperty("DrugSchedule")]
         [XmlElement("DrugSchedule")]
         public int DrugSchedule
         {
@@ -359,6 +375,7 @@ namespace MotCommonLib
         /// <c>VisualDescription</c>
         /// A shorthand version of what the drug looks like e.g. RND/WHT/412
         /// </summary>
+        [JsonProperty("VisualDescription")]
         [XmlElement("VisualDescription")]
         public string VisualDescription
         {
@@ -375,6 +392,7 @@ namespace MotCommonLib
         /// <c>DrugName</c>
         /// The full manufacturer or clinical name of the drug
         /// </summary>
+        [JsonProperty("DrugName")]
         [XmlElement("DrugName")]
         public string DrugName
         {
@@ -406,6 +424,7 @@ namespace MotCommonLib
         /// <c>ShortName</c>
         /// A 12 character name for the drug, short enough to fit on a cup label
         /// </summary>
+        [JsonProperty("ShortName")]
         [XmlElement("ShortName")]
         public string ShortName
         {
@@ -422,6 +441,7 @@ namespace MotCommonLib
         /// <c>NDCNum</c>
         /// National Drug Classification.  Format is typically nnnnn-nnnn-nnnn 
         /// </summary>
+        [JsonProperty("NDCNum")]
         [XmlElement("NDCNum")]
         public string NDCNum
         {
@@ -438,6 +458,7 @@ namespace MotCommonLib
         /// <c>SizeFactor</c>
         /// The number of doses that fit in a cup.  A 99 means its a bulk item
         /// </summary>
+        [JsonProperty("SizeFactor")]
         [XmlElement("SizeFactor")]
         public int SizeFactor
         {
@@ -455,6 +476,7 @@ namespace MotCommonLib
         /// The template letter from MOT's filling documentation.  The size factor and template code are related. 
         /// 'XX' means it's a bulk item
         /// </summary>
+        [JsonProperty("Template")]
         [XmlElement("Template")]
         public string Template
         {
@@ -471,6 +493,7 @@ namespace MotCommonLib
         /// <c>DefaultIsolate</c>
         /// True if the medication has to be allone in a cup
         /// </summary>
+        [JsonProperty("DefaultIsolate")]
         [XmlElement("DefaultIsolate")]
         public int DefaultIsolate
         {
@@ -487,6 +510,7 @@ namespace MotCommonLib
         /// <c>ConsultMsg</c>
         /// Any special instructions associated with the drug
         /// </summary>
+        [JsonProperty("ConsultMsg")]
         [XmlElement("ConsultMsg")]
         public string ConsultMsg
         {
@@ -503,6 +527,7 @@ namespace MotCommonLib
         /// <c>GenericFor</c>
         /// If the drug is a generic, the original trade name e.g.  lorazepam is the generic for Ativan
         /// </summary>
+        [JsonProperty("GenericFor")]
         [XmlElement("GenericFor")]
         public string GenericFor
         {

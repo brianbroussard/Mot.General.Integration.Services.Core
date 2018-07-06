@@ -57,6 +57,7 @@ namespace MotCommonLib
     /// <c>Field</c>
     /// Enhanced property defining data characteristics for Gateway suported data
     /// </summary>
+    [Serializable]
     public class Field
     {
         public string tagName { get; set; }
@@ -113,11 +114,6 @@ namespace MotCommonLib
     [Serializable]
     public class MotRecordBase : IDisposable
     {
-
-        // Root attribute for XML deserialization
-        // [XmlAttribute("Record")]
-        // protected string Record;
-
         /// <summary>
         /// DSN for the target database
         /// </summary>
@@ -127,6 +123,7 @@ namespace MotCommonLib
         /// CRUD for records, Add, Create, Detele
         /// </summary>
         public string TableAction;
+
         /// <summary>
         /// Logger
         /// </summary>
@@ -136,17 +133,60 @@ namespace MotCommonLib
         /// DefaultSocket
         /// </summary>
         public MotSocket DefaultSocket { get; set; }
+
+        /// <summary>
+        /// Gets or sets the gateway ip.
+        /// </summary>
+        /// <value>The gateway ip.</value>
         public string GatewayIP { get; set; }
+
+        /// <summary>
+        /// Gets or sets the gateway port.
+        /// </summary>
+        /// <value>The gateway port.</value>
         public string GatewayPort { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> is empty.
+        /// </summary>
+        /// <value><c>true</c> if is empty; otherwise, <c>false</c>.</value>
         public bool IsEmpty { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> log records.
+        /// </summary>
+        /// <value><c>true</c> if log records; otherwise, <c>false</c>.</value>
         public bool LogRecords { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> auto truncate.
+        /// </summary>
+        /// <value><c>true</c> if auto truncate; otherwise, <c>false</c>.</value>
         public bool AutoTruncate { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> use strong validation.
+        /// </summary>
+        /// <value><c>true</c> if use strong validation; otherwise, <c>false</c>.</value>
         public bool UseStrongValidation { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> send EOF.
+        /// </summary>
+        /// <value><c>true</c> if send EOF; otherwise, <c>false</c>.</value>
         public bool SendEof { get; set; } = false;
 
         // External Ordered Queue
+        /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase"/> queue writes.
+        /// </summary>
+        /// <value><c>true</c> if queue writes; otherwise, <c>false</c>.</value>
         public bool QueueWrites { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the local write queue.
+        /// </summary>
+        /// <value>The local write queue.</value>
         public MotWriteQueue LocalWriteQueue { get; set; } = null;
 
         /// <summary>
@@ -310,7 +350,6 @@ namespace MotCommonLib
             // Extract the date pard
             var dateOnly = origDate.Split(' ');
 
-
             string[] DatePatterns =  // Hope I got them all
             {
                 "yyyyMMdd",
@@ -406,7 +445,7 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="deaId"></param>
         /// <returns></returns>
-        public string ValidateDea(string deaId)
+        protected string ValidateDea(string deaId)
         {
             if (string.IsNullOrEmpty(deaId))
             {
@@ -457,7 +496,7 @@ namespace MotCommonLib
         /// Makes sure all required fields have appropriate content
         /// </summary>
         /// <param name="fieldSet"></param>
-        public void CheckDependencies(List<Field> fieldSet)
+        private void CheckDependencies(List<Field> fieldSet)
         {
             //
             // Legacy MOT Gateway rules (Required Column)
@@ -520,7 +559,7 @@ namespace MotCommonLib
         /// Clears out all the tag data in the set
         /// </summary>
         /// <param name="FieldSet"></param>
-        public void Clear(List<Field> FieldSet)
+        protected void Clear(List<Field> FieldSet)
         {
             string Type = FieldSet[0].tagData;
             string Action = FieldSet[1].tagData;
@@ -535,54 +574,6 @@ namespace MotCommonLib
 
             IsEmpty = true;
         }
-
-        /// <summary>
-        /// <c>SetField</c>
-        /// Sets the value associated with a specific tag in the collection
-        /// </summary>
-        /// <param name="fieldSet"></param>
-        /// <param name="val"></param>
-        /// <param name="tag"></param>
-        /// <returns></returns>
-        /// 
-        /*
-        protected bool SetField(List<Field> FieldSet, string Val, string Tag)
-        {
-            string LogData = string.Empty;
-
-            if (FieldSet == null || Tag == null)
-            {
-                return false;
-            }
-
-            var f = FieldSet?.Find(x => x.tagName.ToLower().Contains((Tag.ToLower())));
-
-            if (f == null)
-            {
-                FieldSet.Add(new Field(Tag, Val, -1, false, 'n', false, true));
-                return false;   // Field doesn't exist
-            }
-
-            if (Tag != null && Tag.Length > f.maxLen)
-            {
-                if (!AutoTruncate)
-                {
-                    LogData = string.Format("Field Overflow at: <{0}>, Data: {1} Maxlen = {2} but got: {3}", Tag, Tag, f.maxLen, Tag.Length);
-                    EventLogger.Error(LogData);
-                    throw new Exception(LogData);
-                }
-
-                LogData = string.Format("Autotruncated Overflowed Field at: <{0}>, Data: {1} Maxlen = {2} but got: {3}", Tag, Tag, f.maxLen, Tag.Length);
-                EventLogger.Warn(LogData);
-
-                Tag = Tag?.Substring(0, f.maxLen);
-            }
-
-            f.tagData = string.IsNullOrEmpty(Tag) ? string.Empty : Tag;
-
-            return true;
-        }
-        */
 
         /// <summary>
         /// <c>SetField</c>

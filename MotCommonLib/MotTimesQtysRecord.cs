@@ -26,14 +26,16 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace MotCommonLib
 {
     /// <summary>
     /// TimeQtys Record  (Key == F)
     /// </summary>
-    [XmlRoot("MotTimeQtysRecord")]
-    public class MotTimeQtysRecord : MotRecordBase
+    [Serializable]
+    [XmlRoot("MotTimesQtysRecord")]
+    public class MotTimesQtysRecord : MotRecordBase
     {
         /// <summary>
         /// <c>FieldList</c>
@@ -61,7 +63,7 @@ namespace MotCommonLib
         /// <c>motTimeQtysRecord</c>
         /// Constructor
         /// </summary>
-        public MotTimeQtysRecord()
+        public MotTimesQtysRecord()
         {
         }
 
@@ -69,7 +71,7 @@ namespace MotCommonLib
         /// <c>motTimeQtysRecord</c>
         /// Constructor with a specific action (Add, Change, Delete) and sets the auto truncate option
         /// </summary>
-        public MotTimeQtysRecord(string action, bool autoTruncate = false)
+        public MotTimesQtysRecord(string action, bool autoTruncate = false)
         {
             if (action == null)
             {
@@ -178,29 +180,14 @@ namespace MotCommonLib
             Clear(_fieldList);
         }
 
-        /// <summary>
-        /// <c>LocationID</c>
-        /// The ID of the facility that uses the new dose schedule
-        /// </summary>
-        [XmlElement("FacilityId")]
-        public string FacilityId
-        {
-            get
-            {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_locid")));
-                return f?.tagData;
-            }
-
-            set => SetField(_fieldList, value ?? "0", "RxSys_LocID");
-        }
 
         /// <summary>
         /// <c>LocationID</c>
         /// The ID of the facility that uses the new dose schedule
         /// </summary>
-        [Obsolete("Use FacilityID")]
-        [XmlElement("RxSys_LocID")]
-        public string RxSys_LocID
+        [JsonProperty("LocationID")]
+        [XmlElement("LocationID")]
+        public string LocationID
         {
             get
             {
@@ -215,6 +202,7 @@ namespace MotCommonLib
         /// <c>DoseScheduleName</c>
         /// The name of the new dose schedule
         /// </summary>
+        [JsonProperty("DoseScheduleName")]
         [XmlElement("DoseScheduleName")]
         public string DoseScheduleName
         {
@@ -235,6 +223,7 @@ namespace MotCommonLib
         /// Monthly:  As above but with 31 cells
         /// Daily:    hh:mmnn.nn repeated for each dose in a day
         /// </summary>
+        [JsonProperty("DoseTimesQtys")]
         [XmlElement("DoseTimesQtys")]
         public string DoseTimesQtys
         {

@@ -257,7 +257,7 @@ namespace MotParserLib
                                 if (doseTimes.Count > 1)
                                 {
                                     // Build and write TQ Record
-                                    var tq = new MotTimeQtysRecord("Add", AutoTruncate)
+                                    var tq = new MotTimesQtysRecord("Add", AutoTruncate)
                                     {
                                         // New name
                                         DoseScheduleName = facility.LocationName?.Substring(0, 3) + nameVersion
@@ -266,7 +266,7 @@ namespace MotParserLib
                                     nameVersion++;
 
                                     // Fill the record
-                                    tq.FacilityId = patient.LocationID;
+                                    tq.LocationID = patient.LocationID;
                                     tq.DoseTimesQtys = scrip.DoseTimesQtys;
 
                                     // Assign the DoseSchcedulw name to the scrip & clear the scrip DoseTimeSchedule
@@ -303,13 +303,13 @@ namespace MotParserLib
                                 patient.LocationID = rawRecord[2]?.Trim()?.Substring(0, 4);
                             }
 
-                            patient.ID = rawRecord[1];
+                            patient.PatientID = rawRecord[1];
                             patient.Room = rawRecord[4];
                             patient.Address1 = "";
                             patient.Address2 = "";
                             patient.City = "";
                             patient.State = "NH";
-                            patient.Zip = "";
+                            patient.Zipcode = "";
                             patient.Status = 1;
 
                             facility.LocationName = rawRecord[2];
@@ -317,15 +317,15 @@ namespace MotParserLib
                             facility.Address2 = "";
                             facility.City = "";
                             facility.State = "NH";
-                            facility.Zip = "";
+                            facility.Zipcode = "";
 
                             if (rawRecord[2].Length >= 4)
                             {
-                                facility.RxSys_LocID = rawRecord[2]?.Trim()?.Substring(0, 4);
+                                facility.LocationID = rawRecord[2]?.Trim()?.Substring(0, 4);
                             }
 
                             drug.NDCNum = rawRecord[7];
-                            drug.RxSys_DrugID = rawRecord[7];
+                            drug.DrugID = rawRecord[7];
 
                             if (drug.NDCNum == "0")
                             {
@@ -375,7 +375,7 @@ namespace MotParserLib
                                 drug.TradeName = drug.DrugName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
                                 drug.ShortName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit}";
                                 drug.Unit = DrugName.Unit;
-                                drug.Strength = DrugName.Strength;
+                                drug.Strength = Convert.ToDouble(DrugName.Strength ?? "0.00");
                                 drug.DoseForm = DrugName.Form;
 
                                 tempTradeName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
@@ -386,7 +386,7 @@ namespace MotParserLib
                                 drug.TradeName = drug.DrugName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
                                 drug.ShortName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit}";
                                 drug.Unit = DrugName.Unit;
-                                drug.Strength = DrugName.Strength;
+                                drug.Strength = Convert.ToDouble(DrugName.Strength ?? "0.00");
                                 drug.DoseForm = DrugName.Form;
                                 drug.GenericFor = tempTradeName;
                             }
@@ -403,7 +403,7 @@ namespace MotParserLib
                             practitioner.Address2 = "";
                             practitioner.City = "";
                             practitioner.State = "NH";
-                            practitioner.Zip = "";
+                            practitioner.Zipcode = "";
 
                             try
                             {
@@ -412,7 +412,7 @@ namespace MotParserLib
                                     case 2:
                                         if (practitionerName[0].Length >= 3 && practitionerName[1].Length >= 3)
                                         {
-                                            practitioner.ID = practitionerName[0]?.Trim()?.Substring(0, 3) + practitionerName[1]?.Trim()?.Substring(0, 3);
+                                            practitioner.PrescriberID = practitionerName[0]?.Trim()?.Substring(0, 3) + practitionerName[1]?.Trim()?.Substring(0, 3);
                                         }
                                         practitioner.FirstName = (practitionerName[0] ?? "Warning[DFN]").Trim();
                                         practitioner.LastName = (practitionerName[1] ?? "Warning[DLN]").Trim();
@@ -421,7 +421,7 @@ namespace MotParserLib
                                     case 3:
                                         if (practitionerName[1].Length >= 3 && practitionerName[2].Length >= 3)
                                         {
-                                            practitioner.ID = practitionerName[0]?.Trim()?.Substring(0, 3) + practitionerName[2]?.Trim()?.Substring(0, 3);
+                                            practitioner.PrescriberID = practitionerName[0]?.Trim()?.Substring(0, 3) + practitionerName[2]?.Trim()?.Substring(0, 3);
                                         }
                                         practitioner.FirstName = practitionerName[0]?.Trim();
                                         practitioner.MiddleInitial = practitionerName[1].Trim();
@@ -429,29 +429,29 @@ namespace MotParserLib
                                         break;
 
                                     default:
-                                        practitioner.ID = new Random(40000).ToString();
+                                        practitioner.PrescriberID = new Random(40000).ToString();
                                         break;
                                 }
                             }
                             catch
                             {
-                                practitioner.ID = new Random(60000).ToString();
+                                practitioner.PrescriberID = new Random(60000).ToString();
                             }
 
-                            patient.PrescriberID = practitioner.ID;
+                            patient.PrimaryPrescriberID = practitioner.PrescriberID;
 
-                            scrip.RxSys_RxNum = rawRecord[15];
-                            scrip.RxSys_PatID = patient.ID;
-                            scrip.RxSys_DocID = patient.PrescriberID;
-                            scrip.Status = "1";
+                            scrip.PrescriptionID = rawRecord[15];
+                            scrip.PatientID = patient.PatientID;
+                            scrip.PrescriberID = patient.PrimaryPrescriberID;
+                            scrip.Status = 1;
 
                             if (string.IsNullOrEmpty(rawRecord[10]))  // It's a PRN
                             {
-                                scrip.RxStartDate = $"{DateTime.Now:yyyyMMdd}";
+                                scrip.RxStartDate = DateTime.Now;
                             }
                             else
                             {
-                                scrip.RxStartDate = rawRecord[10];
+                                scrip.RxStartDate = DateTime.Parse(rawRecord[10] ?? "1970-01-01");
                             }
 
                             if (rawRecord[11] != null && rawRecord[12] != null)
@@ -459,13 +459,13 @@ namespace MotParserLib
                                 scrip.DoseTimesQtys = $"{Convert.ToInt32(rawRecord[11]):0000}{Convert.ToDouble(rawRecord[12]):00.00}";
                             }
 
-                            scrip.QtyPerDose = rawRecord[12];
-                            scrip.QtyDispensed = rawRecord[24];
+                            scrip.QtyPerDose = Convert.ToDouble(rawRecord[12] ?? "0.00");
+                            scrip.QtyDispensed = Convert.ToDouble(rawRecord[24] ?? "0.00");
                             scrip.Sig = $"{rawRecord[18]}\n{rawRecord[19]}\n{rawRecord[20]}";
                             scrip.Comments = $"{rawRecord[16]}\n{rawRecord[17]}";
-                            scrip.Refills = rawRecord[23];
-                            scrip.RxSys_DrugID = drug.NDCNum;
-                            scrip.RxType = rawRecord[22].Trim().ToUpper() == "P" ? "2" : "1";
+                            scrip.Refills = Convert.ToInt32(rawRecord[23] ?? "0");
+                            scrip.DrugID = drug.NDCNum;
+                            scrip.RxType = rawRecord[22].Trim().ToUpper() == "P" ? 2 : 1;
 
                             lastDoseTime = rawRecord[11];
                             lastDoseQty = rawRecord[12];

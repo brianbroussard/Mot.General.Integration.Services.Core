@@ -26,13 +26,15 @@ using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 namespace MotCommonLib
 {
     /// <summary>
     /// Prescriber Record (Key == C)
     /// </summary>
-    [XmlRoot("motPrescriberRecord")]
+    [Serializable]
+    [XmlRoot("MotPrescriberRecord")]
     public class MotPrescriberRecord : MotRecordBase
     {
         private readonly List<Field> _fieldList;
@@ -113,6 +115,7 @@ namespace MotCommonLib
                 throw;
             }
         }
+
         /// <summary>
         /// AddToQueue
         /// </summary>
@@ -159,6 +162,7 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
         /// <summary>
         /// Write 
         /// </summary>
@@ -185,6 +189,7 @@ namespace MotCommonLib
                 throw new Exception(errorString);
             }
         }
+
         /// <summary>
         /// Clear
         /// </summary>
@@ -193,24 +198,12 @@ namespace MotCommonLib
             Clear(_fieldList);
         }
 
-        /// <summary>
-        /// ID
-        /// </summary>
-        [XmlElement("ID")]
-        public string ID
-        {
-            get
-            {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_docid")));
-                return f?.tagData;
-            }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
-        }
         /// <summary>
-        /// Obsolete RxSys_DocID
+        /// RxSys_DocID
         /// </summary>
-        [Obsolete("Use ID")]
+        [JsonProperty("RxSys_DocID")]
+        [XmlElement("RxSys_DocID")]
         public string RxSys_DocID
         {
             get
@@ -221,9 +214,22 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
         }
+
+        /// <summary>
+        /// PrescriberID
+        /// </summary>
+        [JsonProperty("PrescriberID")]
+        [XmlElement("PrescriberID")]
+        public string PrescriberID
+        {
+            get { return RxSys_DocID; }
+            set => RxSys_DocID = value;
+        }
+
         /// <summary>
         /// LastName
         /// </summary>
+        [JsonProperty("LastName")]
         [XmlElement("LastName")]
         public string LastName
         {
@@ -235,9 +241,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "LastName");
         }
+
         /// <summary>
         /// FirstName
         /// </summary>
+        [JsonProperty("FirstName")]
         [XmlElement("FirstName")]
         public string FirstName
         {
@@ -249,9 +257,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "FirstName");
         }
+
         /// <summary>
         /// MiddleInitial
         /// </summary>
+        [JsonProperty("MiddleInitial")]
         [XmlElement("MiddleInitial")]
         public string MiddleInitial
         {
@@ -263,9 +273,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "MiddleInitial");
         }
+
         /// <summary>
         /// Address1
         /// </summary>
+        [JsonProperty("Address1")]
         [XmlElement("Address1")]
         public string Address1
         {
@@ -277,9 +289,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Address1");
         }
+
         /// <summary>
         /// Address2
         /// </summary>
+        [JsonProperty("Address2")]
         [XmlElement("Address2")]
         public string Address2
         {
@@ -291,9 +305,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Address2");
         }
+
         /// <summary>
         /// City
         /// </summary>
+        [JsonProperty("City")]
         [XmlElement("City")]
         public string City
         {
@@ -305,9 +321,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "City");
         }
+
         /// <summary>
         /// State
         /// </summary>
+        [JsonProperty("State")]
         [XmlElement("State")]
         public string State
         {
@@ -319,44 +337,13 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value?.ToUpper() ?? String.Empty, "State");
         }
-        /// <summary>
-        /// PostalCode
-        /// </summary>
-        [XmlElement("PostalCode")]
-        public string PostalCode
-        {
-            get
-            {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("zip")));
-                return f?.tagData;
-            }
-
-            set
-            {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    while ((bool)value?.Contains("-"))
-                    {
-                        if (value.Length > value.IndexOf("-"))
-                        {
-                            value = value.Remove(value.IndexOf("-"), 1);
-                        }
-                    }
-
-                    SetField(_fieldList, value, "Zip");
-                }
-                else
-                {
-                    SetField(_fieldList, string.Empty, "Zip");
-                }
-            }
-        }
 
         /// <summary>
         /// Zip
         /// </summary>
-        [XmlElement("Zip")]
-        public string Zip
+        [JsonProperty("Zipcode")]
+        [XmlElement("Zipcode")]
+        public string Zipcode
         {
             get
             {
@@ -384,9 +371,11 @@ namespace MotCommonLib
                 }
             }
         }
+
         /// <summary>
         /// Phone
         /// </summary>
+        [JsonProperty("Phone")]
         [XmlElement("Phone")]
         public string Phone
         {
@@ -398,9 +387,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, NormalizeString(value ?? string.Empty), "Phone");
         }
+
         /// <summary>
         /// Comments
         /// </summary>
+        [JsonProperty("Comments")]
         [XmlElement("Comments")]
         public string Comments
         {
@@ -412,9 +403,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? string.Empty, "Comments");
         }
+
         /// <summary>
         /// DEA_ID
         /// </summary>
+        [JsonProperty("DEA_ID")]
         [XmlElement("DEA_ID")]
         public string DEA_ID
         {
@@ -426,9 +419,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, ValidateDea(value ?? String.Empty), "DEA_ID");
         }
+
         /// <summary>
         /// TPID
         /// </summary>
+        [JsonProperty("TPID")]
         [XmlElement("TPID")]
         public string TPID
         {
@@ -440,27 +435,30 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? String.Empty, "TPID");
         }
+
         /// <summary>
         /// Specialty
         /// </summary>
+        [JsonProperty("Speciality")]
         [XmlElement("Speciality")]
-        public int Specialty
+        public string Specialty
         {
             get
             {
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("speciality")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
+                return !string.IsNullOrEmpty(f.tagData) ? f.tagData : "None";
             }
 
             set
             {
-                SetField(_fieldList, Convert.ToString(value), "Specialty");
+                SetField(_fieldList, value, "Specialty");
             }
         }
 
         /// <summary>
         /// Fax
         /// </summary>
+        [JsonProperty("Fax")]
         [XmlElement("Fax")]
         public string Fax
         {
@@ -472,9 +470,11 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? String.Empty, "Fax");
         }
+
         /// <summary>
         /// PagerInfo
         /// </summary>
+        [JsonProperty("PagerInfo")]
         [XmlElement("PagerInfo")]
         public string PagerInfo
         {
@@ -486,9 +486,12 @@ namespace MotCommonLib
 
             set => SetField(_fieldList, value ?? String.Empty, "PagerInfo");
         }
+
         /// <summary>
-        /// 
-        /// </sumEmailmary>
+        /// Email
+        /// </summary>
+        [JsonProperty("Email")]
+        [XmlElement("Email")]
         public string Email
         {
             set
@@ -497,9 +500,12 @@ namespace MotCommonLib
                 f.tagData += "\nEmail: " + value;
             }
         }
+
         /// <summary>
         /// IM
         /// </summary>
+        [JsonProperty("IM")]
+        [XmlElement("IM")]
         public string IM
         {
             set

@@ -102,7 +102,7 @@ namespace MotHL7Lib
                     month[0] += month[i++];
                 }
 
-                RecBundle.Scrip.RxType = "18";
+                RecBundle.Scrip.RxType = 18;
                 RecBundle.Scrip.MDOMStart = Data.Substring(1, 1);  // Extract the number 
                 RecBundle.Scrip.DoseScheduleName = tq1.Get("TQ1.3.1");  // => This is the key part.  The DosScheduleName has to exist on MOTALL 
                 RecBundle.Scrip.SpecialDoses = month[0];
