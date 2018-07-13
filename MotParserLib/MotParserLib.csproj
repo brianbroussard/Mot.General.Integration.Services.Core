@@ -11,6 +11,9 @@
     <Summary>Objects to support Pharmacy Management System Interface Development</Summary>
     <Title>Medicine-On-Time Gateway Interface Tooling</Title>
     <Description>Libraries to support interfacing Pharmacy Management Systems etceterra with Medicine-On-Time's Legacy (MOTALL.EXE) and motNext's Legacy Doppleganger gateways.</Description>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIconUrl>https://avatars0.githubusercontent.com/u/14909537?s=400&amp;u=c9732fc98f659e0affe84e56750404f2dea85bfa&amp;v=4</PackageIconUrl>
+    <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
