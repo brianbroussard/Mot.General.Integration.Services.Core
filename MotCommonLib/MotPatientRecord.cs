@@ -785,10 +785,13 @@ namespace MotCommonLib
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dob")));
                 return TransformDate(f?.tagData);
             }
-
+            
             set
             {
-                SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "DOB");
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01")
+                {
+                    SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "DOB");
+                }
             }
         }
 

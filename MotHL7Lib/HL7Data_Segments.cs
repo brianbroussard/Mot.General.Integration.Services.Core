@@ -1141,7 +1141,7 @@ namespace MotHL7Lib
     public class ACK : HL7Return
     {
         public string AckString { get; set; } = string.Empty;
-        public string __clean_ack_string { get; set; } = string.Empty;
+        public string CleanAckString { get; set; } = string.Empty;
         // XDocument xmlDoc;
 
         public void Build(MSH __msh, string __org, string __proc)
@@ -1156,58 +1156,58 @@ namespace MotHL7Lib
                 __proc = "Unknown";
             }
 
-            MSH __tmp_msh = __msh;
+            MSH tmpMsh = __msh;
 
             string __time_stamp = DateTime.Now.ToString("yyyyMMddhh");
 
-            __tmp_msh.MessageData["MSH.5"] = __tmp_msh.MessageData["MSH.3"];
-            __tmp_msh.MessageData["MSH.6"] = __tmp_msh.MessageData["MSH.4"];
+            tmpMsh.MessageData["MSH.5"] = tmpMsh.MessageData["MSH.3"];
+            tmpMsh.MessageData["MSH.6"] = tmpMsh.MessageData["MSH.4"];
 
-            __tmp_msh.MessageData["MSH.3"] = __proc;
-            __tmp_msh.MessageData["MSH.4"] = __org;
+            tmpMsh.MessageData["MSH.3"] = __proc;
+            tmpMsh.MessageData["MSH.4"] = __org;
 
             AckString = '\x0B' +
                            @"MSH|^~\&|" +
-                           __tmp_msh.MessageData["MSH.3"] + "|" +
-                           __tmp_msh.MessageData["MSH.4"] + "|" +
-                           __tmp_msh.MessageData["MSH.5"] + "|" +
-                           __tmp_msh.MessageData["MSH.6"] + "|" +
+                           tmpMsh.MessageData["MSH.3"] + "|" +
+                           tmpMsh.MessageData["MSH.4"] + "|" +
+                           tmpMsh.MessageData["MSH.5"] + "|" +
+                           tmpMsh.MessageData["MSH.6"] + "|" +
                            __time_stamp + "||ACK^" +
-                           __tmp_msh.MessageData["MSH.9.2"] + "|" +
-                           __tmp_msh.MessageData["MSH.10"] + "|" +
-                           __tmp_msh.MessageData["MSH.11"] + "|" +
-                           __tmp_msh.MessageData["MSH.12"] + "|" +
+                           tmpMsh.MessageData["MSH.9.2"] + "|" +
+                           tmpMsh.MessageData["MSH.10"] + "|" +
+                           tmpMsh.MessageData["MSH.11"] + "|" +
+                           tmpMsh.MessageData["MSH.12"] + "|" +
                            "\r" +
                            @"MSA|AA|" +
-                           __tmp_msh.MessageData["MSH.10"] + "|" +
+                           tmpMsh.MessageData["MSH.10"] + "|" +
                            '\x1C' +
                            '\x0D';
 
-            __clean_ack_string = @"MSH | ^~\& | " +
-                           __tmp_msh.MessageData["MSH.3"] + " | " +
-                           __tmp_msh.MessageData["MSH.4"] + " | " +
-                           __tmp_msh.MessageData["MSH.5"] + " | " +
-                           __tmp_msh.MessageData["MSH.6"] + " | " +
+            CleanAckString = @"MSH | ^~\& | " +
+                           tmpMsh.MessageData["MSH.3"] + " | " +
+                           tmpMsh.MessageData["MSH.4"] + " | " +
+                           tmpMsh.MessageData["MSH.5"] + " | " +
+                           tmpMsh.MessageData["MSH.6"] + " | " +
                            __time_stamp + "|| ACK^" +
-                           __tmp_msh.MessageData["MSH.9.2"] + " | " +
-                           __tmp_msh.MessageData["MSH.10"] + " | " +
-                           __tmp_msh.MessageData["MSH.11"] + " | " +
-                           __tmp_msh.MessageData["MSH.12"] + " | " +
+                           tmpMsh.MessageData["MSH.9.2"] + " | " +
+                           tmpMsh.MessageData["MSH.10"] + " | " +
+                           tmpMsh.MessageData["MSH.11"] + " | " +
+                           tmpMsh.MessageData["MSH.12"] + " | " +
                            "\n\tMSA | AA | " +
-                           __tmp_msh.MessageData["MSH.10"] + "|\n";
+                           tmpMsh.MessageData["MSH.10"] + "|\n";
         }
 
-        public ACK(MSH __msh)
+        public ACK(MSH msh)
         {
-            Build(__msh, "Medicine-On-Time HL7 Interface", "Medicine-On-Time");
+            Build(msh, "Medicine-On-Time HL7 Interface", "Medicine-On-Time");
         }
-        public ACK(MSH __msh, string __org)
+        public ACK(MSH msh, string org)
         {
-            Build(__msh, __org, "Medicine-On-Time HL7 Interface");
+            Build(msh, org, "Medicine-On-Time HL7 Interface");
         }
-        public ACK(MSH __msh, string __org, string __proc)
+        public ACK(MSH msh, string org, string proc)
         {
-            Build(__msh, __org, __proc);
+            Build(msh, org, proc);
         }
     }
     public class NAK : HL7Return
@@ -1215,84 +1215,87 @@ namespace MotHL7Lib
         public string NakString { get; set; } = string.Empty;
         public string CleanNakString { get; set; } = string.Empty;
 
-        public void Build(MSH __msh, string __error_code, string __org, string __proc, string __error_msg = null)
+        public void Build(MSH msh, string errorCode, string org, string proc, string errorMsg = null)
         {
-            if (string.IsNullOrEmpty(__org))
+            if (msh == null) throw new ArgumentNullException(nameof(msh));
+            
+
+            if (string.IsNullOrEmpty(org))
             {
-                __org = "Unknown";
+                org = "Unknown";
             }
 
-            if (string.IsNullOrEmpty(__proc))
+            if (string.IsNullOrEmpty(proc))
             {
-                __proc = "Unknown";
+                proc = "Unknown";
             }
 
-            if (string.IsNullOrEmpty(__error_code))
+            if (string.IsNullOrEmpty(errorCode))
             {
-                __error_code = "AF";
+                errorCode = "AF";
             }
 
-            MSH __tmp_msh = __msh;
-            var __time_stamp = DateTime.Now.ToString("yyyyMMddhh");
-            var __error_string = !string.IsNullOrEmpty(__error_msg) ? __error_msg : __tmp_msh.MessageData["MSH.10"];
+            MSH tmpMsh = msh;
+            var timeStamp = DateTime.Now.ToString("yyyyMMddhh");
+            var errorString = !string.IsNullOrEmpty(errorMsg) ? errorMsg : tmpMsh.MessageData["MSH.10"];
 
-            __tmp_msh.MessageData["MSH.5"] = __tmp_msh.MessageData["MSH.3"];
-            __tmp_msh.MessageData["MSH.6"] = __tmp_msh.MessageData["MSH.4"];
-            __tmp_msh.MessageData["MSH.3"] = __proc;
-            __tmp_msh.MessageData["MSH.4"] = __org;
+            tmpMsh.MessageData["MSH.5"] = tmpMsh.MessageData["MSH.3"];
+            tmpMsh.MessageData["MSH.6"] = tmpMsh.MessageData["MSH.4"];
+            tmpMsh.MessageData["MSH.3"] = proc;
+            tmpMsh.MessageData["MSH.4"] = org;
 
             NakString = '\x0B' +
                            @"MSH|^~\&|" +
-                           __tmp_msh.MessageData["MSH.3"] + "|" +
-                           __tmp_msh.MessageData["MSH.4"] + "|" +
-                           __tmp_msh.MessageData["MSH.5"] + "|" +
-                           __tmp_msh.MessageData["MSH.6"] + "|" +
-                           __time_stamp + "||NAK^" +
-                           __tmp_msh.MessageData["MSH.9.3"] + "|" +
-                           __tmp_msh.MessageData["MSH.10"] + "|" +
-                           __tmp_msh.MessageData["MSH.11"] + "|" +
-                           __tmp_msh.MessageData["MSH.12"] + "|" +
+                           tmpMsh.MessageData["MSH.3"] + "|" +
+                           tmpMsh.MessageData["MSH.4"] + "|" +
+                           tmpMsh.MessageData["MSH.5"] + "|" +
+                           tmpMsh.MessageData["MSH.6"] + "|" +
+                           timeStamp + "||NAK^" +
+                           tmpMsh.MessageData["MSH.9.3"] + "|" +
+                           tmpMsh.MessageData["MSH.10"] + "|" +
+                           tmpMsh.MessageData["MSH.11"] + "|" +
+                           tmpMsh.MessageData["MSH.12"] + "|" +
                            "\r" +
                            @"MSA|" +
-                           __error_code + "|" +                 // MSA.1
-                           __tmp_msh.MessageData["MSH.10"] + "|" +     // MSA.2
+                           errorCode + "|" +                 // MSA.1
+                           tmpMsh.MessageData["MSH.10"] + "|" +     // MSA.2
                            "PROC ERROR|" +                      // MSA.3
                            "0|" +                               // MSA.4
                            "0|" +                               // MSA.5
-                           __error_string +                     // MSA.6
+                           errorString +                     // MSA.6
                            '\x1C' +
                            '\x0D';
 
             CleanNakString = @"MSH | ^~\& |" +
-                           __tmp_msh.MessageData["MSH.3"] + " | " +
-                           __tmp_msh.MessageData["MSH.4"] + " | " +
-                           __tmp_msh.MessageData["MSH.5"] + " | " +
-                           __tmp_msh.MessageData["MSH.6"] + " | " +
-                           __time_stamp + "| | NAK^" +
-                           __tmp_msh.MessageData["MSH.9.3"] + " | " +
-                           __tmp_msh.MessageData["MSH.10"] + " | " +
-                           __tmp_msh.MessageData["MSH.11"] + " | " +
-                           __tmp_msh.MessageData["MSH.12"] + " | " +
+                           tmpMsh.MessageData["MSH.3"] + " | " +
+                           tmpMsh.MessageData["MSH.4"] + " | " +
+                           tmpMsh.MessageData["MSH.5"] + " | " +
+                           tmpMsh.MessageData["MSH.6"] + " | " +
+                           timeStamp + "| | NAK^" +
+                           tmpMsh.MessageData["MSH.9.3"] + " | " +
+                           tmpMsh.MessageData["MSH.10"] + " | " +
+                           tmpMsh.MessageData["MSH.11"] + " | " +
+                           tmpMsh.MessageData["MSH.12"] + " | " +
                            "\n\tMSA | " +
-                           __error_code + "|" +
-                           __tmp_msh.MessageData["MSH.10"] + "|" +
+                           errorCode + "|" +
+                           tmpMsh.MessageData["MSH.10"] + "|" +
                            "PROC ERROR|" +
                            "0|" +
                            "0|" +
-                           __error_string + "\n";
+                           errorString + "\n";
         }
 
-        public NAK(MSH __msh, string __error_code)
+        public NAK(MSH msh, string errorCode)
         {
-            Build(__msh, __error_code, "Medicine-On-Time", "Medicine-On-Time HL7 Interface");
+            Build(msh, errorCode, "Medicine-On-Time", "Medicine-On-Time HL7 Interface");
         }
-        public NAK(MSH __msh, string __error_code, string __org)
+        public NAK(MSH msh, string errorCode, string org)
         {
-            Build(__msh, __error_code, __org, "Medicine-On-Time HL7 Interface");
+            Build(msh, errorCode, org, "Medicine-On-Time HL7 Interface");
         }
-        public NAK(MSH __msh, string __error_code, string __org, string __proc, string __error_msg = null)
+        public NAK(MSH msh, string errorCode, string org, string proc, string errorMsg = null)
         {
-            Build(__msh, __error_code, __org, __proc, __error_msg);
+            Build(msh, errorCode, org, proc, errorMsg);
         }
     }
 };

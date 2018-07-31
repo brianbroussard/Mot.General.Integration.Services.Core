@@ -451,7 +451,7 @@ namespace MotParserLib
                             }
                             else
                             {
-                                scrip.RxStartDate = scrip.TransformDate(rawRecord[10] ?? "1970-01-01");
+                                scrip.RxStartDate = scrip.TransformDate(rawRecord[10] ?? "");
                             }
 
                             if (rawRecord[11] != null && rawRecord[12] != null)

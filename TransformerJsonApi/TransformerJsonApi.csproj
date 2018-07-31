@@ -1,17 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <AssemblyVersion>1.0.1.1</AssemblyVersion>
-    <FileVersion>1.0.1.1</FileVersion>
   </PropertyGroup>
+
   <ItemGroup>
     <Folder Include="wwwroot\" />
-    <Folder Include="Models\" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Remove="Controllers\ValuesController.cs" />
+    <PackageReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\MotParserLib\MotParserLib.csproj" />
   </ItemGroup>
+
 </Project>

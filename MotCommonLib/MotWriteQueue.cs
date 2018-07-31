@@ -55,8 +55,6 @@ namespace MotCommonLib
         }
         public void Write(MotSocket socket)
         {
-            string bigBuf = string.Empty;
-
             if (socket == null)
             {
                 throw new ArgumentNullException($"motQueue Null Socket Argument");
@@ -85,8 +83,6 @@ namespace MotCommonLib
         }
         public void Write(NetworkStream stream)
         {
-            string bigBuf = string.Empty;
-
             if (stream == null)
             {
                 throw new ArgumentNullException($"motQueue Null Socket Argument");
@@ -94,7 +90,7 @@ namespace MotCommonLib
 
             try
             {
-                var buf = new Byte[1024];
+                var buf = new byte[1024];
                 var bytesRead = 0;
 
                 // Push it to the port

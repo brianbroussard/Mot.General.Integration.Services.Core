@@ -419,6 +419,11 @@ namespace MotCommonLib
         {
             DateTime dateOut;
 
+            if (date == null)
+            {
+                return DateTime.Parse("1970-01-01");
+            }
+
             try
             {
                 DateTime.TryParseExact(date, datePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateOut);                                                   

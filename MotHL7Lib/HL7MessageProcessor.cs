@@ -898,8 +898,8 @@ namespace MotHL7Lib
                 recBundle.Scrip.PrescriptionID = orc.Get("ORC.2.1");
             }
 
-            recBundle.Scrip.RxStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.19") ?? "1970-01-01");
-            recBundle.Scrip.RxStopDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.20") ?? "1970-01-01");
+            recBundle.Scrip.RxStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.19") ?? "");
+            recBundle.Scrip.RxStopDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.20") ?? "");
 
             recBundle.Location.LocationName = orc.Get("ORC.21.1");
             recBundle.Location.Address1 = orc.Get("ORC.22.1");
@@ -1477,8 +1477,8 @@ namespace MotHL7Lib
             recBundle.Scrip.RxType = 0; // Default Type
             recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : "CUSTOM";
 
-            var tqStartDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.7") ?? "1970-01-01");
-            var tqStopDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.8") ?? "1970-01-01");
+            var tqStartDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.7"));
+            var tqStopDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.8"));
 
 
             if (tqStartDate.ToString("yyyy-MM-dd") != "1970-01-01")
@@ -1486,8 +1486,10 @@ namespace MotHL7Lib
                 recBundle.Scrip.RxStartDate = tqStartDate;
             }
 
-
-            recBundle.Scrip.RxStopDate = tqStopDate;
+            if (tqStopDate.ToString("yyyy-MM-dd") != "1970-01-01")
+            {
+                recBundle.Scrip.RxStopDate = tqStopDate;
+            }
 
 
             var tq111 = tq1.Get("TQ1.11");
@@ -1627,15 +1629,8 @@ namespace MotHL7Lib
 
             if (DebugMode)
             {
-                string[] __lines = st.Split('\n');
-
-                foreach (var l in __lines)
-                {
-                    if (l.Contains(" in "))
-                    {
-                        trace += (l.Substring(l.IndexOf("in", StringComparison.Ordinal)) + "\n");
-                    }
-                }
+                var lines = st.Split('\n');
+                trace = lines.Where(l => l.Contains(" in ")).Aggregate(trace, (current, l) => current + (l.Substring(l.IndexOf("in", StringComparison.Ordinal)) + "\n"));
             }
 
             return trace;

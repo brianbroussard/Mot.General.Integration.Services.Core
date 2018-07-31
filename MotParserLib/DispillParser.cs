@@ -199,8 +199,8 @@ namespace MotParserLib
                                 Room = f2[14]
                             };
 
-                            patient.CycleDate = patient.TransformDate(f2[11] ?? "1970-01-01");
-                            patient.DOB = patient.TransformDate(f2[4] ?? "1970-01-01");
+                            patient.CycleDate = patient.TransformDate(f2[11] ?? "");
+                            patient.DOB = patient.TransformDate(f2[4] ?? "");
 
                             patient.AddToQueue();
                             break;
@@ -255,7 +255,7 @@ namespace MotParserLib
                             rx.Sig = f3[5];
                             rx.QtyDispensed = Convert.ToDouble(f3[4] ?? "0.00");
                             rx.Refills = Convert.ToInt32(f3[9] ?? "0");
-                            rx.RxStopDate = rx.TransformDate(f3[14] ?? "1970-01-01"); // Actually the Expire Date
+                            rx.RxStopDate = rx.TransformDate(f3[14] ?? ""); // Actually the Expire Date
 
                             // Intake Code - 00,00,00,00 = 0800[q], 1200[q], 1800[q], 2100[q]
                             var dq = f3[7].Split(';');
