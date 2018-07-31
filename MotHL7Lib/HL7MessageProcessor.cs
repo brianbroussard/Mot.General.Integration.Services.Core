@@ -224,7 +224,7 @@ namespace MotHL7Lib
                 dataInputType = DataInputType.File;
             }
 
-            return data.Split(new char[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            return data.Split(new[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
         }
         /// <summary>
         /// <c>ValidateData</c>
@@ -273,7 +273,7 @@ namespace MotHL7Lib
                 return sender;
             }
 
-            throw new Exception($"Malformed MSH-3 - Unknown Sender");
+            throw new Exception("Malformed MSH-3 - Unknown Sender");
         }
         private void PrepForProcessing()
         {
@@ -317,7 +317,7 @@ namespace MotHL7Lib
             {
                 _msh = new MSH($@"MSH |^ ~\&|{Organization}|{Processor}|{ex.Message}|BAD MESSAGE|{DateTime.Now:yyyyMMddhhmm}|637300|UNKNOWN|2|T|276||||||UNICODE UTF-8|||||");
 
-                ResponseMessage = new NAK(_msh, $"AR", Organization, Processor).NakString;
+                ResponseMessage = new NAK(_msh, "AR", Organization, Processor).NakString;
                 EventLogger.Error($"HL7 NAK: {ResponseMessage} Malormed Message: {data}");
 
                 // Update any subscribers and sending systems
@@ -359,6 +359,7 @@ namespace MotHL7Lib
                     break;
             }
         }
+        
         public void Go(string inputStream = null)
         {
             if (inputStream != null)
@@ -402,37 +403,17 @@ namespace MotHL7Lib
 
                     case "ADT_A01":
                     case "ADT_AO1":
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = data;
-                        Process_ADT_A01_Event(this, Hl7Event7MessageArgs);
-                        break;
-
                     case "ADT_A03":
                     case "ADT_AO3":
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = data;
-                        Process_ADT_A03_Event(this, Hl7Event7MessageArgs);
-                        break;
-
                     case "ADT_A06":
                     case "ADT_AO6":
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = data;
-                        Process_ADT_A01_Event(this, Hl7Event7MessageArgs);
-                        break;
-
                     case "ADT_A08":
                     case "ADT_AO8":
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = data;
-                        Process_ADT_A01_Event(this, Hl7Event7MessageArgs);
-                        break;
-
                     case "ADT_A12":
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
                         Hl7Event7MessageArgs.Data = data;
-                        Process_ADT_A12_Event(this, Hl7Event7MessageArgs);
-                        break;
+                        ProcessADTEvent(this, Hl7Event7MessageArgs);
+                        break;                                        
 
                     default:
                         EventLogger.Error("Missing or Unhandled Message Type {0}", _msh.Get("MSH.9.3"));
@@ -503,7 +484,7 @@ namespace MotHL7Lib
                 // Each digit that follows J is an adjusted offset into the array
                 var numberPattern = pattern.Substring(pattern.IndexOf("J", StringComparison.Ordinal) + 1);
 
-                var dayArray = new int[,]
+                var dayArray = new[,]
                 { // Dose Day
                   // S M T W T F S
                     {1,2,3,4,5,6,7 }, // S - First Day of Week
@@ -628,7 +609,7 @@ namespace MotHL7Lib
 
                 foreach (var tq14 in tq14List)
                 {
-                    scrip.DoseTimesQtys += string.Format("{0}{1:00.00}", tq14, Convert.ToDouble(tq121)); // 080001.00120002.00180001.00200002.00
+                    scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}"; // 080001.00120002.00180001.00200002.00
                 }
 
                 EventLogger.Warn("Logging QLX record with new values: Special Doses {0}, DoseTimeQtys {1}", scrip.SpecialDoses, scrip.DoseTimesQtys);
@@ -719,8 +700,34 @@ namespace MotHL7Lib
             }
 
             ProblemLocus = "EVN";
+            var currentDate = recBundle.Patient.TransformDate(evn.Get("EVN.2"));
+            
+            switch(evn.Get("EVN.1"))
+            {
+                case "A01": // Admit/Visit  
+                    recBundle.Patient.AdmitDate = currentDate;
+                    recBundle.Patient.Status = 1;                  
+                    break;
+                    
+                case "A03": // Discharge
+                    recBundle.Patient.Comments = $"Discharge Date: {currentDate}";
+                    recBundle.Patient.Status = 0;
+                    break;
+                
+                case "A06":
+                    break;
+                
+                case "A08":
+                    break;
+                               
+                case "A12":
+                    break;      
+                
+                default:
+                    break;                                         
+            }
 
-            return evn.Get("EVN.1.1");
+            return EventCode;
         }
         private void ProcessIN1(RecordBundle recBundle, IN1 in1)
         {
@@ -858,7 +865,7 @@ namespace MotHL7Lib
                 char[] delim = { '|' };
                 var part = orc.Get("ORC.3").Split(delim);
 
-                if (part.Count() >= 3)
+                if (part.Length >= 3)
                 {
                     recBundle.Location.LocationID = part[0];
                     recBundle.Scrip.PrescriptionID = part[2];
@@ -962,7 +969,7 @@ namespace MotHL7Lib
                 if (!string.IsNullOrEmpty(tmp))
                 {
                     var part = tmp.Split(delim);
-                    if (part.Count() >= 2)
+                    if (part.Length >= 2)
                     {
                         recBundle.Patient.LocationID = part[0];
                         recBundle.Patient.PatientID = part[1];
@@ -1033,8 +1040,8 @@ namespace MotHL7Lib
                 {
                     Temp = Temp.Substring(0, 9);
                 }
-            }
-
+            }        
+            
             recBundle.Prescriber.PrescriberID = Temp;
             recBundle.Prescriber.LastName = pv1.Get("PV1.7.2");
             recBundle.Prescriber.FirstName = pv1.Get("PV1.7.3");
@@ -1532,9 +1539,9 @@ namespace MotHL7Lib
 
 
             // HL7 specific dose schedule pattern?
-            if (IsHL7DoseSchedule(doseScheduleName))
+            if (IsHL7DoseSchedule(recBundle.Scrip.DoseScheduleName))
             {
-                return ParsePatternedDoseSchedule(doseScheduleName, tq1RxType, tq1, recBundle.Scrip, tqStartDate, tqStopDate);
+                return ParsePatternedDoseSchedule(recBundle.Scrip.DoseScheduleName, tq1RxType, tq1, recBundle.Scrip, tqStartDate, tqStopDate);
             }
 
             // See if its a dose schedule we know about
@@ -1771,7 +1778,7 @@ namespace MotHL7Lib
 
         }
 
-        public void Process_ADT_A01_Event(Object sender, HL7Event7MessageArgs args)
+        public void ProcessADTEvent(Object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
             var tq = string.Empty;
@@ -1781,23 +1788,19 @@ namespace MotHL7Lib
             Hl7SendingApp = args.Hl7SendingApp;
             recBundle.SetDebug(DebugMode);
 
-            const string problemSegment = "ADT-A01";
-
             var hl7Xml = new XmlToHL7Parser();
             var xDoc = hl7Xml.Go(args.Data);
             var adt = new ADT_A01(xDoc);
 
             MessageType = "ADT";
-            EventCode = "A01";
-
+            EventCode = ProcessEVN(recBundle, adt.EVN);
+                    
             try
             {
                 using (var localTcpClient = new TcpClient(Socket.Address, Socket.Port))
                 {
                     using (var stream = localTcpClient.GetStream())
-                    {
-                        recBundle.Patient.Status = 1;  // ADT^A01 is a Patient Admission
-
+                    {                        
                         ProcessPID(recBundle, adt.PID);
                         ProcessPV1(recBundle, adt.PV1);
                         ProcessPV2(recBundle, adt.PV2);
@@ -1817,112 +1820,15 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
+                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
             }
             catch (Exception ex)
             {
-                EventLogger.Error("{0} Processing Failure: {1}", problemSegment, ex.StackTrace);
-                throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
+                EventLogger.Error("{0} Processing Failure: {1}", $"{MessageType}^{EventCode}", ex.StackTrace);
+                throw new HL7Exception(199, $"Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
-        public void Process_ADT_A03_Event(Object sender, HL7Event7MessageArgs Args)
-        {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var temp = string.Empty;
-            const string problemSegment = "ADT-A03";
-
-            recBundle.MessageType = "ADT";
-            Hl7SendingApp = Args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
-
-            var hl7Xml = new XmlToHL7Parser();
-            var xmlDoc = hl7Xml.Go(Args.Data);
-            var ADT = new ADT_A01(xmlDoc);
-
-            MessageType = "ADT";
-            EventCode = "A03";
-
-            try
-            {
-                using (var localTcpClient = new TcpClient(Socket.Address, Socket.Port))
-                {
-                    using (var stream = localTcpClient.GetStream())
-                    {
-                        recBundle.Patient.Status = 0;  // ADT^A03 is a Patient Discharge
-
-                        ProcessPID(recBundle, ADT.PID);
-                        ProcessPV1(recBundle, ADT.PV1);
-                        ProcessPV2(recBundle, ADT.PV2);
-                        ProcessPD1(recBundle, ADT.PD1);
-
-                        foreach (var obx in ADT.OBX) { ProcessOBX(recBundle, obx); }
-                        foreach (var al1 in ADT.AL1) { recBundle.Patient.Allergies += ProcessAL1(recBundle, al1); }
-                        foreach (var dg1 in ADT.DG1) { recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1); }
-
-                        recBundle.Write();
-                        recBundle.Commit(stream);
-
-                        ProcessRnaRenewOrder(stream, recBundle);
-                    }
-                }
-
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, Args.Data);
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error("{0} Processing Failure: {1}", problemSegment, ex.StackTrace);
-                throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
-            }
-        }
-        public void Process_ADT_A12_Event(Object sender, HL7Event7MessageArgs Args)
-        {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var temp = string.Empty;
-            const string problemSegment = "ADT-A12";
-
-            recBundle.MessageType = "ADT";
-            Hl7SendingApp = Args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
-
-            var hl7Xml = new XmlToHL7Parser();
-            var xmlDoc = hl7Xml.Go(Args.Data);
-            var ADT = new ADT_A01(xmlDoc);
-
-            MessageType = "ADT";
-            EventCode = "A12";
-
-            try
-            {
-                using (var localTcpClient = new TcpClient(Socket.Address, Socket.Port))
-                {
-                    using (var stream = localTcpClient.GetStream())
-                    {
-                        ProcessPID(recBundle, ADT.PID);
-                        ProcessPV1(recBundle, ADT.PV1);
-                        ProcessPV2(recBundle, ADT.PV2);
-                        ProcessPD1(recBundle, ADT.PD1);
-
-                        foreach (var obx in ADT.OBX) { ProcessOBX(recBundle, obx); }
-                        foreach (var al1 in ADT.AL1) { recBundle.Patient.Allergies += ProcessAL1(recBundle, al1); }
-                        foreach (var dg1 in ADT.DG1) { recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1); }
-
-                        recBundle.Write();
-                        recBundle.Commit(stream);
-
-                        ProcessRnaRenewOrder(stream, recBundle);
-                    }
-                }
-
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, Args.Data);
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error("{0} Processing Failure: {1}", problemSegment, ex.StackTrace);
-                throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
-            }
-        }
+        
         public void Process_OMP_O09_Event(Object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
