@@ -90,7 +90,7 @@ namespace MotHL7Lib
     }
     public class MotHl7MessageProcessor : HL7TransformerBase
     {
- #region variables
+        #region variables
         private HL7SendingApplication Hl7SendingApp { get; set; }
         private int FirstDoW { get; set; }
         private HL7SendingApplication RxHl7SendingApp { get; set; }
@@ -134,10 +134,10 @@ namespace MotHL7Lib
             {HL7SendingApplication.Unknown, "Unknown" }
         };
 
-#endregion
+        #endregion
 
 
- #region Messaging     
+        #region Messaging     
         public event MotHl7OutputChangeEventHandler OutputTextChanged;
         public event MotHl7ErrorEventHandler OutputErrorText;
         /// <summary>
@@ -359,7 +359,7 @@ namespace MotHL7Lib
                     break;
             }
         }
-        
+
         public void Go(string inputStream = null)
         {
             if (inputStream != null)
@@ -413,7 +413,7 @@ namespace MotHL7Lib
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
                         Hl7Event7MessageArgs.Data = data;
                         ProcessADTEvent(this, Hl7Event7MessageArgs);
-                        break;                                        
+                        break;
 
                     default:
                         EventLogger.Error("Missing or Unhandled Message Type {0}", _msh.Get("MSH.9.3"));
@@ -672,7 +672,13 @@ namespace MotHL7Lib
             ProblemLocus = "AL1";
 
             return
-                $"Type Code: {al1.Get("AL1.2.1")}Mnemonic: {al1.Get("AL1.3.1")}\nDesc: {al1.Get("AL1.3.2")}Severity: {al1.Get("AL1.4.1")}\nReaction: {al1.Get("AL1.5")}\nID Date: {al1.Get("AL1.6")}\n******\n";
+                $"Type Code: {al1.Get("AL1.2.1")}\n" + 
+                $"Mnemonic: {al1.Get("AL1.3.1")}\n" +
+                $"Desc: {al1.Get("AL1.3.2")}\n" +
+                $"Severity: {al1.Get("AL1.4.1")}\n" +
+                $"Reaction: {al1.Get("AL1.5")}\n" +
+                $"ID Date: {al1.Get("AL1.6")}\n" +
+                $"**\n";
         }
         private string ProcessDG1(RecordBundle recBundle, DG1 dg1)
         {
@@ -701,30 +707,30 @@ namespace MotHL7Lib
 
             ProblemLocus = "EVN";
             var currentDate = recBundle.Patient.TransformDate(evn.Get("EVN.2"));
-            
-            switch(evn.Get("EVN.1"))
+
+            switch (evn.Get("EVN.1"))
             {
                 case "A01": // Admit/Visit  
                     recBundle.Patient.AdmitDate = currentDate;
-                    recBundle.Patient.Status = 1;                  
+                    recBundle.Patient.Status = 1;
                     break;
-                    
+
                 case "A03": // Discharge
                     recBundle.Patient.Comments = $"Discharge Date: {currentDate}";
                     recBundle.Patient.Status = 0;
                     break;
-                
-                case "A06":
+
+                case "A06": // Change Outpatient to Inpatient                  
                     break;
-                
-                case "A08":
+
+                case "A08": // Update patient Informtion
                     break;
-                               
-                case "A12":
-                    break;      
-                
+
+                case "A12": // Cancel Transfer
+                    break;
+
                 default:
-                    break;                                         
+                    break;
             }
 
             return EventCode;
@@ -837,7 +843,7 @@ namespace MotHL7Lib
                     break;
 
                 case "DC":  // Discontinue order/service request
-                    recBundle.Scrip.DiscontinueDate = DateTime.Now;
+                    recBundle.Scrip.DiscontinueDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     recBundle.Scrip.Status = 0;
                     break;
 
@@ -849,7 +855,7 @@ namespace MotHL7Lib
                 case "CA":  // Change order/service request
                     recBundle.Scrip.Status = 0;
                     recBundle.MakeDupScrip = true;
-                    recBundle.NewStartDate = DateTime.Now;
+                    recBundle.NewStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     break;
 
                 case "RE":  // Observations/Performed Service to follow
@@ -1020,6 +1026,7 @@ namespace MotHL7Lib
 
             // Set the default patient status to active, it can be changed with an ADT^A03 or ADT^A08
             recBundle.Patient.Status = 1;
+            
 
             //__scrip.RxSys_PatID = __pr.RxSys_PatID;
         }
@@ -1040,8 +1047,8 @@ namespace MotHL7Lib
                 {
                     Temp = Temp.Substring(0, 9);
                 }
-            }        
-            
+            }
+
             recBundle.Prescriber.PrescriberID = Temp;
             recBundle.Prescriber.LastName = pv1.Get("PV1.7.2");
             recBundle.Prescriber.FirstName = pv1.Get("PV1.7.3");
@@ -1289,13 +1296,29 @@ namespace MotHL7Lib
 
             if (rxe.Get("RXE.25") != string.Empty)
             {
+                // Check for concatenated RXE.25 & 26 -- RNA Helix does it, maybe others do too
                 if (!string.IsNullOrEmpty(rxe.Get("RXE.25")))
                 {
-                    recBundle.Drug.Strength = Convert.ToDouble(rxe.Get("RXE.25") ?? "0.00");
+                    var dose = rxe.Get("RXE.25");
+                    var unit = rxe.Get("RXE.26");
+                    var doseLen = 0;
+
+                    for (var i = 0; i < dose.Length; i++)
+                    {
+                        if (!char.IsDigit(dose[i]))
+                        {
+                            unit = dose.Substring(i);
+                            dose = dose.Substring(0, doseLen);
+                        }
+
+                        doseLen++;
+                    }
+
+                    recBundle.Drug.Strength = Convert.ToDouble(dose);
+                    recBundle.Drug.Unit = unit;
                 }
             }
 
-            recBundle.Drug.Unit = rxe.Get("RXE.26.1");
             recBundle.Drug.DoseForm = rxe.Get("RXE.6.1");
 
             /*
@@ -1340,7 +1363,7 @@ namespace MotHL7Lib
 
             if (string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName))
             {
-                recBundle.Scrip.DoseScheduleName = "CUSTOM";
+                recBundle.Scrip.DoseScheduleName = $"{DateTime.Now.ToString("yyyyddmmss")})";
             }
 
 
@@ -1435,7 +1458,7 @@ namespace MotHL7Lib
             {
                 if (string.IsNullOrEmpty(doseScheduleName))
                 {
-                    doseScheduleName = $"CUSTOM";
+                    doseScheduleName = $"{DateTime.Now.ToString("yyyyddmmss")})";
                 }
             }
 
@@ -1482,7 +1505,7 @@ namespace MotHL7Lib
             }
 
             recBundle.Scrip.RxType = 0; // Default Type
-            recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : "CUSTOM";
+            recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : $"{DateTime.Now.ToString("yyyyddmmss")})";
 
             var tqStartDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.7"));
             var tqStopDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.8"));
@@ -1507,7 +1530,7 @@ namespace MotHL7Lib
                 {
                     if (!recBundle.Scrip.Sig.Contains(tq111))
                     {
-                        recBundle.Scrip.Sig += " \n ";
+                        recBundle.Scrip.Sig += "\n";
                         recBundle.Scrip.Sig += tq111;
                     }
                 }
@@ -1534,7 +1557,7 @@ namespace MotHL7Lib
                 }
 
                 recBundle.Scrip.QtyPerDose = Convert.ToDouble(tq2 ?? "0.00");
-                return recBundle.Scrip.DoseTimesQtys =  $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(tq2) ? "E" : tq2):00.00}";
+                return recBundle.Scrip.DoseTimesQtys = $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(tq2) ? "E" : tq2):00.00}";
             }
 
 
@@ -1794,13 +1817,13 @@ namespace MotHL7Lib
 
             MessageType = "ADT";
             EventCode = ProcessEVN(recBundle, adt.EVN);
-                    
+
             try
             {
                 using (var localTcpClient = new TcpClient(Socket.Address, Socket.Port))
                 {
                     using (var stream = localTcpClient.GetStream())
-                    {                        
+                    {
                         ProcessPID(recBundle, adt.PID);
                         ProcessPV1(recBundle, adt.PV1);
                         ProcessPV2(recBundle, adt.PV2);
@@ -1812,6 +1835,9 @@ namespace MotHL7Lib
                         foreach (var in1 in adt.IN1) { ProcessIN1(recBundle, in1); }
                         foreach (var in2 in adt.IN2) { ProcessIN2(recBundle, in2); }
                         foreach (var nk1 in adt.NK1) { recBundle.Patient.ResponisbleName += ProcessNK1(recBundle, nk1); }
+
+                        // Make sure the proper actions are taken for the event
+                        ProcessEVN(recBundle, adt.EVN);
 
                         recBundle.Write();
                         recBundle.Commit(stream);
@@ -1828,7 +1854,7 @@ namespace MotHL7Lib
                 throw new HL7Exception(199, $"Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
-        
+
         public void Process_OMP_O09_Event(Object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
