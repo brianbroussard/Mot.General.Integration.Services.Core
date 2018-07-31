@@ -13,92 +13,84 @@ namespace MotCommonLib
     /// For example, A prescriber cannot write a Scrip without the Drug being available 
     /// and a Patient to write it for, so the send order would be Drug, Scrip, Patient, Prescriber
     /// </summary>
-    public class MotWriteQueue
+    public class MotWriteQueue :IDisposable
     {
-
         private static Mutex _queueMutex;
-        private List<KeyValuePair<string, string>> Records { get; set; } = null;
+        private List<KeyValuePair<string, string>> Records { get; set; }
         public bool SendEof { get; set; } = false;
         public bool LogRecords { get; set; } = false;
-        private readonly Logger EventLogger;
+        private readonly Logger _eventLogger;
 
         /// <inheritdoc />
         public MotWriteQueue()
         {
             Records = new List<KeyValuePair<string, string>>();
-            EventLogger = LogManager.GetLogger("WriteQueue.Record");
+            _eventLogger = LogManager.GetLogger("WriteQueue");
 
             if (_queueMutex == null)
             {
                 _queueMutex = new Mutex();
             }
         }
+
         ~MotWriteQueue()
         {
-            Records?.Clear();
+            Dispose();
         }
-        private int compare(KeyValuePair<string, string> a, KeyValuePair<string, string> b)
+
+        private int CompareTypes(KeyValuePair<string, string> a, KeyValuePair<string, string> b)
         {
-            return string.Compare(a.Key, b.Key);
+            return string.CompareOrdinal(a.Key, b.Key);
         }
-        public void Add(string __type, string __record)
+
+        public void Add(string type, string record)
         {
-            if (string.IsNullOrEmpty(__type) || string.IsNullOrEmpty(__record))
+            if (string.IsNullOrEmpty(type) || string.IsNullOrEmpty(record))
             {
-                throw new ArgumentNullException("motQueue.Add NULL argument");
+                throw new ArgumentNullException($"motQueue.Add NULL argument");
             }
 
-            Records.Add(new KeyValuePair<string, string>(__type, __record));
-            Records.Sort(compare);
+            Records.Add(new KeyValuePair<string, string>(type, record));
+            Records.Sort(CompareTypes);
         }
-        public void Write(MotSocket Socket)
+        public void Write(MotSocket socket)
         {
-            string __big_buf = string.Empty;
+            string bigBuf = string.Empty;
 
-            if (Socket == null)
+            if (socket == null)
             {
-                throw new ArgumentNullException("motQueue Null Socket Argument");
+                throw new ArgumentNullException($"motQueue Null Socket Argument");
             }
-
-            //__queue_mutex.WaitOne();
-
-            //Console.WriteLine("Queue writing on thread {0}({1})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
 
             try
             {
                 // Push it to the port
-                foreach (KeyValuePair<string, string> __record in Records)
+                foreach (var record in Records)
                 {
-                    Socket.Write(__record.Value);
+                    socket.Write(record.Value);
 
                     if (LogRecords)
                     {
-                        EventLogger.Debug(__record);
+                        _eventLogger.Debug(record);
                     }
                 }
 
                 // Flush
                 Records.Clear();
-                //__queue_mutex.ReleaseMutex();
             }
             catch (Exception ex)
             {
-                //__queue_mutex.ReleaseMutex();
                 throw new Exception("Failed to write queue to Socket: " + ex.Message);
             }
         }
-        public void Write(NetworkStream Stream)
+        public void Write(NetworkStream stream)
         {
-            string __big_buf = string.Empty;
+            string bigBuf = string.Empty;
 
-            if (Stream == null)
+            if (stream == null)
             {
-                throw new ArgumentNullException("motQueue Null Socket Argument");
+                throw new ArgumentNullException($"motQueue Null Socket Argument");
             }
-
-            //__queue_mutex.WaitOne();
-
-            //Console.WriteLine("Queue writing on thread {0}({1})", Thread.CurrentThread.Name, Thread.CurrentThread.ManagedThreadId);
 
             try
             {
@@ -106,14 +98,14 @@ namespace MotCommonLib
                 var bytesRead = 0;
 
                 // Push it to the port
-                foreach (KeyValuePair<string, string> Record in Records)
+                foreach (var record in Records)
                 {
-                    Stream.Write(Encoding.UTF8.GetBytes(Record.Value), 0, Record.Value.Length);
-                    bytesRead = Stream.Read(buf, 0, buf.Length);
+                    stream.Write(Encoding.UTF8.GetBytes(record.Value), 0, record.Value.Length);
+                    bytesRead = stream.Read(buf, 0, buf.Length);
 
                     if (LogRecords)
                     {
-                        EventLogger.Debug(Record);
+                        _eventLogger.Debug(record);
                     }
                 }
 
@@ -122,31 +114,47 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to write queue to Stream: " + ex.Message);
+                throw new Exception($"Failed to write queue to Stream: {ex.Message}");
             }
         }
-        public void WriteEOF(MotSocket __socket)
+        public void WriteEof(MotSocket socket)
         {
-            if (__socket == null)
+            if (socket == null)
             {
-                throw new ArgumentNullException("motQueue Null Socket Argument");
+                throw new ArgumentNullException($"motQueue Null Socket Argument");
             }
 
             if (SendEof)
             {
                 try
                 {
-                    __socket.WriteReturn("<EOF/>");
+                    socket.WriteReturn("<EOF/>");
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception("Failed to write queue <EOF/>: " + ex.Message);
+                    throw new Exception($"Failed to write queue <EOF/>: {ex.Message}");
                 }
             }
         }
+
         public void Clear()
         {
             Records.Clear();
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Records.Clear();
+                Records = null;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

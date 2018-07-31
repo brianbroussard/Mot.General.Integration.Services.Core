@@ -44,9 +44,13 @@ namespace motCommonLib
         NullServer,
         SqlServer,
         NpgServer,
+        MySqlServer,
+        SqlightServer,
+        SqlAnywhereServer,
         OdbcServer
 #pragma warning restore 1591
     };
+    
     /// <summary>
     /// <c>Action</c>
     /// Enumeration for database actions
