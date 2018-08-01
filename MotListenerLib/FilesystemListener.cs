@@ -47,6 +47,7 @@ namespace MotListenerLib
         public void WriteData()
         {
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// Conditional IDisposable destructor
@@ -59,6 +60,7 @@ namespace MotListenerLib
 
             }
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// Direct IDisposable destructor that destroys and nullifies everything 
@@ -68,6 +70,7 @@ namespace MotListenerLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         public bool ProcessReturn(byte[] data)
         {
             switch (data[0])
@@ -94,7 +97,6 @@ namespace MotListenerLib
             return true;
         }
 
-
         private void CheckDirectory(string dirName)
         {
             if (!Directory.Exists(dirName))
@@ -102,6 +104,7 @@ namespace MotListenerLib
                 Directory.CreateDirectory(dirName ?? throw new ArgumentNullException(nameof(dirName)));
             }
         }
+
         public void WatchDirectory()
         {
             CheckDirectory(DirName);
@@ -159,6 +162,7 @@ namespace MotListenerLib
 
             Console.WriteLine("Exiting Thread {0}", Thread.CurrentThread.Name);
         }
+
         public void WaitForWork()
         {
             if (string.IsNullOrEmpty(DirName) || StringProcessor == null)
@@ -217,6 +221,7 @@ namespace MotListenerLib
 
             t.Wait();
         }
+
         public void Go(StringStringDelegate stringProcessor = null, string dirName = null)
         {
             if (dirName != null)
@@ -246,15 +251,18 @@ namespace MotListenerLib
             }
 
         }
+
         public void ShutDown()
         {
             Listening = false;
         }
+
         public FilesystemListener()
         {
             Listening = false;
             _eventLogger = LogManager.GetLogger("FileSystemWatcher");
         }
+
         ///
         /// <c>MotFileSystemListener</c>
         /// Set up listener to run as a task with a processor callback
@@ -271,6 +279,7 @@ namespace MotListenerLib
             _eventLogger = LogManager.GetLogger("FileSystemWatcher");
 
         }
+
         /// <summary>
         /// <c>MotFileSystemListener</c>
         /// Set up listener as a polling system
@@ -289,6 +298,7 @@ namespace MotListenerLib
             TargetPort = port;
             _eventLogger = LogManager.GetLogger("FileSystemWatcher");
         }
+
         ~FilesystemListener()
         {
             Dispose(false);

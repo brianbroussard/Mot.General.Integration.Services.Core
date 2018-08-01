@@ -1,6 +1,6 @@
 ﻿// MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -62,6 +62,7 @@ namespace MotListenerLib
 
             //Hl7FhirListner.StartListener(prefixes, ParseHl7Message);
         }
+
         public Hl7SocketListener(int port, StringStringDelegate callback, bool useSSL = false)
         {
             try
@@ -80,6 +81,7 @@ namespace MotListenerLib
                 throw;
             }
         }
+
         public void Go()
         {
             try
@@ -107,6 +109,7 @@ namespace MotListenerLib
                 throw;
             }
         }
+
         public void ShutDown()
         {
             try
@@ -162,6 +165,7 @@ namespace MotListenerLib
                 EventLogger?.Error("Port I/O error sending ACK to {0}.  {1}", ListenerSocket.remoteEndPoint, ex.Message);
             }
         }
+
         /// <summary>
         /// <c>WriteMessageToFile</c>
         /// Persist the message to a file

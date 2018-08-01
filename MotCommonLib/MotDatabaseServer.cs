@@ -723,7 +723,7 @@ namespace motCommonLib
 
                 if (!Directory.Exists(Path.GetPathRoot(fullPath)))
                 {
-                    Directory.CreateDirectory(Path.GetPathRoot(fullPath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
                 }
 
                 using (_connection = new SqliteConnection($"Data Source={fullPath};Version=3;"))
@@ -734,7 +734,7 @@ namespace motCommonLib
             }
             catch (Exception ex)
             {
-                throw new Exception($"ODBC Connection Failed: {ex.Message}");
+                throw new Exception($"Sqlite Connection Failed: {ex.Message}");
             }
             finally
             {
@@ -935,6 +935,9 @@ namespace motCommonLib
                     case DbType.SqlServer:
                         return _sqlServer.ExecuteQuery(strQuery, parameterList, tableName);
 
+                    case DbType.SqlightServer:
+                        return _sqliteServer.ExecuteQuery(strQuery, parameterList, tableName);
+
                     default:
                         break;
                 }
@@ -972,6 +975,10 @@ namespace motCommonLib
                         _sqlServer.ExecuteNonQuery(strQuery, parameterList);
                         break;
 
+                    case DbType.SqlightServer:
+                        _sqliteServer.ExecuteNonQuery(strQuery, parameterList);
+                        break;
+
                     default:
                         break;
                 }
@@ -1005,6 +1012,9 @@ namespace motCommonLib
 
                     case DbType.SqlServer:
                         return _sqlServer.ExecuteQuery(View);
+
+                    case DbType.SqlightServer:
+                        return _sqliteServer.ExecuteQuery(View);
 
                     default:
                         break;
@@ -1051,6 +1061,10 @@ namespace motCommonLib
                         _sqlServer?.Dispose();
                         break;
 
+                    case DbType.SqlightServer:
+                        _sqliteServer?.Dispose();
+                        break;
+
                     default:
                         break;
                 }
@@ -1071,22 +1085,28 @@ namespace motCommonLib
 
                 switch (_typeParameterType.Name)
                 {
-                    case "SqlServer":
+                    case "MotSqlServer":
                         _sqlServer = new MotSqlServer(connectString);
                         _thisDbType = DbType.SqlServer;
                         _eventLogger.Info("Setting up as Microsoft SQL Server");
                         break;
 
-                    case "OdbcServer":
+                    case "MotOdbcServer":
                         _odbcServer = new MotOdbcServer(connectString);
                         _thisDbType = DbType.OdbcServer;
                         _eventLogger.Info("Setting up as ODBC Server");
                         break;
 
-                    case "NpgServer":
+                    case "MotNpgServer":
                         _npgServer = new MotPostgreSqlServer(connectString);
                         _thisDbType = DbType.NpgServer;
                         _eventLogger.Info("Setting up as PostgreSQL Server");
+                        break;
+
+                    case "MotSqliteServer":
+                        _sqliteServer = new MotSqliteServer(connectString);
+                        _thisDbType = DbType.SqlightServer;
+                        _eventLogger.Info("Setting up as SqlIteL Server");
                         break;
 
                     default:

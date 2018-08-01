@@ -3,17 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MotCommonLib", "MotCommonLib\MotCommonLib.csproj", "{BA7221DA-DC07-4908-91B7-BB01A3956BCD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotCommonLib", "MotCommonLib\MotCommonLib.csproj", "{BA7221DA-DC07-4908-91B7-BB01A3956BCD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MotParserLib", "MotParserLib\MotParserLib.csproj", "{3F52A3E2-7435-41CC-B8AB-A43B20655214}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotParserLib", "MotParserLib\MotParserLib.csproj", "{3F52A3E2-7435-41CC-B8AB-A43B20655214}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MotHL7Lib", "MotHL7Lib\MotHL7Lib.csproj", "{DBEE6F58-9609-4076-AC16-21FFB9BA9082}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotHL7Lib", "MotHL7Lib\MotHL7Lib.csproj", "{DBEE6F58-9609-4076-AC16-21FFB9BA9082}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MotListenerLib", "MotListenerLib\MotListenerLib.csproj", "{5E544BA6-2B0F-4AAA-9331-434A82518A16}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotListenerLib", "MotListenerLib\MotListenerLib.csproj", "{5E544BA6-2B0F-4AAA-9331-434A82518A16}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformerService", "TransformerService\TransformerService.csproj", "{1DE6C337-CABC-4237-B3CA-0BB4A8C00A50}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformerJsonApi", "TransformerJsonApi\TransformerJsonApi.csproj", "{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTests", "CommonTests\CommonTests.csproj", "{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ListenerTests", "ListenerTests\ListenerTests.csproj", "{3D6B6733-A91C-4E7E-B742-6BE257CA071B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserTests", "ParserTests\ParserTests.csproj", "{621FDD57-EE80-47A8-A8C6-0CA39D940495}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +51,18 @@ Global
 		{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D6B6733-A91C-4E7E-B742-6BE257CA071B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D6B6733-A91C-4E7E-B742-6BE257CA071B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D6B6733-A91C-4E7E-B742-6BE257CA071B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D6B6733-A91C-4E7E-B742-6BE257CA071B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,6 +1,6 @@
 ﻿// MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -79,6 +79,7 @@ namespace MotHL7Lib
                 dataIn?.ShutDown();
             }
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -88,6 +89,7 @@ namespace MotHL7Lib
             GC.SuppressFinalize(this);
         }
     }
+
     public class MotHl7MessageProcessor : HL7TransformerBase
     {
         #region variables
@@ -160,14 +162,17 @@ namespace MotHL7Lib
         {
             dataInputType = DataInputType.Unknown;
         }
+
         public MotHl7MessageProcessor(string data, int port, bool service, bool encrypt) : base(data)
         {
             dataInputType = DataInputType.WebService;
         }
+
         public MotHl7MessageProcessor(string data, string dirName, bool service, bool encrypt) : base(data)
         {
             dataInputType = DataInputType.File;
         }
+
         /// <inheritdoc />
         public MotHl7MessageProcessor(bool startListener, string data, string gatewayAddress, int gatewayPort, bool service, bool encrypt) : base(data)
         {
@@ -205,6 +210,7 @@ namespace MotHL7Lib
                 throw;
             }
         }
+
         /// <summary>
         /// <c>Segment Data</c>
         /// Break up the incominng message into its component segments
@@ -226,6 +232,7 @@ namespace MotHL7Lib
 
             return data.Split(new[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
         }
+
         /// <summary>
         /// <c>ValidateData</c>
         /// Make sure the incoming data is valid HL7
@@ -247,6 +254,7 @@ namespace MotHL7Lib
 
             return true;
         }
+
         /// <summary>
         /// <c>ValidateMas</c>
         /// Make sure the MSH is valid and extract the sending system
@@ -275,6 +283,7 @@ namespace MotHL7Lib
 
             throw new Exception("Malformed MSH-3 - Unknown Sender");
         }
+
         private void PrepForProcessing()
         {
             try
@@ -327,6 +336,7 @@ namespace MotHL7Lib
                 throw new Exception(ResponseMessage);
             }
         }
+
         private void WriteResponse(string message, bool isError = false)
         {
             // Update subscribers
@@ -453,6 +463,7 @@ namespace MotHL7Lib
                 ResponseMessage = nakOut.NakString;
             }
         }
+
         //---------------------------------------------------------------
         private string ParsePatternedDoseSchedule(string pattern, int thisRxType, TQ1 tq1, MotPrescriptionRecord scrip, DateTime StartDate, DateTime StopDate)
         {
@@ -618,6 +629,7 @@ namespace MotHL7Lib
             // Get the Time/Qtys
             return $"{tq14List.FirstOrDefault()}{Convert.ToDouble(tq121):00.00}";
         }
+
         /// <summary>
         /// IsHL7DoseSchedule()
         /// HL7 v2.7 defines a collection of stock Dose Schedules that are in general use.  Several were set up for Frameworks already.  Many more are defined by Hl7.
@@ -662,6 +674,7 @@ namespace MotHL7Lib
             */
             return false;
         }
+
         public string ProcessAL1(RecordBundle recBundle, AL1 al1)
         {
             if (recBundle == null || al1 == null)
@@ -680,6 +693,7 @@ namespace MotHL7Lib
                 $"ID Date: {al1.Get("AL1.6")}\n" +
                 $"**\n";
         }
+
         private string ProcessDG1(RecordBundle recBundle, DG1 dg1)
         {
             if (recBundle == null || dg1 == null)
@@ -698,6 +712,7 @@ namespace MotHL7Lib
                                  dg1.Get("DG1.7"),   // 5 - Major Diagnostic Catagory
                                  dg1.Get("DG1.8"));  // 6 - Diagnostic Related Group
         }
+
         private string ProcessEVN(RecordBundle recBundle, EVN evn)
         {
             if (recBundle == null || evn == null)
@@ -735,6 +750,7 @@ namespace MotHL7Lib
 
             return EventCode;
         }
+
         private void ProcessIN1(RecordBundle recBundle, IN1 in1)
         {
             if (recBundle == null || in1 == null)
@@ -751,6 +767,7 @@ namespace MotHL7Lib
             // No Insurancec Policy Number per se, but there is a group name(1-9) and a group number(1-8) 
             //__recs.__pr.InsPNo = __in1.Get("IN1.1.9") + "-" + __in1.Get("IN1.1.8");
         }
+
         private void ProcessIN2(RecordBundle recBundle, IN2 in2)
         {
             if (recBundle == null || in2 == null)
@@ -765,6 +782,7 @@ namespace MotHL7Lib
                 recBundle.Patient.SSN = in2.Get("IN2.1.1");
             }
         }
+
         private string ProcessNK1(RecordBundle recBundle, NK1 nk1)
         {
             if (recBundle == null || nk1 == null)
@@ -776,6 +794,7 @@ namespace MotHL7Lib
 
             return $"{nk1.Get("NK1.2.2")} {nk1.Get("NK1.2.3")} {nk1.Get("NK1.2.1")} [{nk1.Get("NK1.3.1")}]\n";
         }
+
         private string ProcessNTE(RecordBundle recBundle, NTE nte)
         {
             if (recBundle == null || nte == null)
@@ -786,6 +805,7 @@ namespace MotHL7Lib
 
             return nte.Get("NTE.3");
         }
+
         private void ProcessOBX(RecordBundle recBundle, OBX obx)
         {
             if (recBundle == null || obx == null)
@@ -824,6 +844,7 @@ namespace MotHL7Lib
                 }
             }
         }
+
         private void ProcessORC(RecordBundle recBundle, ORC orc)
         {
             if (recBundle == null || orc == null)
@@ -944,6 +965,7 @@ namespace MotHL7Lib
             recBundle.Patient.PrimaryPrescriberID = temp;
             recBundle.Scrip.PrescriberID = temp;
         }
+
         private void ProcessPID(RecordBundle recBundle, PID pid)
         {
             if (recBundle == null || pid == null)
@@ -1030,6 +1052,7 @@ namespace MotHL7Lib
 
             //__scrip.RxSys_PatID = __pr.RxSys_PatID;
         }
+
         private void ProcessPV1(RecordBundle recBundle, PV1 pv1)
         {
             if (recBundle == null || pv1 == null)
@@ -1063,6 +1086,7 @@ namespace MotHL7Lib
                 recBundle.Patient.PrimaryPrescriberID = Temp;
             }
         }
+
         private void ProcessPV2(RecordBundle recBundle, PV2 pv2)
         {
             if (recBundle == null || pv2 == null)
@@ -1072,6 +1096,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "PV2";
         }
+
         private void ProcessPD1(RecordBundle recBundle, PD1 pd1)
         {
             if (recBundle == null || pd1 == null)
@@ -1081,6 +1106,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "PD1";
         }
+
         private void ProcessPRT(RecordBundle recBundle, PRT prt)  // this is an EPIC or 2.7 record
         {
             if (recBundle == null || prt == null)
@@ -1152,6 +1178,7 @@ namespace MotHL7Lib
                 recBundle.StoreList.Add(tempStore);
             }
         }
+
         private void ProcessRXC(RecordBundle recBundle, RXC rxc)  // Process Compound Components
         {
             if (recBundle == null || rxc == null)
@@ -1171,6 +1198,7 @@ namespace MotHL7Lib
             recBundle.Scrip.Comments += "Component Drug Strength Volume Units" + rxc.Get("RXC.9.1");
             recBundle.Scrip.Comments += "\n\n";
         }
+
         private void ProcessRXD(RecordBundle recBundle, RXD rxd)
         {
             if (recBundle == null || rxd == null)
@@ -1261,6 +1289,7 @@ namespace MotHL7Lib
             // Apparently the RXD doesn't identify the patient -- Assume a pid always comes first
             recBundle.Scrip.PatientID = recBundle.Patient.PatientID;
         }
+
         private void ProcessRXE(RecordBundle recBundle, RXE rxe)
         {
             if (recBundle == null || rxe == null)
@@ -1409,6 +1438,7 @@ namespace MotHL7Lib
             recBundle.Store.State = rxe.Get("RXE.41.4");
             recBundle.Store.Zipcode = rxe.Get("RXE.41.5");
         }
+
         private void ProcessRXO(RecordBundle recBundle, RXO rxo)
         {
             if (recBundle == null || rxo == null)
@@ -1420,6 +1450,7 @@ namespace MotHL7Lib
 
             recBundle.Patient.DxNotes = rxo.Get("RXO.20.2") + " - " + rxo.Get("RXO.20.5");
         }
+
         private void ProcessRXR(RecordBundle recBundle, RXR rxr)
         {
             if (recBundle == null || rxr == null)
@@ -1431,6 +1462,7 @@ namespace MotHL7Lib
 
             recBundle.Drug.Route = rxr.Get("RXR.1.1");
         }
+
         private string ProcessTQ1(RecordBundle recBundle, TQ1 tq1, bool newSet = false, int tq1RxType = 0)
         {
             if (recBundle == null || tq1 == null)
@@ -1589,6 +1621,7 @@ namespace MotHL7Lib
             // recBundle.Scrip.QtyPerDose = TQ2;
             // return DoseTQ;
         }
+
         private void ProcessZAS(RecordBundle recBundle, ZAS zas)
         {
             if (recBundle == null || zas == null)
@@ -1598,6 +1631,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "ZAS";
         }
+
         private void ProcessZLB(RecordBundle recBundle, ZLB zlb)
         {
             if (recBundle == null || zlb == null)
@@ -1607,6 +1641,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "ZLB";
         }
+
         private void ProcessZPI(RecordBundle recBundle, ZPI zpi)
         {
             if (recBundle == null || zpi == null)
@@ -1624,6 +1659,7 @@ namespace MotHL7Lib
             // TODO:  Locate the store DEA Num
             //__store.DEANum = __assign("ZPI-21", __fields)?.Substring(0, 10);
         }
+
         private void ProcessZFI(RecordBundle recBundle, ZFI zfi)
         {
             if (recBundle == null || zfi == null)
@@ -1646,6 +1682,7 @@ namespace MotHL7Lib
             recBundle.Drug.Route = zfi.Get("ZFI.11");
             recBundle.Drug.ProductCode = zfi.Get("ZFI.14");
         }
+
         private void ProcessCX1(RecordBundle recBundle, CX1 Cx1)
         {
             if (recBundle == null || Cx1 == null)
@@ -1673,6 +1710,7 @@ namespace MotHL7Lib
             GlobalMsh = header.MSH;
             return true;
         }
+
         private bool ProcessPatient(hl7Patient newPatient, RecordBundle recBundle)
         {
             ProcessPID(recBundle, newPatient.PID);
@@ -1783,6 +1821,7 @@ namespace MotHL7Lib
                 return true;
             }
         }
+
         /// <summary>
         /// Returns result codes from MOT 
         /// </summary>
@@ -1907,6 +1946,7 @@ namespace MotHL7Lib
             }
 
         }
+
         // Drug Order       MSH, [ PID, [PV1] ], { ORC, [RXO, {RXR}, RXE, [{NTE}], {TQ1}, {RXR}, [{RXC}] }, [ZPI]
         // Literal Order    MSH, PID, [PV1], ORC, [TQ1], [RXE], [ZAS]
         // TODO:  CHeck the Framework SPec for where the order types live
@@ -1965,6 +2005,7 @@ namespace MotHL7Lib
                     $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
             }
         }
+
         public void Process_RDS_O13_Event(Object sender, HL7Event7MessageArgs Args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);

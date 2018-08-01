@@ -92,19 +92,23 @@ namespace MotParserLib
     {
         protected string data;
         public string ResponseMessage { get; set; }
+
         /// <summary>
         /// DebugMode - Flag for extra debug output
         /// </summary>
         public bool DebugMode { get; set; }
+
         /// <summary>
         /// AutoTruncate - flag to force string lengths down to motLegacy lengths
         /// </summary>
         public bool AutoTruncate { get; set; }
+
         /// <summary>
         /// <c>GatewaySocket</c>
         /// Target socket for output
         /// </summary>
         public MotSocket GatewaySocket { get; set; }
+
         /// <summary>
         /// <c>SenderSocket</c>
         ///  Source socket for input
@@ -114,20 +118,24 @@ namespace MotParserLib
         /// eventLogger - NLOG logger
         /// </summary>
         public Logger EventLogger { get; set; }
+
         /// <summary>
         /// <c>InputFormat</c>
         /// </summary>
         public InputDataFormat InputFormat { get; set; }
+
         /// <summary>
         /// <c>SendEof</c>
         /// Forces motLegacy gateway to close
         /// </summary>
         public bool SendEof { get; set; }
+
         /// <summary>
         /// <c>RunAsService</c>
         /// Flag to tell if the process is running as a service
         /// </summary>
         public bool RunAsService { get; set; }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -140,6 +148,7 @@ namespace MotParserLib
                 //Socket = null;
             }
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -148,6 +157,7 @@ namespace MotParserLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// <c>ParserBase</c>
         /// Constructor
@@ -169,6 +179,7 @@ namespace MotParserLib
         {
 
         }
+
         private void WriteBlockToGateway(string inboundData)
         {
             if (string.IsNullOrEmpty(inboundData))
@@ -200,6 +211,7 @@ namespace MotParserLib
                 throw new Exception($"Failed to write to gateway: {ex.Message}");
             }
         }
+
         /// <summary>
         /// <c>parseTagged</c>
         /// </summary>
@@ -223,6 +235,7 @@ namespace MotParserLib
             }
         }
     }
+
     /// <summary>
     /// <c>motParser</c>
     /// General data format transformation engine
@@ -241,6 +254,7 @@ namespace MotParserLib
             test.Load(inputStream);
             return test;
         }
+
         /// <summary>
         /// <c>parseJSON</c>
         /// </summary>
@@ -281,6 +295,7 @@ namespace MotParserLib
 
             return retVal;
         }
+
         /// <summary>
         /// <c>parseXML</c>
         /// Takes a true Xml and converts it to the motLegacy tagged format
@@ -414,6 +429,7 @@ namespace MotParserLib
 
             return xmlDoc;
         }
+
         /// <summary>
         /// psEDI file parser 
         /// </summary>
@@ -429,6 +445,7 @@ namespace MotParserLib
                 mtsParser.Go();
             }
         }
+
         /// <summary>
         /// psEDI file parser 
         /// </summary>
@@ -444,6 +461,7 @@ namespace MotParserLib
                 psEdiParser.Go();
             }
         }
+
         /// <summary>
         /// <c>ParseParada</c>
         /// Transforms a parada job table into a proper MOT record.  Used by BestRx
@@ -478,6 +496,7 @@ namespace MotParserLib
                 delimitedParser.Go(v1Format);
             }
         }
+
         /// <summary>
         /// <c>ParseHL7</c>
         /// Process HL7 2.5+ input stream
@@ -496,6 +515,7 @@ namespace MotParserLib
                 ResponseMessage = hl7Parser.ResponseMessage;
             }
         }
+
         /// <summary>
         /// <c>ParseDispill</c>
         /// Process Dispill input stream

@@ -45,11 +45,10 @@ namespace TransformerService
                 x.StartAutomatically();
                 x.RunAsLocalSystem();
 
-                x.SetDescription("MOT Universal Interface");
-                x.SetDisplayName("MotNext Transformer");
-                x.SetServiceName("MotNextTransformer");
+                x.SetDescription("MOT Data Transformation Interface");
+                x.SetDisplayName("motNext Transformer");
+                x.SetServiceName("motNextTransformer");
 
-                x.DependsOnMsmq();
                 x.EnableShutdown();
 
                 x.EnableServiceRecovery(r =>
