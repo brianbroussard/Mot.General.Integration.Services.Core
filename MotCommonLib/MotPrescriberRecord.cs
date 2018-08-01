@@ -1,7 +1,7 @@
 ﻿// 
 // MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,7 @@ namespace MotCommonLib
     {
         private readonly List<Field> _fieldList;
 
-        private void createRecord(string tableAction)
+        private void CreateRecord(string tableAction)
         {
             try
             {
@@ -87,7 +87,7 @@ namespace MotCommonLib
             try
             {
                 _fieldList = new List<Field>();
-                createRecord(action);
+                CreateRecord(action);
             }
             catch (Exception ex)
             {

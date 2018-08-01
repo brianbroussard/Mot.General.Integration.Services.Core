@@ -1,7 +1,7 @@
 ﻿// 
 // MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -991,7 +991,11 @@ namespace MotCommonLib
 
             set
             {
-                SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "AdmitDate");
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" && 
+                    value.ToString("yyyy-MM-dd") != "0001-01-01")
+                {
+                    SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "AdmitDate");
+                }
             }
         }
 

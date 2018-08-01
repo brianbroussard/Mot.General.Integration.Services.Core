@@ -1,7 +1,7 @@
 ﻿// 
 // MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -239,14 +239,13 @@ namespace MotCommonLib
             Clear(_fieldList);
         }
 
-
         /// <summary>
         /// Gets or sets the rx sys rx number.
         /// </summary>
         /// <value>The rx sys rx number.</value>
-        [JsonProperty("PrescriptionID")]
-        [XmlElement("PrescriptionID")]
-        public string PrescriptionID
+        [JsonProperty("RxSys_RxNum")]
+        [XmlElement("RxSys_RxNum")]
+        public string RxSys_RxNum
         {
             get
             {
@@ -257,14 +256,25 @@ namespace MotCommonLib
             set => SetField(_fieldList, value ?? "0", "RxSys_RxNum");
         }
 
+        /// <summary>
+        /// Gets or sets the rx sys rx number.
+        /// </summary>
+        /// <value>The rx sys rx number.</value>
+        [JsonProperty("PrescriptionID")]
+        [XmlElement("PrescriptionID")]
+        public string PrescriptionID
+        {
+            get { return RxSys_RxNum; }
+            set => RxSys_RxNum = value;
+        }
 
         /// <summary>
         /// Gets or sets the patient identifier.
         /// </summary>
         /// <value>The patient identifier.</value>
-        [JsonProperty("PatientID")]
-        [XmlElement("PatientID")]
-        public string PatientID
+        [JsonProperty("RxSys_PatID")]
+        [XmlElement("RxSys_PatID")]
+        public string RxSys_PatID
         {
             get
             {
@@ -276,12 +286,24 @@ namespace MotCommonLib
         }
 
         /// <summary>
+        /// Gets or sets the patient id
+        /// </summary>
+        /// <value>The rx sys rx number.</value>
+        [JsonProperty("PatientID")]
+        [XmlElement("PatientID")]
+        public string PatientID
+        {
+            get { return RxSys_PatID; }
+            set => RxSys_PatID = value;
+        }
+       
+        /// <summary>
         /// Gets or sets the prescriber identifier.
         /// </summary>
         /// <value>The prescriber identifier.</value>
-        [JsonProperty("PrescriberID")]
-        [XmlElement("PrescriberID")]
-        public string PrescriberID
+        [JsonProperty("RxSys_DocID")]
+        [XmlElement("RxSys_DocID")]
+        public string RxSys_DocID
         {
             get
             {
@@ -290,6 +312,18 @@ namespace MotCommonLib
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
+        }
+
+        /// <summary>
+        /// Gets or sets the patient id
+        /// </summary>
+        /// <value>The rx sys rx number.</value>
+        [JsonProperty("PrescriberID")]
+        [XmlElement("PrescriberID")]
+        public string PrescriberID
+        {
+            get { return RxSys_DocID; }
+            set => RxSys_DocID = value;
         }
 
         /// <summary>
@@ -343,7 +377,8 @@ namespace MotCommonLib
 
             set
             {
-                if (value.ToString("yyyy-MM-dd") != "1970-01-01")
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" && 
+                    value.ToString("yyyy-MM-dd") != "0001-01-01")
                 {
                     SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStartDate");
                 }
@@ -366,8 +401,9 @@ namespace MotCommonLib
 
                 set
                 {
-                    if (value.ToString("yyyy-MM-dd") != "1970-01-01")
-                    {
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
+                    value.ToString("yyyy-MM-dd") != "0001-01-01")
+                {
                         SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
                     }
                 }
@@ -389,8 +425,9 @@ namespace MotCommonLib
 
                 set
                 {
-                    if (value.ToString("yyyy-MM-dd") != "1970-01-01")
-                    {
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
+                    value.ToString("yyyy-MM-dd") != "0001-01-01")
+                {
                         SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "DiscontinueDate");
                     }
                 }
@@ -676,13 +713,12 @@ namespace MotCommonLib
 
             set
             {
-                if (value.ToString("yyyy-MM-dd") != "1970-01-01")
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
+                    value.ToString("yyyy-MM-dd") != "0001-01-01")
                 {
                     SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "AnchorDate");
                 }
             }
-        }
-
-        public string RxSys_RxNum { get; set; }
+        }     
     }
 }

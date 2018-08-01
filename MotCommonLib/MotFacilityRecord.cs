@@ -1,4 +1,28 @@
-﻿using System;
+﻿// 
+// MIT license
+//
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// 
+
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
@@ -138,9 +162,9 @@ namespace MotCommonLib
         /// Gets or sets the location identifier.
         /// </summary>
         /// <value>The location identifier.</value>
-        [JsonProperty("LocationID")]
-        [XmlElement("LocationID")]
-        public string LocationID
+        [JsonProperty("RxSys_LocID")]
+        [XmlElement("RxSys_LocID")]
+        public string RxSys_LocID
         {
             get
             {
@@ -152,21 +176,42 @@ namespace MotCommonLib
         }
 
         /// <summary>
+        /// LocationID
+        /// </summary>
+        [JsonProperty("LocationID")]
+        [XmlElement("LocationID")]
+        public string LocationID
+        {
+            get { return RxSys_LocID; }
+            set => RxSys_LocID = value;
+        }
+
+        /// <summary>
         /// Gets or sets the store identifier.
         /// </summary>
         /// <value>The store identifier.</value>
-        [JsonProperty("StoreID")]
-        [XmlElement("StoreID")]
-        public string StoreID
+        [JsonProperty("RxSys_StoreID")]
+        [XmlElement("RxSys_StoreID")]
+        public string RxSys_StoreID
         {
             get
             {
-
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_storeid")));
                 return f?.tagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "RxSys_StoreID");
+        }
+
+        /// <summary>
+        /// StoreID
+        /// </summary>
+        [JsonProperty("StoreID")]
+        [XmlElement("StoreID")]
+        public string StoreID
+        {
+            get { return RxSys_StoreID; }
+            set => RxSys_StoreID = value;
         }
 
         /// <summary>

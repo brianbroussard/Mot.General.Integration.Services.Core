@@ -1,7 +1,7 @@
 ﻿// 
 // MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -188,17 +188,29 @@ namespace MotCommonLib
         /// Gets or sets the store identifier.
         /// </summary>
         /// <value>The store identifier.</value>
-        [JsonProperty("StoreID")]
-        [XmlElement("StoreID")]
-        public string StoreID
+        [JsonProperty("RxSys_StoreID")]
+        [XmlElement("RxSys_StoreID")]
+        public string RxSys_StoreID
         {
             get
             {
+
                 var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_storeid")));
                 return f?.tagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_StoreID");
+            set => SetField(_fieldList, value ?? string.Empty, "RxSys_StoreID");
+        }
+
+        /// <summary>
+        /// StoreID
+        /// </summary>
+        [JsonProperty("StoreID")]
+        [XmlElement("StoreID")]
+        public string StoreID
+        {
+            get { return RxSys_StoreID; }
+            set => RxSys_StoreID = value;
         }
 
         /// <summary>

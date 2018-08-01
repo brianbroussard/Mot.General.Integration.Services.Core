@@ -1,4 +1,28 @@
-﻿using System;
+﻿// 
+// MIT license
+//
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// 
+
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Xml.Serialization;
@@ -141,8 +165,8 @@ namespace MotCommonLib
         /// Writes the current FieldList to the passed socket or queues it
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="DoLogging"></param>
-        public void Write(NetworkStream stream, bool DoLogging = false)
+        /// <param name="doLogging"></param>
+        public void Write(NetworkStream stream, bool doLogging = false)
         {
             try
             {
@@ -152,7 +176,7 @@ namespace MotCommonLib
                 }
                 else
                 {
-                    Write(stream, _fieldList, DoLogging);
+                    Write(stream, _fieldList, doLogging);
                 }
             }
             catch (Exception ex)
@@ -179,12 +203,12 @@ namespace MotCommonLib
         /// </summary>
         /// <param name="fieldName"></param>
         /// <param name="val"></param>
-        /// <param name="OverrideTruncation"></param>
-        public void SetField(string fieldName, string val, bool OverrideTruncation = false)
+        /// <param name="overrideTruncation"></param>
+        public void SetField(string fieldName, string val, bool overrideTruncation = false)
         {
             try
             {
-                SetField(_fieldList, val, fieldName, OverrideTruncation);
+                SetField(_fieldList, val, fieldName, overrideTruncation);
             }
             catch
             {
@@ -193,12 +217,12 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// Gets or sets the rx sys drug identifier.
+        /// Gets or sets the drug identifier.
         /// </summary>
         /// <value>The rx sys drug identifier.</value>
-        [JsonProperty("DrugID")]
-        [XmlElement("DrugID")]
-        public string DrugID
+        [JsonProperty("RxSys_DrugID")]
+        [XmlElement("RxSys_DrugID")]
+        public string RxSys_DrugID
         {
             get
             {
@@ -207,6 +231,17 @@ namespace MotCommonLib
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DrugID");
+        }
+
+        /// <summary>
+        /// DrugID
+        /// </summary>
+        [JsonProperty("DrugID")]
+        [XmlElement("DrugID")]
+        public string DrugID
+        {
+            get { return RxSys_DrugID; }
+            set => RxSys_DrugID = value;
         }
 
         /// <summary>

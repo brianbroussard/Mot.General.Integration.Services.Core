@@ -1,6 +1,6 @@
 ﻿// MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@
 // 
 
 using System;
-using System.IO;
 using System.Collections.Generic;
 using NLog;
 using System.Runtime.InteropServices;
@@ -48,48 +47,48 @@ namespace MotParserLib
 
     public class MotTransformerBase : IDisposable
     {
-        protected Logger EventLogger;
-        protected Hl7SocketListener SocketListener;
-        protected FilesystemListener FilesystemListener;
-        protected string GatewayAddress;
-        protected int GatewayPort;
-        protected int ListenerPort;
-        protected string WinMonitorDirectory;
-        protected string NixMonitorDirectory;
-        protected bool WatchFileSystem;
-        protected bool WatchSocket;
+        protected Logger eventLogger;
+        protected Hl7SocketListener socketListener;
+        protected FilesystemListener filesystemListener;
+        protected string gatewayAddress;
+        protected int gatewayPort;
+        protected int listenerPort;
+        protected string winMonitorDirectory;
+        protected string nixMonitorDirectory;
+        protected bool watchFileSystem;
+        protected bool watchSocket;
 
-        public List<string> Responses;
-        public PlatformOs Platform;
+        protected List<string> _responses;
+        private PlatformOs _platform;
 
         public MotTransformerBase()
         {
             LoadConfiguration();
-            Platform = GetOs();
+            _platform = GetOs();
         }
 
         protected void LoadConfiguration()
         {
             var appSettings = ConfigurationManager.AppSettings;
-            ListenerPort = Convert.ToInt32(appSettings["ListenerPort"] ?? "24025");
-            GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
-            GatewayAddress = appSettings["GatewayAddress"] ?? "192.168.1.160";
-            WinMonitorDirectory = appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io";
-            NixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
-            WatchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
-            WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
+            listenerPort = Convert.ToInt32(appSettings["ListenerPort"] ?? "24025");
+            gatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
+            gatewayAddress = appSettings["GatewayAddress"] ?? "192.168.1.160";
+            winMonitorDirectory = appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io";
+            nixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
+            watchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
+            watchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
         }
 
         protected void SaveConfiguration()
         {
             var appSettings = ConfigurationManager.AppSettings;
-            appSettings["ListenerPort"] = ListenerPort.ToString();
-            appSettings["GatewayPort"] = GatewayPort.ToString();
-            appSettings["GatewayAddress"] = GatewayAddress;
-            appSettings["WinMonitorDirectory"] = WinMonitorDirectory;
-            appSettings["NixMonitorDirectory"] = NixMonitorDirectory;
-            appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
-            appSettings["WatchSocket"] = WatchSocket.ToString();
+            appSettings["ListenerPort"] = listenerPort.ToString();
+            appSettings["GatewayPort"] = gatewayPort.ToString();
+            appSettings["GatewayAddress"] = gatewayAddress;
+            appSettings["WinMonitorDirectory"] = winMonitorDirectory;
+            appSettings["NixMonitorDirectory"] = nixMonitorDirectory;
+            appSettings["WatchFileSystem"] = watchFileSystem.ToString();
+            appSettings["WatchSocket"] = watchSocket.ToString();
         }
 
         public List<string> GetConfigList()
@@ -113,18 +112,18 @@ namespace MotParserLib
             // just worry about Nix and Win for now
             if (RuntimeInformation.OSDescription.Contains("Unix"))
             {
-                Platform = PlatformOs.Unix;
+                _platform = PlatformOs.Unix;
             }
             else if (RuntimeInformation.OSDescription.Contains("Windows"))
             {
-                Platform = PlatformOs.Windows;
+                _platform = PlatformOs.Windows;
             }
             else
             {
-                Platform = PlatformOs.Unknown;
+                _platform = PlatformOs.Unknown;
             }
 
-            return Platform;
+            return _platform;
         }
 
         /// <summary>
@@ -135,7 +134,7 @@ namespace MotParserLib
         {
             if (disposing)
             {
-                FilesystemListener?.Dispose();
+                filesystemListener?.Dispose();
             }
         }
 
@@ -152,11 +151,11 @@ namespace MotParserLib
 
     public class MotTransformerInterface : MotTransformerBase
     {
-        InputDataFormat inputDataFormat;
+        InputDataFormat _inputDataFormat;
 
         public string Parse(string data, InputDataFormat inputDataFormat = InputDataFormat.AutoDetect)
         {
-            this.inputDataFormat = inputDataFormat;
+            this._inputDataFormat = inputDataFormat;
             return Parse(data);
         }
 
@@ -167,19 +166,19 @@ namespace MotParserLib
                 return "Null data";
             }
 
-            var resp = data;
+            var responseMessage = data;
 
-            using (var GatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
+            using (var gatewaySocket = new MotSocket(gatewayAddress, gatewayPort))
             {
-                using (var p = new MotParser(GatewaySocket, data, inputDataFormat))
+                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat))
                 {
-                    EventLogger.Info(p.ResponseMessage);
-                    resp = p.ResponseMessage;
-                    Responses.Add(resp);
+                    eventLogger.Info(p.ResponseMessage);
+                    responseMessage = p.ResponseMessage;
+                    _responses.Add(responseMessage);
                 }
             }
 
-            return resp;
+            return responseMessage;
         }
 
         /// <summary>
@@ -190,12 +189,12 @@ namespace MotParserLib
             try
             {
                 LoadConfiguration();
-                Responses = new List<string>();
-                EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
+                _responses = new List<string>();
+                eventLogger = LogManager.GetLogger("Mot.Transformer.Service");
             }
             catch (Exception ex)
             {
-                EventLogger?.Fatal("Failed to start construct HL7Execute: {0}", ex.Message);
+                eventLogger?.Fatal("Failed to start construct HL7Execute: {0}", ex.Message);
                 throw new Exception("Constructor Failure");
             }
         }
@@ -205,21 +204,21 @@ namespace MotParserLib
         /// </summary>
         public void Start()
         {
-            if (WatchSocket)
+            if (watchSocket)
             {
-                SocketListener = new Hl7SocketListener(ListenerPort, Parse);
-                SocketListener.RunAsService = true;
-                SocketListener.Go();
+                socketListener = new Hl7SocketListener(listenerPort, Parse);
+                socketListener.RunAsService = true;
+                socketListener.Go();
             }
 
-            if (WatchFileSystem)
+            if (watchFileSystem)
             {
-                FilesystemListener = new FilesystemListener((GetOs() == PlatformOs.Windows) ? WinMonitorDirectory : NixMonitorDirectory, Parse);
-                FilesystemListener.RunAsService = true;
-                FilesystemListener.Go();
+                filesystemListener = new FilesystemListener((GetOs() == PlatformOs.Windows) ? winMonitorDirectory : nixMonitorDirectory, Parse);
+                filesystemListener.RunAsService = true;
+                filesystemListener.Go();
             }
 
-            EventLogger.Info("Service started");
+            eventLogger.Info("Service started");
         }
         /// <summary>
         /// <c>StopListener</c>
@@ -227,17 +226,17 @@ namespace MotParserLib
         /// </summary>
         public void Stop()
         {
-            if (WatchSocket)
+            if (watchSocket)
             {
-                SocketListener.ShutDown();
+                socketListener.ShutDown();
             }
 
-            if (WatchFileSystem)
+            if (watchFileSystem)
             {
-                FilesystemListener.ShutDown();
+                filesystemListener.ShutDown();
             }
 
-            EventLogger.Info("sevice stopped");
+            eventLogger.Info("sevice stopped");
         }
         /// <summary>
         /// <c>ShutDown</c>
@@ -253,19 +252,19 @@ namespace MotParserLib
         /// </summary>
         public void Restart()
         {
-            if (WatchSocket)
+            if (watchSocket)
             {
-                SocketListener.ShutDown();
-                SocketListener.Go();
+                socketListener.ShutDown();
+                socketListener.Go();
             }
 
-            if (WatchFileSystem)
+            if (watchFileSystem)
             {
-                FilesystemListener.ShutDown();
-                FilesystemListener.Go();
+                filesystemListener.ShutDown();
+                filesystemListener.Go();
             }
 
-            EventLogger.Info("Service restarted");
+            eventLogger.Info("Service restarted");
         }
     }
 }

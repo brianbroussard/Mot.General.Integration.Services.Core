@@ -1,7 +1,7 @@
 ﻿// 
 // MIT license
 //
-// Copyright (c) 2016 by Peter H. Jenney and Medicine-On-Time, LLC.
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -28,9 +28,10 @@ using System.Data;
 using Npgsql;
 using System.Data.Odbc;
 using System.Data.SqlClient;
+using System.IO;
+using Microsoft.Data.Sqlite;
 using NLog;
 using System.Threading;
-
 
 namespace motCommonLib
 {
@@ -50,7 +51,7 @@ namespace motCommonLib
         OdbcServer
 #pragma warning restore 1591
     };
-    
+
     /// <summary>
     /// <c>Action</c>
     /// Enumeration for database actions
@@ -67,31 +68,33 @@ namespace motCommonLib
     public class MotDbBase : IDisposable
     {
         protected static Mutex dbConMutex;
-        protected string DSN;
+        protected string dsn;
         protected DataSet records;
 
-        public MotDbBase(string dsn)
+        public MotDbBase(string fullPath)
         {
             if (dbConMutex == null)
             {
                 dbConMutex = new Mutex(false, "MotDb");
             }
         }
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
-        protected virtual void Dispose(bool Disposing)
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-
             }
         }
+
         protected DataSet ValidateReturn(string tableName)
         {
             if (records.Tables.Count > 1 && records.Tables[tableName].Rows.Count > 0)
@@ -102,15 +105,16 @@ namespace motCommonLib
             throw new Exception($"Query did not return any data");
         }
     }
+
     /// <summary>
     /// <c>MotPostgreSQLServer</c>
     /// A database instance for manageing PostegreSQL
     /// </summary>
     public class MotPostgreSqlServer : MotDbBase
     {
-        private NpgsqlConnection Connection;
-        private NpgsqlDataAdapter Adapter;
-        private NpgsqlCommand Command;
+        private NpgsqlConnection _connection;
+        private NpgsqlDataAdapter _adapter;
+        private NpgsqlCommand _command;
 
         /// <summary>
         /// <c>Dispose</c>
@@ -120,41 +124,43 @@ namespace motCommonLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
-        /// <param name="Disposing"></param>
-        protected override void Dispose(bool Disposing)
+        /// <param name="disposing"></param>
+        protected override void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                Connection?.Dispose();
-                Adapter?.Dispose();
+                _connection?.Dispose();
+                _adapter?.Dispose();
             }
         }
+
         /// <summary>
         /// <c>executeNonQuery</c>
         /// Executes SQL commands from the passed string
         /// </summary>
         /// <param name="strQuery"></param>
-        public void executeNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             try
             {
                 dbConMutex.WaitOne();
 
-                using (Connection = new NpgsqlConnection(DSN))
+                using (_connection = new NpgsqlConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
                     using (var command = new NpgsqlCommand())
                     {
-                        command.Connection = Connection;
+                        command.Connection = _connection;
                         command.CommandText = strQuery;
                         command.ExecuteNonQuery();
                     }
 
-                    Connection.Close();
+                    _connection.Close();
                 }
             }
             catch (Exception ex)
@@ -166,6 +172,7 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>executeQuery</c>
         /// Executes the SQL query and populates the passed DataSet
@@ -174,13 +181,11 @@ namespace motCommonLib
         /// <param name="parameterList"></param>
         /// <param name="tableName"></param>
         /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-#pragma warning disable 1570
         /// <code>
         ///         try
         ///         {
         ///             var parameterList1 = new List<KeyValuePair<string, string>>()
         ///             {
-
         ///                 new KeyValuePair<string, string>("firstName", "Fred"),
         ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
         ///             };
@@ -194,38 +199,36 @@ namespace motCommonLib
         ///         }
         /// 
         ///</code>
-#pragma warning restore 1570
         ///
-        public DataSet executeQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
-
             try
             {
                 dbConMutex.WaitOne();
                 records.Clear();
 
-                using (Connection = new NpgsqlConnection(DSN))
+                using (_connection = new NpgsqlConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
-                    using (Command = new NpgsqlCommand(strQuery, Connection))
+                    using (_command = new NpgsqlCommand(strQuery, _connection))
                     {
                         if (parameterList != null)
                         {
                             foreach (var param in parameterList)
                             {
-                                Command.Parameters.AddWithValue(param.Key, param.Value);
+                                _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
 
-                        using (Adapter = new NpgsqlDataAdapter(strQuery, Connection))
+                        using (_adapter = new NpgsqlDataAdapter(strQuery, _connection))
                         {
-                            Adapter.SelectCommand = Command;
-                            Adapter.Fill(records, tableName ?? "strTable");
+                            _adapter.SelectCommand = _command;
+                            _adapter.Fill(records, tableName ?? "strTable");
                         }
                     }
 
-                    Connection.Close();
+                    _connection.Close();
 
                     return ValidateReturn(tableName ?? "Table");
                 }
@@ -239,21 +242,21 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>motPostgreSQLServer</c>
         /// Constructor, connects to the database using the passed complete DSN
         /// </summary>
-        /// <param name="dsn"></param>
-        public MotPostgreSqlServer(string dsn) : base(dsn)
+        /// <param name="fullPath"></param>
+        public MotPostgreSqlServer(string fullPath) : base(fullPath)
         {
-
             dbConMutex.WaitOne();
 
             try
             {
-                Connection = new NpgsqlConnection(dsn);
-                Connection.Open();
-                Connection.Close();
+                _connection = new NpgsqlConnection(fullPath);
+                _connection.Open();
+                _connection.Close();
             }
             catch (Exception ex)
             {
@@ -264,6 +267,7 @@ namespace motCommonLib
                 dbConMutex.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>~motPostgreSQLServer</c>
         /// Destructor, disposes local instance
@@ -273,15 +277,16 @@ namespace motCommonLib
             Dispose(false);
         }
     }
+
     /// <summary>
     /// <c>MotSQLServer</c>
     /// A database instance for manageing Microsoft SQL Server
     /// </summary>
     public class MotSqlServer : MotDbBase
     {
-        private SqlConnection Connection;
-        private SqlDataAdapter Adapter;
-        private SqlCommand Command;
+        private SqlConnection _connection;
+        private SqlDataAdapter _adapter;
+        private SqlCommand _command;
 
         /// <summary>
         /// <c>Dispose</c>
@@ -291,6 +296,7 @@ namespace motCommonLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -298,28 +304,28 @@ namespace motCommonLib
         {
             if (disposing)
             {
-                Connection?.Dispose();
-                Adapter?.Dispose();
+                _connection?.Dispose();
+                _adapter?.Dispose();
             }
         }
+
         /// <summary>
         /// <c>executeNonQuery</c>
         /// Executes SQL commands from the passed string
         /// </summary>
         /// <param name="strQuery"></param>
         /// <param name="parameterList"></param>
-        public void executeNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
 
 #if !PharmaServe
-
             try
             {
                 dbConMutex.WaitOne();
 
-                using (Connection = new SqlConnection(DSN))
+                using (_connection = new SqlConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
                     using (SqlCommand command = new SqlCommand())
                     {
@@ -331,12 +337,12 @@ namespace motCommonLib
                             }
                         }
 
-                        command.Connection = Connection;
+                        command.Connection = _connection;
                         command.CommandText = strQuery;
                         command.ExecuteNonQuery();
                     }
 
-                    Connection.Close();
+                    _connection.Close();
                 }
             }
             catch
@@ -380,6 +386,7 @@ namespace motCommonLib
             }
 #endif
         }
+
         /// <summary>
         /// <c>executeQuery</c>
         /// Executes the SQL query and populates the passed DataSet
@@ -388,13 +395,11 @@ namespace motCommonLib
         /// <param name="parameterList"></param>
         /// <param name="tableName"></param>
         /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-#pragma warning disable 1570
         /// <code>
         ///         try
         ///         {
         ///             var parameterList1 = new List<KeyValuePair<string, string>>()
         ///             {
-
         ///                 new KeyValuePair<string, string>("firstName", "Fred"),
         ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
         ///             };
@@ -408,37 +413,36 @@ namespace motCommonLib
         ///         }
         /// 
         ///</code>
-#pragma warning restore 1570
         ///
-        public DataSet executeQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
                 dbConMutex.WaitOne();
                 records.Clear();
 
-                using (Connection = new SqlConnection(DSN))
+                using (_connection = new SqlConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
-                    using (Command = new SqlCommand(strQuery, Connection))
+                    using (_command = new SqlCommand(strQuery, _connection))
                     {
                         if (parameterList != null)
                         {
                             foreach (var param in parameterList)
                             {
-                                Command.Parameters.AddWithValue(param.Key, param.Value);
+                                _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
 
-                        using (Adapter = new SqlDataAdapter(strQuery, Connection))
+                        using (_adapter = new SqlDataAdapter(strQuery, _connection))
                         {
-                            Adapter.SelectCommand = Command;
-                            Adapter.Fill(records, tableName ?? "Table");
+                            _adapter.SelectCommand = _command;
+                            _adapter.Fill(records, tableName ?? "Table");
                         }
                     }
 
-                    Connection.Close();
+                    _connection.Close();
 
                     return (ValidateReturn(tableName ?? "Table"));
                 }
@@ -452,20 +456,21 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>motSQLServer</c>
         /// Constructor, connects to the database using the passed complete DSN
         /// </summary>
-        /// <param name="dsn"></param>
-        public MotSqlServer(string dsn) : base(dsn)
+        /// <param name="fullPath"></param>
+        public MotSqlServer(string fullPath) : base(fullPath)
         {
             dbConMutex.WaitOne();
 
             try
             {
-                Connection = new SqlConnection(dsn);
-                Connection.Open();
-                Connection.Close();
+                _connection = new SqlConnection(fullPath);
+                _connection.Open();
+                _connection.Close();
             }
             catch (Exception ex)
             {
@@ -476,6 +481,7 @@ namespace motCommonLib
                 dbConMutex.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>~motSQLServer</c>
         /// Destructor, disposes local instance
@@ -485,15 +491,16 @@ namespace motCommonLib
             Dispose(false);
         }
     }
+
     /// <summary>
     /// <c>MotODBCServer</c>
     /// A database instance for manageing ODBC Databases
     /// </summary>
     public class MotOdbcServer : MotDbBase
     {
-        private OdbcConnection Connection;
-        private OdbcDataAdapter Adapter;
-        private OdbcCommand Command;
+        private OdbcConnection _connection;
+        private OdbcDataAdapter _adapter;
+        private OdbcCommand _command;
 
         /// <summary>
         /// <c>Dispose</c>
@@ -503,34 +510,36 @@ namespace motCommonLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
-        protected override void Dispose(bool Disposing)
+        protected override void Dispose(bool disposing)
         {
-            if (!Disposing)
+            if (!disposing)
             {
                 return;
             }
 
-            Connection?.Dispose();
-            Adapter?.Dispose();
+            _connection?.Dispose();
+            _adapter?.Dispose();
         }
+
         /// <summary>
         /// <c>motODBCServer</c>
         /// Constructor, connects to the database using the passed complete DSN
         /// </summary>
-        /// <param name="dsn"></param>
-        public MotOdbcServer(string dsn) : base(dsn)
+        /// <param name="fullPath"></param>
+        public MotOdbcServer(string fullPath) : base(fullPath)
         {
             try
             {
                 dbConMutex.WaitOne();
 
-                using (Connection = new OdbcConnection(dsn))
+                using (_connection = new OdbcConnection(fullPath))
                 {
-                    Connection.Open();
-                    Connection.Close();
+                    _connection.Open();
+                    _connection.Close();
                 }
             }
             catch (Exception ex)
@@ -542,36 +551,38 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
+
         /// <summary>
         /// <c>executeNonQuery</c>
         /// Executes SQL commands from the passed string
         /// </summary>
         /// <param name="strQuery"></param>
         /// <param name="parameterList"></param>
-        public void executeNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             try
             {
                 dbConMutex.WaitOne();
 
-                using (Connection = new OdbcConnection(DSN))
+                using (_connection = new OdbcConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
-                    using (Command = new OdbcCommand())
+                    using (_command = new OdbcCommand())
                     {
-                        Command.Connection = Connection;
-                        Command.CommandText = strQuery;
+                        _command.Connection = _connection;
+                        _command.CommandText = strQuery;
 
                         if (parameterList != null)
                         {
                             foreach (var param in parameterList)
                             {
-                                Command.Parameters.AddWithValue(param.Key, param.Value);
+                                _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
 
-                        Command.ExecuteNonQuery();
+                        _command.ExecuteNonQuery();
                     }
                 }
             }
@@ -584,6 +595,7 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>executeQuery</c>
         /// Executes the SQL query and populates the passed DataSet
@@ -592,13 +604,11 @@ namespace motCommonLib
         /// <param name="parameterList"></param>
         /// <param name="tableName"></param>
         /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-#pragma warning disable 1570
         /// <code>
         ///         try
         ///         {
         ///             var parameterList1 = new List<KeyValuePair<string, string>>()
         ///             {
-
         ///                 new KeyValuePair<string, string>("firstName", "Fred"),
         ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
         ///             };
@@ -612,42 +622,39 @@ namespace motCommonLib
         ///         }
         /// 
         ///</code>
-#pragma warning restore 1570
         /// 
-        public DataSet executeQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
-
-
                 dbConMutex.WaitOne();
                 records.Clear();
 
-                using (Connection = new OdbcConnection(DSN))
+                using (_connection = new OdbcConnection(dsn))
                 {
-                    Connection.Open();
+                    _connection.Open();
 
-                    using (Command = new OdbcCommand(strQuery, Connection))
+                    using (_command = new OdbcCommand(strQuery, _connection))
                     {
                         if (parameterList != null)
                         {
                             foreach (var param in parameterList)
                             {
-                                Command.Parameters.AddWithValue(param.Key, param.Value);
+                                _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
 
                         records = new DataSet(tableName ?? "Table");
 
-                        using (Adapter = new OdbcDataAdapter(strQuery, Connection))
+                        using (_adapter = new OdbcDataAdapter(strQuery, _connection))
                         {
-                            Adapter.SelectCommand = Command;
-                            Adapter.Fill(records, tableName ?? "strTable");
+                            _adapter.SelectCommand = _command;
+                            _adapter.Fill(records, tableName ?? "strTable");
                         }
                     }
                 }
 
-                Connection.Close();
+                _connection.Close();
 
                 return (ValidateReturn(tableName ?? "Table"));
             }
@@ -660,6 +667,7 @@ namespace motCommonLib
                 dbConMutex?.ReleaseMutex();
             }
         }
+
         /// <summary>
         /// <c>~motODBCServer</c>
         /// Destructor, disposes local instance
@@ -669,6 +677,213 @@ namespace motCommonLib
             Dispose(false);
         }
     }
+
+    /// <summary>
+    /// <c>MotSqliteServer</c>
+    /// A database instance for manageing Sqlite Databases
+    /// </summary>
+    public class MotSqliteServer : MotDbBase
+    {
+        private SqliteConnection _connection;
+        private SqliteCommand _command;
+
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
+        public new void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
+        protected override void Dispose(bool disposing)
+        {
+            if (!disposing)
+            {
+                return;
+            }
+
+            _connection?.Dispose();
+        }
+
+        /// <summary>
+        /// <c>motODBCServer</c>
+        /// Constructor, connects to the database using the passed complete DSN
+        /// Note that in the case of Sqlite the fullPath needs to be a fully qualified path
+        /// </summary>
+        /// <param name="fullPath"></param>
+        public MotSqliteServer(string fullPath) : base(fullPath)
+        {
+            try
+            {
+                dbConMutex.WaitOne();
+
+                if (!Directory.Exists(Path.GetPathRoot(fullPath)))
+                {
+                    Directory.CreateDirectory(Path.GetPathRoot(fullPath));
+                }
+
+                using (_connection = new SqliteConnection($"Data Source={fullPath};Version=3;"))
+                {
+                    _connection.Open();
+                    _connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"ODBC Connection Failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex?.ReleaseMutex();
+            }
+        }
+
+
+        /// <summary>
+        /// <c>executeNonQuery</c>
+        /// Executes SQL commands from the passed string
+        /// </summary>
+        /// <param name="strQuery"></param>
+        /// <param name="parameterList"></param>
+        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        {
+            if (strQuery == null)
+            {
+                throw new ArgumentNullException($"Null Query String");
+            }
+
+            try
+            {
+                dbConMutex.WaitOne();
+
+                using (_connection = new SqliteConnection($"Data Source={dsn};Version=3;"))
+                {
+                    _connection.Open();
+
+                    using (_command = new SqliteCommand(strQuery, _connection))
+                    {
+                        if (parameterList != null)
+                        {
+                            foreach (var param in parameterList)
+                            {
+                                if (param.Key.Contains("@"))
+                                {
+                                    _command.Parameters.AddWithValue(param.Key, param.Value);
+                                }
+                                else
+                                {
+                                    _command.Parameters.AddWithValue($"@{param.Key}", param.Value);
+                                }
+                            }
+                        }
+
+                        _command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (SqliteException ex)
+            {
+                throw new Exception($"Sqlite executeNonQuery failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex?.ReleaseMutex();
+            }
+        }
+
+        /// <summary>
+        /// <c>executeQuery</c>
+        /// Executes the SQL query and populates the passed DataSet
+        /// </summary>
+        /// <param name="strQuery"></param>
+        /// <param name="parameterList"></param>
+        /// <param name="tableName"></param>
+        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
+        /// <code>
+        ///         try
+        ///         {
+        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
+        ///             {
+        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
+        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
+        ///             };
+        ///
+        ///             var db = new MotOdbcServer("select * from members where firstName = ? and lastName = ?");
+        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
+        ///         }
+        ///         catch(Exception ex)
+        ///         {
+        ///             Console.Write($"Query did not return any date: {ex.Message}");
+        ///         }
+        /// 
+        ///</code>
+        /// 
+        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        {
+            try
+            {
+                dbConMutex.WaitOne();
+                records.Clear();
+
+                using (_connection = new SqliteConnection($"Data Source={dsn};Version=3;"))
+                {
+                    _connection.Open();
+
+                    using (_command = new SqliteCommand(strQuery, _connection))
+                    {
+                        if (parameterList != null)
+                        {
+                            foreach (var param in parameterList)
+                            {
+                                if (param.Key.Contains("@"))
+                                {
+                                    _command.Parameters.AddWithValue(param.Key, param.Value);
+                                }
+                                else
+                                {
+                                    _command.Parameters.AddWithValue($"@{param.Key}", param.Value);
+                                }
+                            }
+                        }
+
+                        records = new DataSet(tableName ?? "Table");
+                        DataTable dt = new DataTable();
+
+                        using (var rdr = _command.ExecuteReader(CommandBehavior.SingleResult))
+                        {
+                            dt.Load(rdr);
+                        }
+
+                        records.Tables.Add(dt);
+                    }
+                }
+
+                return (ValidateReturn(tableName ?? "Table"));
+            }
+            catch (SqliteException ex)
+            {
+                throw new Exception($"Sqlite executeQuery failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex?.ReleaseMutex();
+            }
+        }
+
+        /// <summary>
+        /// <c>~motODBCServer</c>
+        /// Destructor, disposes local instance
+        /// </summary>
+        ~MotSqliteServer()
+        {
+            Dispose(false);
+        }
+    }
+
     /// <summary>
     /// <c>MotDatabase</c>
     /// A class to abstract and normalize the use of multiple SQL database types
@@ -680,40 +895,45 @@ namespace motCommonLib
     ///      }
     /// </code>
     /// </summary>
-    public class MotDatabaseServer : IDisposable
+    public class MotDatabaseServer<T> : IDisposable
     {
-        private readonly DbType thisDbType = DbType.NullServer;
-        private readonly MotSqlServer sqlServer;
-        private readonly MotPostgreSqlServer npgServer;
-        private readonly MotOdbcServer odbcServer;
-        private readonly Logger EventLogger;
+        private readonly DbType _thisDbType = DbType.NullServer;
+        private readonly MotSqlServer _sqlServer;
+        private readonly MotPostgreSqlServer _npgServer;
+        private readonly MotOdbcServer _odbcServer;
+        private readonly MotSqliteServer _sqliteServer;
+
+        private readonly Logger _eventLogger;
+        private Type _typeParameterType;
 
         /// <summary>
         /// <c>recordSet</c>
         /// A global DataSet for use by underlying classes
         /// </summary>
-        private readonly DataSet RecordSet;
+        private readonly DataSet _recordSet;
+
         /// <summary>
         /// <c>executeQuery</c>
         /// Executes the SQL query and populates the passed DataSet
         /// </summary>
         /// <param name="strQuery"></param>
         /// <param name="parameterList"></param>
+        /// <param name="tableName"></param>
         /// <returns>bool indicating succcess or failure of the call</returns>
-        public DataSet executeQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
-                switch (thisDbType)
+                switch (_thisDbType)
                 {
                     case DbType.NpgServer:
-                        return npgServer.executeQuery(strQuery, parameterList, tableName);
+                        return _npgServer.ExecuteQuery(strQuery, parameterList, tableName);
 
                     case DbType.OdbcServer:
-                        return odbcServer.executeQuery(strQuery, parameterList, tableName);
+                        return _odbcServer.ExecuteQuery(strQuery, parameterList, tableName);
 
                     case DbType.SqlServer:
-                        return sqlServer.executeQuery(strQuery, parameterList, tableName);
+                        return _sqlServer.ExecuteQuery(strQuery, parameterList, tableName);
 
                     default:
                         break;
@@ -721,34 +941,35 @@ namespace motCommonLib
             }
             catch (Exception e)
             {
-                EventLogger.Error("Failed while executing Query: {0}", e.Message);
+                _eventLogger.Error("Failed while executing Query: {0}", e.Message);
                 throw;
             }
 
             return null;
         }
+
         /// <summary>
         /// <c>executeNonQuery</c>
         /// Executes SQL commands from the passed string
         /// </summary>
         /// <param name="strQuery"></param>
         /// <param name="parameterList"></param>
-        public bool executeNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public bool ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             try
             {
-                switch (thisDbType)
+                switch (_thisDbType)
                 {
                     case DbType.NpgServer:
-                        npgServer.executeNonQuery(strQuery, parameterList);
+                        _npgServer.ExecuteNonQuery(strQuery, parameterList);
                         break;
 
                     case DbType.OdbcServer:
-                        odbcServer.executeNonQuery(strQuery, parameterList);
+                        _odbcServer.ExecuteNonQuery(strQuery, parameterList);
                         break;
 
                     case DbType.SqlServer:
-                        sqlServer.executeNonQuery(strQuery, parameterList);
+                        _sqlServer.ExecuteNonQuery(strQuery, parameterList);
                         break;
 
                     default:
@@ -757,32 +978,33 @@ namespace motCommonLib
             }
             catch (Exception e)
             {
-                EventLogger.Error("Failed while executing NonQuery: {0}", e.Message);
+                _eventLogger.Error("Failed while executing NonQuery: {0}", e.Message);
                 throw;
             }
 
             return false;
         }
+
         /// <summary>
         /// <c>setView</c>
         /// Queries against a view instead of a simple query string
         /// </summary>
         /// <param name="View"></param>
         /// <returns></returns>
-        public DataSet setView(string View)
+        public DataSet SetView(string View)
         {
             try
             {
-                switch (thisDbType)
+                switch (_thisDbType)
                 {
                     case DbType.NpgServer:
-                        return npgServer.executeQuery(View);
+                        return _npgServer.ExecuteQuery(View);
 
                     case DbType.OdbcServer:
-                        return odbcServer.executeQuery(View);
+                        return _odbcServer.ExecuteQuery(View);
 
                     case DbType.SqlServer:
-                        return sqlServer.executeQuery(View);
+                        return _sqlServer.ExecuteQuery(View);
 
                     default:
                         break;
@@ -790,7 +1012,7 @@ namespace motCommonLib
             }
             catch (Exception e)
             {
-                EventLogger.Warn("Failed to set view: {0}", e.Message);
+                _eventLogger.Warn("Failed to set view: {0}", e.Message);
                 throw;
             }
 
@@ -804,28 +1026,29 @@ namespace motCommonLib
             Dispose(true);
             GC.SuppressFinalize(this);
         }
+
         /// <summary>
         /// Dispose
         /// </summary>
-        /// <param name="Disposing"></param>
-        protected virtual void Dispose(bool Disposing)
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
-                ((IDisposable)RecordSet).Dispose();
+                ((IDisposable)_recordSet).Dispose();
 
-                switch (thisDbType)
+                switch (_thisDbType)
                 {
                     case DbType.NpgServer:
-                        npgServer?.Dispose();
+                        _npgServer?.Dispose();
                         break;
 
                     case DbType.OdbcServer:
-                        odbcServer?.Dispose();
+                        _odbcServer?.Dispose();
                         break;
 
                     case DbType.SqlServer:
-                        sqlServer?.Dispose();
+                        _sqlServer?.Dispose();
                         break;
 
                     default:
@@ -833,47 +1056,37 @@ namespace motCommonLib
                 }
             }
         }
-        /// <summary>
-        /// <c>motDatabase</c>
-        /// Constructor
-        /// </summary>
-        public MotDatabaseServer() { }
+
         /// <summary>
         /// <c>motDatabase</c>
         /// </summary>
         /// <param name="connectString"></param>
-        /// <param name="dbType"></param>
-        public MotDatabaseServer(string connectString, DbType dbType)
+        public MotDatabaseServer(string connectString)
         {
             try
             {
-                RecordSet = new DataSet("GenericTable");
-                EventLogger = LogManager.GetLogger("motInboundLib.Database");
+                _recordSet = new DataSet("GenericTable");
+                _eventLogger = LogManager.GetLogger("motInboundLib.Database");
+                _typeParameterType = typeof(T);
 
-                switch (dbType)
+                switch (_typeParameterType.Name)
                 {
-                    case DbType.SqlServer:
-                        sqlServer = new MotSqlServer(connectString);
-                        thisDbType = DbType.SqlServer;
-
-                        EventLogger.Info("Setting up as Microsoft SQL Server");
-
+                    case "SqlServer":
+                        _sqlServer = new MotSqlServer(connectString);
+                        _thisDbType = DbType.SqlServer;
+                        _eventLogger.Info("Setting up as Microsoft SQL Server");
                         break;
 
-                    case DbType.OdbcServer:
-                        odbcServer = new MotOdbcServer(connectString);
-                        thisDbType = DbType.OdbcServer;
-
-                        EventLogger.Info("Setting up as ODBC Server");
-
+                    case "OdbcServer":
+                        _odbcServer = new MotOdbcServer(connectString);
+                        _thisDbType = DbType.OdbcServer;
+                        _eventLogger.Info("Setting up as ODBC Server");
                         break;
 
-                    case DbType.NpgServer:
-                        npgServer = new MotPostgreSqlServer(connectString);
-                        thisDbType = DbType.NpgServer;
-
-                        EventLogger.Info("Setting up as PostgreSQL Server");
-
+                    case "NpgServer":
+                        _npgServer = new MotPostgreSqlServer(connectString);
+                        _thisDbType = DbType.NpgServer;
+                        _eventLogger.Info("Setting up as PostgreSQL Server");
                         break;
 
                     default:
