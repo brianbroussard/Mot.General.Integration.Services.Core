@@ -37,6 +37,7 @@ namespace MotListenerLib
         public bool UseSsl { get; set; }
         public bool RunAsService { get; set; }
         public Logger EventLogger { get; set; }
+        public bool debugMode { get; set; }
 
         public MotSocket GatewaySocket { get; set; }
      

@@ -10,7 +10,7 @@ namespace CommonTests
         [TestMethod]
         public void ConstructSqlite()
         {
-            var path = ()
+            //var path = ()
             var sqlite = new MotDatabaseServer<MotSqliteServer>("~/Projects/Tests/Sqlite/Test.sqlite");
 
 

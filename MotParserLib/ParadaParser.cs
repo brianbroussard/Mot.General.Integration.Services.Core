@@ -240,7 +240,7 @@ namespace MotParserLib
                 true;
 
             writeQueue.SendEof = false;  // Has to be off so we don't lose the socket.
-            writeQueue.LogRecords = DebugMode;
+            writeQueue.debugMode = debugMode;
 
             try
             {

@@ -55,7 +55,7 @@ namespace MotCommonLib
         private MotWriteQueue WriteQueue;
         protected bool UseQueue = true;
         public bool SendEof { get; set; }
-        public bool DebugMode { get; set; }
+        public bool debugMode { get; set; }
         public string MessageType { get; set; }
 
         /// <summary>
@@ -66,8 +66,8 @@ namespace MotCommonLib
         /// <returns></returns>
         public bool SetDebug(bool on)
         {
-            WriteQueue.LogRecords = on;
-            return WriteQueue.LogRecords;
+            WriteQueue.debugMode = on;
+            return WriteQueue.debugMode;
         }
 
         /// <summary>
@@ -102,6 +102,7 @@ namespace MotCommonLib
                     WriteQueue;
 
                 WriteQueue.SendEof = sendEof;
+                WriteQueue.debugMode = debugMode;
             }
 
             Patient.QueueWrites =

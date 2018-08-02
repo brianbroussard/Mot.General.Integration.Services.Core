@@ -126,9 +126,9 @@ namespace MotCommonLib
         /// Write
         /// </summary>
         /// <param name="socket"></param>
-        /// <param name="DoLogging"></param>
+        /// <param name="doLogging"></param>
         /// <exception cref="Exception"></exception>
-        public void Write(MotSocket socket, bool DoLogging = false)
+        public void Write(MotSocket socket, bool doLogging = false)
         {
             try
             {
@@ -138,7 +138,7 @@ namespace MotCommonLib
                 }
                 else
                 {
-                    Write(socket, _fieldList, DoLogging);
+                    Write(socket, _fieldList, doLogging);
                 }
             }
             catch (Exception ex)

@@ -57,6 +57,7 @@ namespace MotParserLib
         protected string nixMonitorDirectory;
         protected bool watchFileSystem;
         protected bool watchSocket;
+        protected bool debugMode;
 
         protected List<string> _responses;
         private PlatformOs _platform;
@@ -77,6 +78,7 @@ namespace MotParserLib
             nixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
             watchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
             watchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
+            debugMode = (appSettings["Debug"] ?? "false") == "true";
         }
 
         protected void SaveConfiguration()
@@ -103,7 +105,7 @@ namespace MotParserLib
             response.Add($"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}");
             response.Add($"WatchFileSystem: {appSettings["WatchFileSystem"]}");
             response.Add($"WatchSocket: {appSettings["WatchSocket"] ?? "false"}");
-
+            response.Add($"Debug: {appSettings["Debug"] ?? "false"}");
             return response;
         }
 
@@ -170,7 +172,7 @@ namespace MotParserLib
 
             using (var gatewaySocket = new MotSocket(gatewayAddress, gatewayPort))
             {
-                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat))
+                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, debugMode))
                 {
                     eventLogger.Info(p.ResponseMessage);
                     responseMessage = p.ResponseMessage;
@@ -208,6 +210,7 @@ namespace MotParserLib
             {
                 socketListener = new Hl7SocketListener(listenerPort, Parse);
                 socketListener.RunAsService = true;
+                socketListener.debugMode = debugMode;
                 socketListener.Go();
             }
 
@@ -215,6 +218,8 @@ namespace MotParserLib
             {
                 filesystemListener = new FilesystemListener((GetOs() == PlatformOs.Windows) ? winMonitorDirectory : nixMonitorDirectory, Parse);
                 filesystemListener.RunAsService = true;
+                filesystemListener.Listening = true;
+                filesystemListener.DebugMode = debugMode;
                 filesystemListener.Go();
             }
 
