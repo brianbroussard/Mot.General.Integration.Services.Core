@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Xml;
 using System.Text.RegularExpressions;
 using System.Globalization;
 
@@ -20,7 +18,7 @@ namespace MotParserLib
     ///</code>
     public class TableConverter
     {
-        private readonly Dictionary<char, string> actionTable = new Dictionary<char, string>()
+        private readonly Dictionary<char, string> _actionTable = new Dictionary<char, string>()
             {
                 {'A', "Add" },
                 {'a', "Add" },
@@ -30,7 +28,7 @@ namespace MotParserLib
                 {'d', "Delete" }
             };
 
-        private readonly Dictionary<char, string> typeTable = new Dictionary<char, string>()
+        private readonly Dictionary<char, string> _typeTable = new Dictionary<char, string>()
             {
                 {'P', "Prescriber" },
                 {'p', "Prescriber" },
@@ -48,7 +46,7 @@ namespace MotParserLib
                 {'t', "TimesQtys" }
             };
 
-        private readonly Dictionary<int, KeyValuePair<bool, string>> practitionerTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
+        private readonly Dictionary<int, KeyValuePair<bool, string>> _practitionerTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
             {
                {1, new KeyValuePair<bool, string>(false,"DocCode") },
                {2, new KeyValuePair<bool, string>(true, "LastName") },
@@ -69,7 +67,7 @@ namespace MotParserLib
                {17,new KeyValuePair<bool, string>(true, "RxSys_DocID") }
            };
 
-        private Dictionary<int, string> practitionerTableV2 = new Dictionary<int, string>()
+        private Dictionary<int, string> _practitionerTableV2 = new Dictionary<int, string>()
            {
                {1, "LastName" },
                {2, "FirstName" },
@@ -89,7 +87,7 @@ namespace MotParserLib
                {16,"RxSys_DocID" }
            };
 
-        private readonly Dictionary<int, KeyValuePair<bool, string>> drugTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
+        private readonly Dictionary<int, KeyValuePair<bool, string>> _drugTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
             {
                {1,  new KeyValuePair<bool, string>(false,"Seq_No") },
                {2,  new KeyValuePair<bool, string>(true,"LblCode") },
@@ -115,7 +113,7 @@ namespace MotParserLib
                {22, new KeyValuePair<bool, string>(true,"RxSys_DrugID") }
             };
 
-        private Dictionary<int, string> drugTableV2 = new Dictionary<int, string>()
+        private Dictionary<int, string> _drugTableV2 = new Dictionary<int, string>()
             {
                {1, "LblCode" },
                {2, "ProdCode" },
@@ -137,7 +135,7 @@ namespace MotParserLib
                {18,"RxSys_DrugID" }
             };
 
-        private readonly Dictionary<int, KeyValuePair<bool, string>> facilityTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
+        private readonly Dictionary<int, KeyValuePair<bool, string>> _facilityTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
             {
                {1, new KeyValuePair<bool, string>(true, "RxSys_StoreID") },
                {2, new KeyValuePair<bool, string>(true, "LocationName") },
@@ -157,7 +155,7 @@ namespace MotParserLib
                {16, new KeyValuePair<bool, string>(false, "RFReminderDays") }
            };
 
-        private Dictionary<int, string> facilityTableV2 = new Dictionary<int, string>()
+        private readonly Dictionary<int, string> _facilityTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_StoreID" },
                {2, "LocationName" },
@@ -173,7 +171,7 @@ namespace MotParserLib
                {12,"CycleType" }
            };
 
-        private readonly Dictionary<int, KeyValuePair<bool, string>> patientTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
+        private readonly Dictionary<int, KeyValuePair<bool, string>> _patientTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
             {
                {1, new KeyValuePair<bool, string>(false, "MOTPatID")  },
                {2, new KeyValuePair<bool, string>(true,  "RxSys_PatID") },
@@ -222,7 +220,7 @@ namespace MotParserLib
                {45, new KeyValuePair<bool, string>(true, "ChartOnly") }
             };
 
-        private Dictionary<int, string> patientTableV2 = new Dictionary<int, string>()
+        private readonly Dictionary<int, string> _patientTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_PatID" },
                {2, "LastName" },
@@ -265,7 +263,7 @@ namespace MotParserLib
                {39, "ChartOnly" }
             };
 
-        Dictionary<int, KeyValuePair<bool, string>> rxTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
+        private readonly Dictionary<int, KeyValuePair<bool, string>> _rxTableV1 = new Dictionary<int, KeyValuePair<bool, string>>()
             {
                {1, new KeyValuePair<bool, string>(true, "RxSys_PatID") },
                {2, new KeyValuePair<bool, string>(false,"MOT_RxID") },
@@ -293,7 +291,7 @@ namespace MotParserLib
                {24, new KeyValuePair<bool, string>(true, "RxSys_DrugID") }   //v2 only
             };
 
-        private Dictionary<int, string> rxTableV2 = new Dictionary<int, string>()
+        private readonly Dictionary<int, string> _rxTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_PatID" },
                {2, "RxSys_RxNum" },
@@ -319,7 +317,7 @@ namespace MotParserLib
                {22, "RxSys_DrugID" }
             };
 
-        Dictionary<int, string> storeTable = new Dictionary<int, string>()
+        private readonly Dictionary<int, string> _storeTable = new Dictionary<int, string>()
             {
                {1, "RxSys_StoreID" },
                {2, "StoreName" },
@@ -333,7 +331,7 @@ namespace MotParserLib
                {10,"DEANum" }
            };
 
-        Dictionary<int, string> tqTable = new Dictionary<int, string>()
+        private readonly Dictionary<int, string> _tqTable = new Dictionary<int, string>()
             {
                {1, "RxSys_LocID" },
                {2, "DoseScheduleName" },
@@ -490,7 +488,7 @@ namespace MotParserLib
 
             items[0] = items[0].Trim();
 
-            typeTable.TryGetValue(items[0][0], out string tableType);
+            _typeTable.TryGetValue(items[0][0], out string tableType);
 
             if (string.IsNullOrEmpty(tableType))
             {
@@ -499,8 +497,8 @@ namespace MotParserLib
 
             //TaggedString.Append(@"<?xml version=""1.0"" encoding=""utf-8""?>");
             taggedString.Append("<Record>");
-            taggedString.Append($"<Table>{typeTable[items[0][0]]}</Table>");
-            taggedString.Append($"<Action>{actionTable[items[0][1]]}</Action>");
+            taggedString.Append($"<Table>{_typeTable[items[0][0]]}</Table>");
+            taggedString.Append($"<Action>{_actionTable[items[0][1]]}</Action>");
 
             int i;
             switch (items[0][0])
@@ -509,40 +507,40 @@ namespace MotParserLib
                 case 'p':
                     for (i = 1; i < items.Length - 1; i++)  // Length - 1 to compensate for the checksum
                     {
-                        if (i > practitionerTableV1.Count)
+                        if (i > _practitionerTableV1.Count)
                         {
                             break;
                         }
 
-                        if (usingV1 && practitionerTableV1[i].Key == false)
+                        if (usingV1 && _practitionerTableV1[i].Key == false)
                         {
                             continue;
                         }
 
-                        if (practitionerTableV1[i].Key != true)
+                        if (_practitionerTableV1[i].Key != true)
                         {
                             continue;
                         }
 
-                        if (practitionerTableV1[i].Value.ToUpper().Contains("DATE"))
+                        if (_practitionerTableV1[i].Value.ToUpper().Contains("DATE"))
                         {
                             items[i] = NormalizeDate(items[i]);
                         }
                         // QS/1 puts the NPI in with the NPI -- <DEA_ID>MT4359798 |1922543198</DEA_ID>
-                        if (practitionerTableV1[i].Value == "DEA_ID" && items[i].Contains("|"))
+                        if (_practitionerTableV1[i].Value == "DEA_ID" && items[i].Contains("|"))
                         {
                             var split = items[i].Split('|');
-                            taggedString.Append($"<{practitionerTableV1[i].Value}>{split[0].Trim()}</{practitionerTableV1[i].Value}>");
+                            taggedString.Append($"<{_practitionerTableV1[i].Value}>{split[0].Trim()}</{_practitionerTableV1[i].Value}>");
                             taggedString.Append($"<TPID>{split[1].Trim()}</TPID>");
                         }
                         else
                         {
-                            if (practitionerTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
+                            if (_practitionerTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
                             {
                                 items[i] = "1";
                             }
 
-                            taggedString.Append($"<{practitionerTableV1[i].Value}>{items[i].Trim()}</{practitionerTableV1[i].Value}>");
+                            taggedString.Append($"<{_practitionerTableV1[i].Value}>{items[i].Trim()}</{_practitionerTableV1[i].Value}>");
                         }
                     }
 
@@ -562,30 +560,30 @@ namespace MotParserLib
                 case 'd':
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > drugTableV1.Count)
+                        if (i > _drugTableV1.Count)
                         {
                             break;
                         }
 
-                        if (usingV1 && drugTableV1[i].Key == false)
+                        if (usingV1 && _drugTableV1[i].Key == false)
                         {
                             continue;
                         }
 
-                        if (!drugTableV1[i].Key)
+                        if (!_drugTableV1[i].Key)
                         {
                             continue;
                         }
 
-                        if (drugTableV1[i].Value.ToUpper().Contains("DATE"))
+                        if (_drugTableV1[i].Value.ToUpper().Contains("DATE"))
                         {
                             items[i] = NormalizeDate(items[i]);
                         }
-                        if (drugTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
+                        if (_drugTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
                         {
                             items[i] = "1";
                         }
-                        taggedString.Append(string.Format("<{0}>{1}</{0}>", drugTableV1[i].Value, items[i].Trim()));
+                        taggedString.Append(string.Format("<{0}>{1}</{0}>", _drugTableV1[i].Value, items[i].Trim()));
                     }
 
                     break;
@@ -594,30 +592,30 @@ namespace MotParserLib
                 case 'l':
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > facilityTableV1.Count)
+                        if (i > _facilityTableV1.Count)
                         {
                             break;
                         }
 
-                        if (usingV1 && facilityTableV1[i].Key == false)
+                        if (usingV1 && _facilityTableV1[i].Key == false)
                         {
                             continue;
                         }
 
-                        if (!facilityTableV1[i].Key)
+                        if (!_facilityTableV1[i].Key)
                         {
                             continue;
                         }
 
-                        if (facilityTableV1[i].Value.ToUpper().Contains("DATE"))
+                        if (_facilityTableV1[i].Value.ToUpper().Contains("DATE"))
                         {
                             items[i] = NormalizeDate(items[i]);
                         }
-                        if (facilityTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
+                        if (_facilityTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
                         {
                             items[i] = "1";
                         }
-                        taggedString.Append(string.Format("<{0}>{1}</{0}>", facilityTableV1[i].Value, items[i].Trim()));
+                        taggedString.Append(string.Format("<{0}>{1}</{0}>", _facilityTableV1[i].Value, items[i].Trim()));
                     }
                     break;
 
@@ -626,31 +624,31 @@ namespace MotParserLib
 
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > patientTableV1.Count)
+                        if (i > _patientTableV1.Count)
                         {
                             break;
                         }
 
-                        if (usingV1 && patientTableV1[i].Key == false)
+                        if (usingV1 && _patientTableV1[i].Key == false)
                         {
                             continue;
                         }
 
-                        if (patientTableV1[i].Key != true)
+                        if (_patientTableV1[i].Key != true)
                         {
                             continue;
                         }
 
-                        if (patientTableV1[i].Value.ToUpper().Contains("DATE"))
+                        if (_patientTableV1[i].Value.ToUpper().Contains("DATE"))
                         {
                             items[i] = NormalizeDate(items[i]);
                         }
-                        if (patientTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
+                        if (_patientTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
                         {
                             items[i] = "1";
                         }
 
-                        taggedString.Append(string.Format("<{0}>{1}</{0}>", patientTableV1[i].Value, items[i].Trim()));
+                        taggedString.Append(string.Format("<{0}>{1}</{0}>", _patientTableV1[i].Value, items[i].Trim()));
                     }
 
                     /*
@@ -669,22 +667,22 @@ namespace MotParserLib
                 case 'r':
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > rxTableV1.Count)
+                        if (i > _rxTableV1.Count)
                         {
                             break;
                         }
 
-                        if (usingV1 && rxTableV1[i].Key == false)
+                        if (usingV1 && _rxTableV1[i].Key == false)
                         {
                             continue;
                         }
 
-                        if (rxTableV1[i].Key != true)
+                        if (_rxTableV1[i].Key != true)
                         {
                             continue;
                         }
 
-                        if (rxTableV1[i].Value.ToUpper() == "DOSETIMESQTYS" && (items[i].Trim().Length % 9) != 0)
+                        if (_rxTableV1[i].Value.ToUpper() == "DOSETIMESQTYS" && (items[i].Trim().Length % 9) != 0)
                         {
                             // There are two valid formats:
                             //            HHHMM0.00
@@ -702,19 +700,19 @@ namespace MotParserLib
                                 offset += 8;
                                 loops--;
                             }
-                            if (rxTableV1[i].Value.ToUpper().Contains("DATE"))
+                            if (_rxTableV1[i].Value.ToUpper().Contains("DATE"))
                             {
                                 items[i] = NormalizeDate(items[i]);
                             }
-                            if (rxTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
+                            if (_rxTableV1[i].Value.ToUpper() == "STATUS" && string.IsNullOrEmpty(items[i]))
                             {
                                 items[i] = "1";
                             }
-                            taggedString.Append($"<{rxTableV1[i].Value}>{transformed}</{rxTableV1[i].Value}>");
+                            taggedString.Append($"<{_rxTableV1[i].Value}>{transformed}</{_rxTableV1[i].Value}>");
                         }
                         else
                         {
-                            taggedString.Append($"<{rxTableV1[i].Value}>{items[i].Trim()}</{rxTableV1[i].Value}>");
+                            taggedString.Append($"<{_rxTableV1[i].Value}>{items[i].Trim()}</{_rxTableV1[i].Value}>");
                         }
                     }
                     break;
@@ -723,12 +721,12 @@ namespace MotParserLib
                 case 's':
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > storeTable.Count)
+                        if (i > _storeTable.Count)
                         {
                             break;
                         }
 
-                        taggedString.Append($"\t<{storeTable[i]}>{items[i].Trim()}</{storeTable[i]}>");
+                        taggedString.Append($"\t<{_storeTable[i]}>{items[i].Trim()}</{_storeTable[i]}>");
                     }
                     break;
 
@@ -736,12 +734,12 @@ namespace MotParserLib
                 case 't':
                     for (i = 1; i < items.Length - 1; i++)
                     {
-                        if (i > tqTable.Count)
+                        if (i > _tqTable.Count)
                         {
                             break;
                         }
 
-                        taggedString.Append($"\t<{tqTable[i]}>{items[i].Trim()}</{tqTable[i]}>");
+                        taggedString.Append($"\t<{_tqTable[i]}>{items[i].Trim()}</{_tqTable[i]}>");
                     }
                     break;
             }
@@ -752,8 +750,7 @@ namespace MotParserLib
         }
     }
 
-    /// <inheritdoc />
-    public class LegacyDelimitedParser : ParserBase, IDisposable
+    public class LegacyDelimitedParser : ParserBase
     {
         /// <inheritdoc />
         public LegacyDelimitedParser(string inputStream) : base(inputStream)
@@ -845,13 +842,13 @@ namespace MotParserLib
 
             return cleanString;
         }
+
         /// <summary>
         /// <c>parseDelimited</c>
         /// </summary>
         /// Converts motLegacy delimited data format to motLegacy tagged format and passes it to the gateway
         /// There are two formats in play.  One uses binary delimiters and one uses plain text, which is
         /// undocumented and appears to be used by Qs1.  FrameworksLTC uses the binary version
-        /// <param name="dataIn"></param>
         /// <param name="v1Data">Indicates documented binary delimited format if true</param>
         public void Go(bool v1Data = false)
         {

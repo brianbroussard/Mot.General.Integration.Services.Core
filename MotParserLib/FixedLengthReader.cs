@@ -14,8 +14,8 @@ namespace MotParserLib
 
         public LayoutAttribute(int index, int length)
         {
-            this.Index = index;
-            this.Length = length;
+            Index = index;
+            Length = length;
         }
     }
     internal class FixedLengthReader : IDisposable
@@ -32,13 +32,13 @@ namespace MotParserLib
         public FixedLengthReader(string data)
         {
             _stream = new MemoryStream(Encoding.UTF8.GetBytes(data));
-            this._buffer = new byte[4];
+            _buffer = new byte[4];
 
         }
         public FixedLengthReader(Stream stream)
         {
-            this._stream = stream;
-            this._buffer = new byte[4];
+            _stream = stream;
+            _buffer = new byte[4];
         }
 
         public void Read<T>(T data)
@@ -71,7 +71,7 @@ namespace MotParserLib
                             // --- If string was written using UTF8 ---
                             byte[] tmp = new byte[layoutAttribute.Length];
                             Array.Copy(_buffer, tmp, tmp.Length);
-                            fieldInfo.SetValue(data, System.Text.Encoding.UTF8.GetString(tmp));
+                            fieldInfo.SetValue(data, Encoding.UTF8.GetString(tmp));
 
                             // --- ALTERNATIVE: Chars were written to file ---
                             //char[] tmp = new char[la.length - 1];

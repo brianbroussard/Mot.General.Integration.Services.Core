@@ -37,19 +37,19 @@ namespace MotListenerLib
         public bool UseSsl { get; set; }
         public bool RunAsService { get; set; }
         public Logger EventLogger { get; set; }
-        public bool debugMode { get; set; }
+        public bool DebugMode { get; set; }
 
         public MotSocket GatewaySocket { get; set; }
      
-        private MotSocket ListenerSocket;
-        public MotSocket WorkerSocket;
-        private Thread WorkerThread;
-        private StringStringDelegate stringCallback;
+        private readonly MotSocket _listenerSocket;
+        public MotSocket workerSocket;
+        private Thread _workerThread;
+        private StringStringDelegate _stringCallback;
 
         public string SenderAddress { get; set; }
         public string SenderPort { get; set; }
 
-        public Hl7SocketListener(string httpUrl, int port, VoidStringDelegate callback, bool useSSL)
+        public Hl7SocketListener(string httpUrl, int port, VoidStringDelegate callback, bool useSsl)
         {
             List<string> prefixes = new List<string>
             {
@@ -64,13 +64,13 @@ namespace MotListenerLib
             //Hl7FhirListner.StartListener(prefixes, ParseHl7Message);
         }
 
-        public Hl7SocketListener(int port, StringStringDelegate callback, bool useSSL = false)
+        public Hl7SocketListener(int port, StringStringDelegate callback, bool useSsl = false)
         {
             try
             {
-                this.stringCallback = callback ?? throw new ArgumentNullException($"callback null");
+                this._stringCallback = callback ?? throw new ArgumentNullException($"callback null");
 
-                ListenerSocket = new MotSocket(port, callback)
+                _listenerSocket = new MotSocket(port, callback)
                 {
                     UseSsl = UseSsl
                 };
@@ -89,19 +89,19 @@ namespace MotListenerLib
             {
                 if (UseSsl)
                 {
-                    WorkerThread = new Thread(() => ListenerSocket.SecureListenAsync())
+                    _workerThread = new Thread(() => _listenerSocket.SecureListenAsync())
                     {
                         Name = "Encrypted Listener"
                     };
-                    WorkerThread.Start();
+                    _workerThread.Start();
                 }
                 else
                 {
-                    WorkerThread = new Thread(() => ListenerSocket.ListenAsync())
+                    _workerThread = new Thread(() => _listenerSocket.ListenAsync())
                     {
                         Name = "Listener"
                     };
-                    WorkerThread.Start();
+                    _workerThread.Start();
                 }
             }
             catch(Exception ex)
@@ -115,7 +115,7 @@ namespace MotListenerLib
         {
             try
             {
-                ListenerSocket?.Close();
+                _listenerSocket?.Close();
             }
             catch (Exception ex)
             {
@@ -137,7 +137,7 @@ namespace MotListenerLib
             {
                 if (overridePort > 0)
                 {
-                    var targetIp = IPAddress.Parse(((IPEndPoint)ListenerSocket.remoteEndPoint).Address.ToString());
+                    var targetIp = IPAddress.Parse(((IPEndPoint)_listenerSocket.remoteEndPoint).Address.ToString());
 
                     using (var localTcpClient = new TcpClient(targetIp.ToString(), overridePort))
                     {
@@ -152,18 +152,18 @@ namespace MotListenerLib
 
                 if (!wait)
                 {
-                    ListenerSocket.WriteReturn(message);
+                    _listenerSocket.WriteReturn(message);
                 }
                 else
                 {
-                    ListenerSocket.Write(message);
+                    _listenerSocket.Write(message);
                 }
 
-                ListenerSocket.Flush();
+                _listenerSocket.Flush();
             }
             catch (Exception ex)
             {
-                EventLogger?.Error("Port I/O error sending ACK to {0}.  {1}", ListenerSocket.remoteEndPoint, ex.Message);
+                EventLogger?.Error("Port I/O error sending ACK to {0}.  {1}", _listenerSocket.remoteEndPoint, ex.Message);
             }
         }
 

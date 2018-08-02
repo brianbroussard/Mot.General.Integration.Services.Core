@@ -90,10 +90,10 @@ namespace MotParserLib
 
         private static class DrugName
         {
-            public static string Name;
-            public static string Strength;
-            public static string Unit;
-            public static string Form;
+            public static string name;
+            public static string strength;
+            public static string unit;
+            public static string form;
 
             public static bool ParseExact(string source)
             {
@@ -145,30 +145,30 @@ namespace MotParserLib
                 if (Regex.Match(source, aspirin).Success)
                 {
                     parts = source.Split(' ');
-                    Name = parts[0] + " " + parts[1] + " " + parts[2];
-                    Strength = parts[3];
-                    Unit = parts[4];
-                    Form = parts[5];
+                    name = parts[0] + " " + parts[1] + " " + parts[2];
+                    strength = parts[3];
+                    unit = parts[4];
+                    form = parts[5];
                     return true;
 
                 }
                 if (Regex.Match(source, splitNamePattern).Success)
                 {
                     parts = source.Split(' ');
-                    Name = parts[0] + " " + parts[1];
-                    Strength = parts[2];
-                    Unit = parts[3];
-                    Form = parts[4];
+                    name = parts[0] + " " + parts[1];
+                    strength = parts[2];
+                    unit = parts[3];
+                    form = parts[4];
                     return true;
                 }
 
                 if (Regex.Match(source, standardPattern).Success)
                 {
                     parts = source.Split(' ');
-                    Name = parts[0];
-                    Strength = parts[1];
-                    Unit = parts[2];
-                    Form = parts[3];
+                    name = parts[0];
+                    strength = parts[1];
+                    unit = parts[2];
+                    form = parts[3];
                     return true;
                 }
 
@@ -176,10 +176,10 @@ namespace MotParserLib
                 if (Regex.Match(source, oyster).Success)
                 {
                     parts = source.Split(' ');
-                    Name = parts[0] + " " + parts[1] + parts[2];
-                    Strength = parts[3];
-                    Unit = parts[4];
-                    Form = parts[5];
+                    name = parts[0] + " " + parts[1] + parts[2];
+                    strength = parts[3];
+                    unit = parts[4];
+                    form = parts[5];
                     return true;
                 }
 
@@ -187,10 +187,10 @@ namespace MotParserLib
                 if (Regex.Match(source, postMashed).Success)
                 {
                     parts = source.Split(' ');
-                    Name = parts[0] + " " + parts[1];
-                    Strength = parts[2];
-                    Unit = parts[3];
-                    Form = "Form Unknown";
+                    name = parts[0] + " " + parts[1];
+                    strength = parts[2];
+                    unit = parts[3];
+                    form = "Form Unknown";
                     return true;
                 }
 
@@ -204,7 +204,6 @@ namespace MotParserLib
         /// Built as a bridge interface to BestRx, the method reads a Parada packing machine file and pulls out as 
         /// much useable information as it can ad pushes it into the DB.  It's too lightweight to be considered a
         /// true interface, but can be used in a pinch.
-        /// <param name="data"></param>
         public void Go()
         {
             var rows = data.Split('\n');
@@ -240,7 +239,7 @@ namespace MotParserLib
                 true;
 
             writeQueue.SendEof = false;  // Has to be off so we don't lose the socket.
-            writeQueue.debugMode = debugMode;
+            writeQueue.debugMode = DebugMode;
 
             try
             {
@@ -372,22 +371,22 @@ namespace MotParserLib
 
                             if (DrugName.ParseExact(rawRecord[8]))
                             {
-                                drug.TradeName = drug.DrugName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
-                                drug.ShortName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit}";
-                                drug.Unit = DrugName.Unit;
-                                drug.Strength = Convert.ToDouble(DrugName.Strength ?? "0.00");
-                                drug.DoseForm = DrugName.Form;
+                                drug.TradeName = drug.DrugName = $"{DrugName.name} {DrugName.strength} {DrugName.unit} {DrugName.form}";
+                                drug.ShortName = $"{DrugName.name} {DrugName.strength} {DrugName.unit}";
+                                drug.Unit = DrugName.unit;
+                                drug.Strength = Convert.ToDouble(DrugName.strength ?? "0.00");
+                                drug.DoseForm = DrugName.form;
 
-                                tempTradeName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
+                                tempTradeName = $"{DrugName.name} {DrugName.strength} {DrugName.unit} {DrugName.form}";
                             }
 
                             if (DrugName.ParseExact(rawRecord[9]))
                             {
-                                drug.TradeName = drug.DrugName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit} {DrugName.Form}";
-                                drug.ShortName = $"{DrugName.Name} {DrugName.Strength} {DrugName.Unit}";
-                                drug.Unit = DrugName.Unit;
-                                drug.Strength = Convert.ToDouble(DrugName.Strength ?? "0.00");
-                                drug.DoseForm = DrugName.Form;
+                                drug.TradeName = drug.DrugName = $"{DrugName.name} {DrugName.strength} {DrugName.unit} {DrugName.form}";
+                                drug.ShortName = $"{DrugName.name} {DrugName.strength} {DrugName.unit}";
+                                drug.Unit = DrugName.unit;
+                                drug.Strength = Convert.ToDouble(DrugName.strength ?? "0.00");
+                                drug.DoseForm = DrugName.form;
                                 drug.GenericFor = tempTradeName;
                             }
 
@@ -407,7 +406,7 @@ namespace MotParserLib
 
                             try
                             {
-                                switch (practitionerName.Count())
+                                switch (practitionerName.Length)
                                 {
                                     case 2:
                                         if (practitionerName[0].Length >= 3 && practitionerName[1].Length >= 3)
@@ -445,14 +444,7 @@ namespace MotParserLib
                             scrip.PrescriberID = patient.PrimaryPrescriberID;
                             scrip.Status = 1;
 
-                            if (string.IsNullOrEmpty(rawRecord[10]))  // It's a PRN
-                            {
-                                scrip.RxStartDate = DateTime.Now;
-                            }
-                            else
-                            {
-                                scrip.RxStartDate = scrip.TransformDate(rawRecord[10] ?? "");
-                            }
+                            scrip.RxStartDate = string.IsNullOrEmpty(rawRecord[10]) ? DateTime.Now : scrip.TransformDate(rawRecord[10] ?? "");
 
                             if (rawRecord[11] != null && rawRecord[12] != null)
                             {

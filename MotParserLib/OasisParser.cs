@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Reflection;
 using MotCommonLib;
 using System.Net.Sockets;
 
@@ -53,65 +48,65 @@ namespace MotParserLib
     class PsEdiData
     {
         [Layout(0, 19)]
-        public string PatientName;
+        public string patientName;
         [Layout(20, 31)]
-        public string PationLoc;
+        public string pationLoc;
         [Layout(32, 43)]
-        public string PatientId;
+        public string patientId;
         [Layout(44, 58)]
-        public string MedId;
+        public string medId;
         [Layout(59, 64)]
-        public DateTime MedAdminDate;
+        public DateTime medAdminDate;
         [Layout(65, 68)]
-        public DateTime MedAdminTime;
+        public DateTime medAdminTime;
         [Layout(69, 70)]
-        public ushort Dose;
+        public ushort dose;
         [Layout(71, 96)]
-        public string PrescriberName;
+        public string prescriberName;
         [Layout(97, 112)]
-        public string RxOrderNumber;
+        public string rxOrderNumber;
         [Layout(114, 136)]
-        public string Notes;
+        public string notes;
         [Layout(137, 144)]
-        public string FacilityId;
+        public string facilityId;
         [Layout(145, 169)]
-        public string PatientLastName;
+        public string patientLastName;
         [Layout(170, 189)]
-        public string PatientFirstName;
+        public string patientFirstName;
         [Layout(190, 190)]
-        public string PatientMiddleInitial;
+        public string patientMiddleInitial;
         [Layout(191, 220)]
-        public string FacilityName;
+        public string facilityName;
         [Layout(221, 231)]
-        public string Ndc11;
+        public string ndc11;
         [Layout(232, 431)]
-        public string Sig;
+        public string sig;
         [Layout(432, 731)]
-        public string ExpandedDirections;
+        public string expandedDirections;
         [Layout(732, 745)]
-        public string OrderedItemCode;
+        public string orderedItemCode;
         [Layout(746, 759)]
-        public string ShippedItemCode;
+        public string shippedItemCode;
         [Layout(760, 760)]
-        public string SubstitutionTypeIndicator;
+        public string substitutionTypeIndicator;
         [Layout(761, 810)]
-        public string ItemLikeText;
+        public string itemLikeText;
         [Layout(811, 813)]
-        public string RefillsRemaining;
+        public string refillsRemaining;
         [Layout(814, 1813)]
-        public string DrugCautionMessages;
+        public string drugCautionMessages;
         [Layout(1814, 1921)]
-        public string PatientAddressOrFacilityAddress;
+        public string patientAddressOrFacilityAddress;
         [Layout(1922, 1929)]
-        public string PV1Initials;
+        public string pv1Initials;
         [Layout(1930, 1979)]
-        public string PharmacyName;
+        public string pharmacyName;
         [Layout(1980, 1984)]
-        public string BranchId;
+        public string branchId;
         [Layout(1985, 1994)]
-        public string FacilityStation;
+        public string facilityStation;
         [Layout(1995, 2010)]
-        public string MagicCookie;
+        public string magicCookie;
     }
 
     class PsEdiParser : ParserBase, IDisposable
@@ -146,9 +141,9 @@ namespace MotParserLib
 
         class EdiRecord
         {
-            public MotPatientRecord Patient { get; set; }
-            public MotPrescriptionRecord Scrip { get; set; }
-            public MotFacilityRecord Facility { get; set; }
+            public MotPatientRecord Patient { get; }
+            public MotPrescriptionRecord Scrip { get; }
+            public MotFacilityRecord Facility { get; }
 
             public EdiRecord()
             {
@@ -179,20 +174,20 @@ namespace MotParserLib
             {
                 var ediRecord = new EdiRecord();
 
-                ediRecord.Patient.LastName = ediData.PatientLastName;
-                ediRecord.Patient.FirstName = ediData.PatientFirstName;
-                ediRecord.Patient.MiddleInitial = ediData.PatientMiddleInitial;
+                ediRecord.Patient.LastName = ediData.patientLastName;
+                ediRecord.Patient.FirstName = ediData.patientFirstName;
+                ediRecord.Patient.MiddleInitial = ediData.patientMiddleInitial;
 
-                ediRecord.Scrip.DrugID = ediData.Ndc11;
-                ediRecord.Scrip.PrescriptionID = ediData.RxOrderNumber;
-                ediRecord.Scrip.RxStartDate = ediData.MedAdminDate;
-                ediRecord.Scrip.DoseTimesQtys = ediData.MedAdminTime.ToString("HHmm") + ediData.Dose.ToString("00");
-                ediRecord.Scrip.QtyPerDose = Convert.ToDouble(ediData.Dose);
-                ediRecord.Scrip.Refills = Convert.ToInt32(ediData.RefillsRemaining ?? "0");
-                ediRecord.Scrip.Sig = $"{ediData.Sig}\n{ediData.ExpandedDirections}";
+                ediRecord.Scrip.DrugID = ediData.ndc11;
+                ediRecord.Scrip.PrescriptionID = ediData.rxOrderNumber;
+                ediRecord.Scrip.RxStartDate = ediData.medAdminDate;
+                ediRecord.Scrip.DoseTimesQtys = ediData.medAdminTime.ToString("HHmm") + ediData.dose.ToString("00");
+                ediRecord.Scrip.QtyPerDose = Convert.ToDouble(ediData.dose);
+                ediRecord.Scrip.Refills = Convert.ToInt32(ediData.refillsRemaining ?? "0");
+                ediRecord.Scrip.Sig = $"{ediData.sig}\n{ediData.expandedDirections}";
 
-                ediRecord.Facility.LocationID = ediData.FacilityId;
-                ediRecord.Facility.LocationName = ediData.FacilityName;
+                ediRecord.Facility.LocationID = ediData.facilityId;
+                ediRecord.Facility.LocationName = ediData.facilityName;
 
                 //
                 // Apparently the system will send over a record per dose.  We'll treat the first data found as the start date

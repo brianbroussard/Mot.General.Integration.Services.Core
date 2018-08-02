@@ -24,10 +24,6 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MotCommonLib;
 
 namespace MotParserLib
@@ -147,7 +143,7 @@ namespace MotParserLib
                 var writeQueue = new MotWriteQueue
                 {
                     SendEof = false,  // Has to be off so we don't lose the socket.
-                    debugMode = debugMode
+                    debugMode = DebugMode
                 };
 
                 string lastPatId = string.Empty;
