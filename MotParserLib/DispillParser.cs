@@ -147,7 +147,7 @@ namespace MotParserLib
                 var writeQueue = new MotWriteQueue
                 {
                     SendEof = false,  // Has to be off so we don't lose the socket.
-                    LogRecords = DebugMode
+                    debugMode = debugMode
                 };
 
                 string lastPatId = string.Empty;

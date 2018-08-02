@@ -94,9 +94,9 @@ namespace MotParserLib
         public string ResponseMessage { get; set; }
 
         /// <summary>
-        /// DebugMode - Flag for extra debug output
+        /// debugMode - Flag for extra debug output
         /// </summary>
-        public bool DebugMode { get; set; }
+        public bool debugMode { get; set; }
 
         /// <summary>
         /// AutoTruncate - flag to force string lengths down to motLegacy lengths
@@ -200,7 +200,7 @@ namespace MotParserLib
                     GatewaySocket.Write("<EOF/>");
                 }
 
-                if (DebugMode)
+                if (debugMode)
                 {
                     EventLogger.Debug(inboundData);
                 }
@@ -440,7 +440,7 @@ namespace MotParserLib
             {
                 mtsParser.GatewaySocket = GatewaySocket;
                 mtsParser.AutoTruncate = AutoTruncate;
-                mtsParser.DebugMode = DebugMode;
+                mtsParser.debugMode = debugMode;
                 mtsParser.EventLogger = EventLogger;
                 mtsParser.Go();
             }
@@ -456,7 +456,7 @@ namespace MotParserLib
             {
                 psEdiParser.GatewaySocket = GatewaySocket;
                 psEdiParser.AutoTruncate = AutoTruncate;
-                psEdiParser.DebugMode = DebugMode;
+                psEdiParser.debugMode = debugMode;
                 psEdiParser.EventLogger = EventLogger;
                 psEdiParser.Go();
             }
@@ -473,7 +473,7 @@ namespace MotParserLib
             {
                 paradaParser.GatewaySocket = GatewaySocket;
                 paradaParser.AutoTruncate = AutoTruncate;
-                paradaParser.DebugMode = DebugMode;
+                paradaParser.debugMode = debugMode;
                 paradaParser.EventLogger = EventLogger;
                 paradaParser.Go();
             }
@@ -491,7 +491,7 @@ namespace MotParserLib
             {
                 delimitedParser.GatewaySocket = GatewaySocket;
                 delimitedParser.AutoTruncate = AutoTruncate;
-                delimitedParser.DebugMode = DebugMode;
+                delimitedParser.debugMode = debugMode;
                 delimitedParser.EventLogger = EventLogger;
                 delimitedParser.Go(v1Format);
             }
@@ -508,7 +508,7 @@ namespace MotParserLib
             {
                 hl7Parser.Socket = GatewaySocket;
                 hl7Parser.AutoTruncate = AutoTruncate;
-                hl7Parser.DebugMode = DebugMode;
+                hl7Parser.debugMode = debugMode;
                 hl7Parser.EventLogger = EventLogger;
                 hl7Parser.Go();
 
@@ -527,7 +527,7 @@ namespace MotParserLib
             {
                 dispillParser.GatewaySocket = GatewaySocket;
                 dispillParser.AutoTruncate = AutoTruncate;
-                dispillParser.DebugMode = DebugMode;
+                dispillParser.debugMode = debugMode;
                 dispillParser.EventLogger = EventLogger;
                 dispillParser.Go();
             }
@@ -643,7 +643,7 @@ namespace MotParserLib
             }
         }
         /// <inheritdoc />
-        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool autoTruncate = false, bool sendEof = false, bool debugMode = false) : base(inputStream)
+        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
         {
             GatewaySocket = outSocket ?? throw new ArgumentNullException($"NULL Socket passed to motParser");
 
@@ -653,7 +653,7 @@ namespace MotParserLib
             }
 
             SendEof = sendEof;
-            DebugMode = debugMode;
+            base.debugMode = debugMode;
             AutoTruncate = autoTruncate;
 
             try
@@ -680,7 +680,7 @@ namespace MotParserLib
                     case InputDataFormat.AutoDetect:
                         ParseByGuess(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Best Guess processing: {inputStream}");
                         }
@@ -689,7 +689,7 @@ namespace MotParserLib
                     case InputDataFormat.XML:
                         ParseXml(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed XML processing: {inputStream}");
                         }
@@ -698,7 +698,7 @@ namespace MotParserLib
                     case InputDataFormat.JSON:
                         ParseJson(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed JSON processing: {inputStream}");
                         }
@@ -707,7 +707,7 @@ namespace MotParserLib
                     case InputDataFormat.Delimited:
                         ParseDelimited(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Delimited File processing: {inputStream}");
                         }
@@ -716,7 +716,7 @@ namespace MotParserLib
                     case InputDataFormat.Tagged:
                         ParseTagged(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Tagged File processing: {inputStream}");
                         }
@@ -725,7 +725,7 @@ namespace MotParserLib
                     case InputDataFormat.Parada:
                         ParseParada(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Parda file processng: {inputStream}");
                         }
@@ -734,7 +734,7 @@ namespace MotParserLib
                     case InputDataFormat.Dispill:
                         ParseDispill(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Dispill File Processing: {inputStream}");
                         }
@@ -743,7 +743,7 @@ namespace MotParserLib
                     case InputDataFormat.HL7:
                         ParseHL7(inputStream);
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed HL7 File Processing: {inputStream}");
                         }
@@ -752,7 +752,7 @@ namespace MotParserLib
                     case InputDataFormat.MTS:
                     case InputDataFormat.psEDI:
                         ParseEdi(inputStream);
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Completed Oasis File Processing: {inputStream}");
                         }
@@ -760,7 +760,7 @@ namespace MotParserLib
 
                     case InputDataFormat.Unknown:
 
-                        if (DebugMode)
+                        if (debugMode)
                         {
                             EventLogger.Debug($"Unknown File Type: {inputStream}");
                         }

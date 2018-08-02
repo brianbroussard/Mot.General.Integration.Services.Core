@@ -48,7 +48,7 @@ namespace MotHL7Lib
         public Logger EventLogger;
         public bool AutoTruncate { get; set; }
         public bool SendEof { get; set; }
-        public bool DebugMode { get; set; }
+        public bool debugMode { get; set; }
         public MotSocket Socket { get; set; }
         #endregion
 
@@ -434,7 +434,7 @@ namespace MotHL7Lib
                 ResponseMessage = ackMessageOut.AckString;
                 WriteResponse(ResponseMessage);
 
-                if (DebugMode)
+                if (debugMode)
                 {
                     EventLogger.Debug("MessageIn:\n{0}", data);
                     EventLogger.Debug("HL7 ACK:\n{0}", ResponseMessage);
@@ -1694,7 +1694,7 @@ namespace MotHL7Lib
         {
             string trace = string.Empty;
 
-            if (DebugMode)
+            if (debugMode)
             {
                 var lines = st.Split('\n');
                 trace = lines.Where(l => l.Contains(" in ")).Aggregate(trace, (current, l) => current + (l.Substring(l.IndexOf("in", StringComparison.Ordinal)) + "\n"));
@@ -1848,7 +1848,7 @@ namespace MotHL7Lib
 
             recBundle.MessageType = "ADT";
             Hl7SendingApp = args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
+            recBundle.SetDebug(debugMode);
 
             var hl7Xml = new XmlToHL7Parser();
             var xDoc = hl7Xml.Go(args.Data);
@@ -1904,7 +1904,7 @@ namespace MotHL7Lib
 
             recBundle.MessageType = "OMP";
             Hl7SendingApp = args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
+            recBundle.SetDebug(debugMode);
 
             var hl7Xml = new XmlToHL7Parser();
             var xmlDoc = hl7Xml.Go(args.Data);
@@ -1922,7 +1922,7 @@ namespace MotHL7Lib
                 {
                     using (var stream = localTcpClient.GetStream())
                     {
-                        recBundle.Patient.Write(stream);
+                        recBundle.Patient.Write(stream, debugMode);
                         recBundle.Patient.SetField("Action", "Change");
 
                         foreach (Order order in omp.Orders)
@@ -1960,7 +1960,7 @@ namespace MotHL7Lib
 
             recBundle.MessageType = "RDE";
             Hl7SendingApp = args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
+            recBundle.SetDebug(debugMode);
 
             var hl7Xml = new XmlToHL7Parser();
             var xmlDoc = hl7Xml.Go(args.Data);
@@ -1979,7 +1979,7 @@ namespace MotHL7Lib
                         ProcessPatient(rde.Patient, recBundle);
 
                         ProblemLocus = "Patient";
-                        recBundle.Patient.Write(stream);
+                        recBundle.Patient.Write(stream, debugMode);
 
                         foreach (Order order in rde.Orders)
                         {
@@ -2019,7 +2019,7 @@ namespace MotHL7Lib
 
             recBundle.MessageType = "RDS";
             Hl7SendingApp = Args.Hl7SendingApp;
-            recBundle.SetDebug(DebugMode);
+            recBundle.SetDebug(debugMode);
 
             var rds = new RDS_O13(xmlDoc);
 
@@ -2035,7 +2035,7 @@ namespace MotHL7Lib
                         ProcessHeader(rds.Header, recBundle);
                         ProcessPatient(rds.Patient, recBundle);
 
-                        recBundle.Patient.Write(stream);
+                        recBundle.Patient.Write(stream, debugMode);
                         recBundle.Patient.SetField("Action", "Change");
 
                         foreach (Order order in rds.Orders)

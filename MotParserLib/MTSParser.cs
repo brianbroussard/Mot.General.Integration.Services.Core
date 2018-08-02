@@ -239,10 +239,10 @@ namespace MotParserLib
                 {
                     foreach (var rec in _recordList)
                     {
-                        rec.Patient.Write(stream);
-                        rec.Scrip.Write(stream);
-                        rec.Doc.Write(stream);
-                        rec.Facility.Write(stream);
+                        rec.Patient.Write(stream, debugMode);
+                        rec.Scrip.Write(stream, debugMode);
+                        rec.Doc.Write(stream, debugMode);
+                        rec.Facility.Write(stream, debugMode);
                     }
                 }
             }

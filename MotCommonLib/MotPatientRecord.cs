@@ -149,7 +149,7 @@ namespace MotCommonLib
             AddToQueue("D", _fieldList);
         }
 
-        public void Write(MotSocket socket, bool DoLogging = false)
+        public void Write(MotSocket socket, bool doLogging = false)
         {
             try
             {
@@ -159,7 +159,7 @@ namespace MotCommonLib
                 }
                 else
                 {
-                    Write(socket, _fieldList, DoLogging);
+                    Write(socket, _fieldList, doLogging);
                 }
             }
             catch (Exception ex)
@@ -170,7 +170,7 @@ namespace MotCommonLib
             }
         }
 
-        public void Write(NetworkStream stream, bool LogOn = false)
+        public void Write(NetworkStream stream, bool doLogging = false)
         {
             try
             {
@@ -180,7 +180,7 @@ namespace MotCommonLib
                 }
                 else
                 {
-                    Write(stream, _fieldList, LogOn);
+                    Write(stream, _fieldList, doLogging);
                 }
             }
             catch (Exception ex)

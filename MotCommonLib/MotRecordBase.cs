@@ -703,7 +703,7 @@ namespace MotCommonLib
 
                 if (doLogging)
                 {
-                    EventLogger.Info(record);
+                    EventLogger.Debug(record);
                 }
             }
             catch (Exception ex)
@@ -768,7 +768,7 @@ namespace MotCommonLib
 
                 if (doLogging)
                 {
-                    EventLogger.Info(record);
+                    EventLogger.Debug(record);
                 }
             }
             catch (Exception ex)
