@@ -242,7 +242,7 @@ namespace MotParserLib
     /// <c>motParser</c>
     /// General data format transformation engine
     /// </summary>
-    public class MotParser : ParserBase, IDisposable
+    public class MotParser : ParserBase
     {
         /// <summary>
         /// <c>parseAndReturnTagged</c>
@@ -253,7 +253,7 @@ namespace MotParserLib
         protected XmlDocument ParseAndReturnTagged(string inputStream)
         {
             var test = new XmlDocument();
-            test.Load(inputStream);
+            test.LoadXml(inputStream);
             return test;
         }
 
@@ -668,6 +668,14 @@ namespace MotParserLib
                 throw;
             }
         }
+
+        public MotParser() : base("Test")
+        {
+            SendEof = false;
+            DebugMode = false;
+            AutoTruncate = false;
+        }
+
         /// <inheritdoc />
         ~MotParser()
         {

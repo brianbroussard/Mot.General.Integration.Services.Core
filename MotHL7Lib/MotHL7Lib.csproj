@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.10.10</AssemblyVersion>
-    <FileVersion>1.0.10.10</FileVersion>
+    <AssemblyVersion>1.0.13.13</AssemblyVersion>
+    <FileVersion>1.0.13.13</FileVersion>
   </PropertyGroup>
 
   <ItemGroup>
