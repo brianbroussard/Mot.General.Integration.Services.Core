@@ -18,5 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
+    <ProjectReference Include="..\MotParserLib\MotParserLib.csproj" />
   </ItemGroup>
 </Project>

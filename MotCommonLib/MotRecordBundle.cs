@@ -47,15 +47,16 @@ namespace MotCommonLib
         public List<MotStoreRecord> StoreList;
         public List<MotPrescriberRecord> PrescriberList;
 
-        private Logger EventLogger;
+        private readonly Logger _eventLogger;
 
         public bool MakeDupScrip { get; set; } = false;
         public DateTime NewStartDate { get; set; }
 
-        private MotWriteQueue WriteQueue;
+        private readonly MotWriteQueue _writeQueue;
+
         protected bool UseQueue = true;
         public bool SendEof { get; set; }
-        public bool debugMode { get; set; }
+        public bool DebugMode { get; set; }
         public string MessageType { get; set; }
 
         /// <summary>
@@ -66,8 +67,8 @@ namespace MotCommonLib
         /// <returns></returns>
         public bool SetDebug(bool on)
         {
-            WriteQueue.debugMode = on;
-            return WriteQueue.debugMode;
+            _writeQueue.debugMode = on;
+            return _writeQueue.debugMode;
         }
 
         /// <summary>
@@ -78,7 +79,8 @@ namespace MotCommonLib
         public RecordBundle(bool autoTruncate = false, bool sendEof = false)
         {
             this.SendEof = sendEof;
-            EventLogger = LogManager.GetLogger("motRecordBundle.Manager");
+            
+            _eventLogger = LogManager.GetLogger("motRecordBundle.Manager");
             Patient = new MotPatientRecord("Add", autoTruncate);
             Scrip = new MotPrescriptionRecord("Add", autoTruncate);
             Prescriber = new MotPrescriberRecord("Add", autoTruncate);
@@ -92,17 +94,17 @@ namespace MotCommonLib
 
             if (UseQueue)
             {
-                WriteQueue = new MotWriteQueue();
+                _writeQueue = new MotWriteQueue();
                 Patient.LocalWriteQueue =
                 Scrip.LocalWriteQueue =
                 Location.LocalWriteQueue =
                 Prescriber.LocalWriteQueue =
                 Store.LocalWriteQueue =
                 Drug.LocalWriteQueue =
-                    WriteQueue;
+                    _writeQueue;
 
-                WriteQueue.SendEof = sendEof;
-                WriteQueue.debugMode = debugMode;
+                _writeQueue.SendEof = sendEof;
+                _writeQueue.debugMode = DebugMode;
             }
 
             Patient.QueueWrites =
@@ -145,21 +147,21 @@ namespace MotCommonLib
                     {
                         if (StoreList.Count > 0)
                         {
-                            foreach (MotStoreRecord Store in StoreList)
+                            foreach (var store in StoreList)
                             {
-                                Store.SendEof = SendEof;
-                                Store.AddToQueue(WriteQueue);
+                                store.SendEof = SendEof;
+                                store.AddToQueue(_writeQueue);
                             }
                         }
                         else
                         {
-                            Store.AddToQueue(WriteQueue);
+                            Store.AddToQueue(_writeQueue);
                         }
 
-                        foreach (MotTimesQtysRecord TQ in TQList)
+                        foreach (var tq in TQList)
                         {
-                            TQ.SendEof = SendEof;
-                            TQ.AddToQueue(WriteQueue);
+                            tq.SendEof = SendEof;
+                            tq.AddToQueue(_writeQueue);
                         }
 
                         Drug.AddToQueue();
@@ -168,15 +170,15 @@ namespace MotCommonLib
 
                     if (PrescriberList.Count > 0)
                     {
-                        foreach (MotPrescriberRecord Prescriber in PrescriberList)
+                        foreach (var prescriber in PrescriberList)
                         {
-                            Prescriber.SendEof = SendEof;
-                            Prescriber.AddToQueue(WriteQueue);
+                            prescriber.SendEof = SendEof;
+                            prescriber.AddToQueue(_writeQueue);
                         }
                     }
                     else
                     {
-                        Prescriber.AddToQueue(WriteQueue);
+                        Prescriber.AddToQueue(_writeQueue);
                     }
 
                     Patient.AddToQueue();
@@ -187,7 +189,7 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                EventLogger.Error("Add To Bundle: {0}", ex.Message);
+                _eventLogger.Error($"Add To Bundle: {ex.Message}");
                 throw;
             }
         }
@@ -216,11 +218,11 @@ namespace MotCommonLib
         {
             try
             {
-                WriteQueue.Write(socket);
+                _writeQueue.Write(socket);
             }
             catch (Exception ex)
             {
-                EventLogger.Error("Commit Bundle: {0}", ex.Message);
+                _eventLogger.Error("Commit Bundle: {0}", ex.Message);
                 throw new Exception("Commit: " + ex.Message);
             }
         }
@@ -234,11 +236,11 @@ namespace MotCommonLib
         {
             try
             {
-                WriteQueue.Write(stream);
+                _writeQueue.Write(stream);
             }
             catch (Exception ex)
             {
-                EventLogger.Error("Commit Bundle: {0}", ex.Message);
+                _eventLogger.Error("Commit Bundle: {0}", ex.Message);
                 throw new Exception("Commit: " + ex.Message);
             }
         }
@@ -247,10 +249,10 @@ namespace MotCommonLib
         /// <c>Dispose</c>
         /// Conditional IDisposable destructor
         /// </summary>
-        /// <param name="Disposing"></param>
-        protected virtual void Dispose(bool Disposing)
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
         {
-            if (Disposing)
+            if (disposing)
             {
                 Patient.Dispose();
                 Scrip.Dispose();
