@@ -43,6 +43,7 @@ namespace MotHL7Lib
         protected string Data { get; set; }
         protected bool Encrypt { get; set; }
         public bool AllowZeroTQ { get; set; }
+        public string DefaultStoreLocation { get; set; }
 
         public string ResponseMessage { get; set; }
 
@@ -232,7 +233,7 @@ namespace MotHL7Lib
                 dataInputType = DataInputType.File;
             }
 
-            return Data.Split(new[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            return Data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
@@ -724,7 +725,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "EVN";
             var currentDate = recBundle.Patient.TransformDate(evn.Get("EVN.2"));
-
+            
             switch (evn.Get("EVN.1"))
             {
                 case "A01": // Admit/Visit  
@@ -877,14 +878,14 @@ namespace MotHL7Lib
                 case "RF":  // Refill order/service request                
                     refillScrip = true;
                     recBundle.Scrip.Status = 1;
-                    recBundle.MakeDupScrip = true;
+                    //recBundle.MakeDupRnaScrip = true;
                     break;
 
                 case "XO":  // Change order/service request
                 case "CA":  // Change order/service request
                     changeOrder = true;
                     recBundle.Scrip.Status = 1;
-                    recBundle.MakeDupScrip = true;
+                    recBundle.MakeDupRnaScrip = true;
                     recBundle.NewStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     break;
 
@@ -923,7 +924,7 @@ namespace MotHL7Lib
                  *
                  *   If ORC-4 is empty and ORC-2 == ORC-3, its an original orderl regardless if its flagged "XO"
                  */
-                if (!newScrip || refillScrip)
+                if (!newScrip && !refillScrip)
                 {
                     // If ORC-4 has a value, this is a Renew event and the last RxNum is not the first one
                     if (string.IsNullOrEmpty(orc.Get("ORC.4.1")))
@@ -961,17 +962,17 @@ namespace MotHL7Lib
             recBundle.Location.Zipcode = orc.Get("ORC.22.5");
             recBundle.Location.Phone = orc.Get("ORC.23.1");
 
-            var temp = orc.Get("ORC.12.1");
+            var prescriberID = orc.Get("ORC.12.1");
 
             if (Hl7SendingApp == HL7SendingApplication.RNA)
             {
-                if (temp.Length > 9)
+                if (prescriberID.Length > 9)
                 {
-                    temp = temp.Substring(0, 9);
+                    prescriberID = prescriberID.Substring(0, 9);
                 }
             }
 
-            recBundle.Prescriber.PrescriberID = temp;
+            recBundle.Prescriber.PrescriberID = prescriberID;
             recBundle.Prescriber.LastName = orc.Get("ORC.12.2");
             recBundle.Prescriber.FirstName = orc.Get("ORC.12.3");
             recBundle.Prescriber.Address1 = orc.Get("ORC.24.1");
@@ -980,8 +981,8 @@ namespace MotHL7Lib
             recBundle.Prescriber.State = orc.Get("ORC.24.4");
             recBundle.Prescriber.Zipcode = orc.Get("ORC.24.5");
 
-            recBundle.Patient.PrimaryPrescriberID = temp;
-            recBundle.Scrip.PrescriberID = temp;
+            recBundle.Patient.PrimaryPrescriberID = prescriberID;
+            recBundle.Scrip.PrescriberID = prescriberID;
         }
 
         private void ProcessPID(RecordBundle recBundle, PID pid)
@@ -1399,7 +1400,7 @@ namespace MotHL7Lib
             {
                 if (Hl7SendingApp != HL7SendingApplication.RNA)
                 {
-                    recBundle.Scrip.Sig = rxe.Get("RXE.7.2");
+                    recBundle.Scrip.Sig += $" {rxe.Get("RXE.7.2")}";
                 }
             }
 
@@ -1492,7 +1493,7 @@ namespace MotHL7Lib
 
             var doseTq = string.Empty;
             var doseScheduleName = tq1.Get("TQ1.3.1");
-            var dosePriority = tq1.Get("TQ1.9.1");
+            var dosePriority = tq1.Get("TQ1.9.1") ?? "N";
 
             if (dosePriority.Contains("PRN"))
             {
@@ -1606,11 +1607,16 @@ namespace MotHL7Lib
                 if (Hl7SendingApp == HL7SendingApplication.RNA)
                 {
                     recBundle.Scrip.QtyPerDose = Rnatq1DoseQty;
-                    return recBundle.Scrip.DoseTimesQtys =
-                        $"{tq141.FirstOrDefault()}{Rnatq1DoseQty}";
+
+                    foreach (var time in tq141)
+                    {
+                        recBundle.Scrip.DoseTimesQtys += $"{time}{Convert.ToDouble(tq2):00.00}";
+                    }
+
+                    return recBundle.Scrip.DoseTimesQtys;
                 }
 
-                recBundle.Scrip.QtyPerDose = Convert.ToDouble(tq2 ?? "0.00");
+                recBundle.Scrip.QtyPerDose = Convert.ToDouble(tq2 ?? "00.00");
                 return recBundle.Scrip.DoseTimesQtys = $"{tq141.FirstOrDefault()}{Convert.ToDouble(string.IsNullOrEmpty(tq2) ? "E" : tq2):00.00}";
             }
 
@@ -1751,11 +1757,11 @@ namespace MotHL7Lib
         }
 
         #region RNA Special Processing
-        void ProcessRnaRenewOrder(NetworkStream Stream, RecordBundle recBundle)
+        void ProcessRnaRenewOrder(NetworkStream stream, RecordBundle recBundle)
         {
-            if (recBundle.MakeDupScrip)
+            if (recBundle.MakeDupRnaScrip && Hl7SendingApp == HL7SendingApplication.RNA)
             {
-                recBundle.MakeDupScrip = false;
+                recBundle.MakeDupRnaScrip = false;
                 var ds = recBundle.Scrip.ShallowCopy();
                 ds.QueueWrites = false;
                 ds.RxStartDate = recBundle.Scrip.RxStartDate;
@@ -1763,7 +1769,7 @@ namespace MotHL7Lib
                 ds.PrescriptionID = ds.RxSys_NewRxNum;
                 ds.RxSys_NewRxNum = string.Empty;
                 ds.Status = 1;
-                ds.Write(Stream);
+                ds.Write(stream);
             }
         }
         #endregion
@@ -1845,10 +1851,9 @@ namespace MotHL7Lib
             }
 
             // There's no place but the order to get the location ID, so grab it now
-            recBundle.Patient.LocationID = newOrder.ORC.Get("ORC.21.3");
-            {
-                return true;
-            }
+            recBundle.Patient.LocationID = newOrder.ORC.Get("ORC.21.3") ?? DefaultStoreLocation;
+
+            return true;
         }
 
         /// <summary>
@@ -1907,10 +1912,18 @@ namespace MotHL7Lib
                         // Make sure the proper actions are taken for the event
                         ProcessEVN(recBundle, adt.EVN);
 
+                        if (string.IsNullOrEmpty(recBundle.Prescriber.LastName))
+                        {
+                            recBundle.Prescriber.DontSend = true;
+                        }
+
+                        if (string.IsNullOrEmpty(recBundle.Patient.LocationID))
+                        {
+                            recBundle.Patient.LocationID = DefaultStoreLocation;
+                        }
+
                         recBundle.Write();
                         recBundle.Commit(stream);
-
-                        ProcessRnaRenewOrder(stream, recBundle);
                     }
                 }
 
@@ -1960,6 +1973,7 @@ namespace MotHL7Lib
                             recBundle.Write();
                         }
 
+                        
                         recBundle.Commit(stream);
 
                         ProcessRnaRenewOrder(stream, recBundle);

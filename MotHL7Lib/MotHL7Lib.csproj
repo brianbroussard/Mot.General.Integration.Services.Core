@@ -5,6 +5,8 @@
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
     <AssemblyVersion>1.0.13.13</AssemblyVersion>
     <FileVersion>1.0.13.13</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>

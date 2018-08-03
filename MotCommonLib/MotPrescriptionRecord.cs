@@ -249,8 +249,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_rxnum")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_rxnum")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_RxNum");
@@ -278,8 +278,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_patid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_patid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_PatID");
@@ -307,8 +307,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_docid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_docid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
@@ -337,8 +337,8 @@ namespace MotCommonLib
             get
             {
 
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_drugid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_drugid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DrugID");
@@ -354,8 +354,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("sig")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("sig")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "Empty Sig", "Sig");
@@ -371,8 +371,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstartdate")));
-                return TransformDate(f?.tagData);
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxstartdate")));
+                return TransformDate(f?.TagData);
             }
 
             set
@@ -395,8 +395,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstopdate")));
-                return TransformDate(f?.tagData);
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxstopdate")));
+                return TransformDate(f?.TagData);
             }
 
             set
@@ -419,8 +419,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("discontinuedate")));
-                return TransformDate(f?.tagData);
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("discontinuedate")));
+                return TransformDate(f?.TagData);
             }
 
             set
@@ -459,8 +459,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("doseschedulename")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("doseschedulename")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, NormalizeString(value ?? "MissingName"), "DoseScheduleName");
@@ -476,8 +476,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("comments")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? " ", "Comments");
@@ -493,8 +493,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("refills")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("refills")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "Refills");
@@ -510,8 +510,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_newrxnum")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_newrxnum")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_NewRxNum");
@@ -527,8 +527,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("isolate")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("isolate")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "1", "Isolate");
@@ -544,8 +544,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxtype")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxtype")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "RxType");
@@ -562,8 +562,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("mdomstart")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("mdomstart")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "MDOMStart");
@@ -579,8 +579,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("mdomend")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("mdomend")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "28", "MDOMEnd");
@@ -596,8 +596,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("qtyperdose")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToDouble(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("qtyperdose")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToDouble(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "QtyPerDose");
@@ -613,8 +613,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("qtydispensed")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToDouble(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("qtydispensed")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToDouble(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "QtyDispensed");
@@ -630,8 +630,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("status")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("status")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "Status");
@@ -647,8 +647,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dow")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("dow")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0000000", "DoW");
@@ -664,8 +664,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("specialdoses")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("specialdoses")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "SpecialDoses");
@@ -681,8 +681,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dosetimesqtys")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("dosetimesqtys")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "00.00", "DoseTimesQtys");
@@ -698,8 +698,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("chartonly")));
-                return !string.IsNullOrEmpty(f.tagData) ? Convert.ToInt32(f.tagData) : 0;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("chartonly")));
+                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, value.ToString(), "ChartOnly");
@@ -711,8 +711,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("anchordate")));
-                return TransformDate(f?.tagData);
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("anchordate")));
+                return TransformDate(f?.TagData);
             }
 
             set

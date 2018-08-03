@@ -191,8 +191,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_locid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_locid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_LocID");
@@ -208,8 +208,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("doseschedulename")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("doseschedulename")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "None", "DoseScheduleName");
@@ -229,8 +229,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dosetimesqtys")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("dosetimesqtys")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "DoseTimesQtys");

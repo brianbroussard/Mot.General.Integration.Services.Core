@@ -16,6 +16,8 @@
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
     <AssemblyVersion>1.0.14.14</AssemblyVersion>
     <FileVersion>1.0.14.14</FileVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">

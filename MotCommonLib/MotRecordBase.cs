@@ -60,12 +60,12 @@ namespace MotCommonLib
     [Serializable]
     public class Field
     {
-        public string tagName { get; set; }
-        public string tagData { get; set; }
-        public int maxLen { get; set; }
-        public bool required { get; set; }
-        public char when { get; set; }
-        public bool autoTruncate { get; set; }
+        public string TagName { get; set; }
+        public string TagData { get; set; }
+        public int MaxLen { get; set; }
+        public bool Required { get; set; }
+        public char When { get; set; }
+        public bool AutoTruncate { get; set; }
         public bool IsNew { get; set; }
         public virtual void rules() { }
 
@@ -76,35 +76,35 @@ namespace MotCommonLib
         /// <inheritdoc />
         public Field(string f, string t, int m, bool r, char w)
         {
-            tagName = f;
-            tagData = t;
-            maxLen = m;
-            required = r;
-            when = w;
-            autoTruncate = IsNew = false;
+            TagName = f;
+            TagData = t;
+            MaxLen = m;
+            Required = r;
+            When = w;
+            AutoTruncate = IsNew = false;
         }
 
         /// <inheritdoc />
         public Field(string f, string t, int m, bool r, char w, bool a, bool n)
         {
-            tagName = f;
-            tagData = t;
-            maxLen = m;
-            required = r;
-            when = w;
-            autoTruncate = true;
+            TagName = f;
+            TagData = t;
+            MaxLen = m;
+            Required = r;
+            When = w;
+            AutoTruncate = true;
             IsNew = true;
         }
 
         /// <inheritdoc />
         public Field(string f, string t, int m, bool r, char w, bool a)
         {
-            tagName = f;
-            tagData = t;
-            maxLen = m;
-            required = r;
-            when = w;
-            autoTruncate = a;
+            TagName = f;
+            TagData = t;
+            MaxLen = m;
+            Required = r;
+            When = w;
+            AutoTruncate = a;
         }
     }
     /// <summary>
@@ -188,6 +188,7 @@ namespace MotCommonLib
         /// </summary>
         /// <value>The local write queue.</value>
         public MotWriteQueue LocalWriteQueue { get; set; } = null;
+        public bool DontSend { get;  set; }
 
         /// <summary>
         /// <c>AddToQueue</c>
@@ -197,6 +198,11 @@ namespace MotCommonLib
         /// <param name="fieldList"></param>
         public void AddToQueue(string type, List<Field> fieldList)
         {
+            if (DontSend)
+            {
+                return;
+            }
+
             var dataLen = 0;
 
             if (IsEmpty)
@@ -227,14 +233,14 @@ namespace MotCommonLib
                     // Qualify field requirement
                     // if required and when == action && is_blank -> throw
 
-                    record += "<" + tag.tagName + ">" +
-                                    tag.tagData + "</" +
-                                    tag.tagName + ">";
+                    record += "<" + tag.TagName + ">" +
+                                    tag.TagData + "</" +
+                                    tag.TagName + ">";
 
                     // If there's no data other than Table and Action we should ignore it.
-                    if (tag.tagName.ToUpper() != "TABLE" && tag.tagName.ToUpper() != "ACTION")
+                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION")
                     {
-                        dataLen += tag.tagData.Length;
+                        dataLen += tag.TagData.Length;
                     }
                 }
 
@@ -528,7 +534,7 @@ namespace MotCommonLib
             //      'C' - Required for all Change actions
             //
 
-            var f = fieldSet?.Find(x => x.tagName.ToLower().Contains("action"));
+            var f = fieldSet?.Find(x => x.TagName.ToLower().Contains("action"));
 
             //  There are rules for fields that are required in add/change/delete.  Test them here
             if (fieldSet != null)
@@ -541,32 +547,32 @@ namespace MotCommonLib
                     // required == true, when == 'a', _table action == 'add', tagData == empty -> Exception
                     // required == true, when == 'c', _table_action == 'change', tagData == empty -> Exception
 
-                    if (t.required && (t.when == f.tagData.ToLower()[0] || t.when == 'k')) // look for a,c,k
+                    if (t.Required && (t.When == f.TagData.ToLower()[0] || t.When == 'k')) // look for a,c,k
                     {
-                        if (string.IsNullOrEmpty(t.tagData))
+                        if (string.IsNullOrEmpty(t.TagData))
                         {
-                            if (t.tagName == "RxSys_LocID")
+                            if (t.TagName == "RxSys_LocID")
                             {
-                                t.tagData = " ";
+                                t.TagData = " ";
                                 continue;
                             }
 
-                            if (t.tagName == "LocationName")
+                            if (t.TagName == "LocationName")
                             {
-                                t.tagData = "Home Care";
+                                t.TagData = "Home Care";
                                 continue;
                             }
 
                             if (!AutoTruncate)
                             {
-                                var errorString = $"REJECTED: Field {t.tagName} empty but required for the {f.tagData} operation on a {fieldSet[0].tagData} record!";
+                                var errorString = $"REJECTED: Field {t.TagName} empty but required for the {f.TagData} operation on a {fieldSet[0].TagData} record!";
 
                                 EventLogger.Error(errorString);
                                 throw new Exception(errorString);
                             }
                             else
                             {
-                                var errorString = $"Attention: Empty {t.tagName}";
+                                var errorString = $"Attention: Empty {t.TagName}";
                                 EventLogger.Error(errorString);
                             }
                         }
@@ -582,16 +588,18 @@ namespace MotCommonLib
         /// <param name="FieldSet"></param>
         protected void Clear(List<Field> FieldSet)
         {
-            string Type = FieldSet[0].tagData;
-            string Action = FieldSet[1].tagData;
+            DontSend = false;
+
+            string Type = FieldSet[0].TagData;
+            string Action = FieldSet[1].TagData;
 
             foreach (var field in FieldSet)
             {
-                field.tagData = string.Empty;
+                field.TagData = string.Empty;
             }
 
-            FieldSet[0].tagData = Type;
-            FieldSet[1].tagData = Action;
+            FieldSet[0].TagData = Type;
+            FieldSet[1].TagData = Action;
 
             IsEmpty = true;
         }
@@ -618,7 +626,7 @@ namespace MotCommonLib
                 //throw new ArgumentNullException();
             }
 
-            var f = fieldSet?.Find(x => x.tagName.ToLower().Contains((tag.ToLower())));
+            var f = fieldSet?.Find(x => x.TagName.ToLower().Contains((tag.ToLower())));
 
             if (f == null)
             {
@@ -626,22 +634,22 @@ namespace MotCommonLib
                 return false;   // Field doesn't exist
             }
 
-            if (!string.IsNullOrEmpty(val) && val.Length > f.maxLen)
+            if (!string.IsNullOrEmpty(val) && val.Length > f.MaxLen)
             {
                 if (AutoTruncate && overrideTruncate)
                 {
-                    logData = $"Field Overflow at: <{tag}>, Data: {val}. Maxlen = {f.maxLen} but got: {val.Length}";
+                    logData = $"Field Overflow at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
                     EventLogger.Error(logData);
                     throw new Exception(logData);
                 }
 
-                logData = $"Autotruncated Overflowed Field at: <{tag}>, Data: {val}. Maxlen = {f.maxLen} but got: {val.Length}";
+                logData = $"Autotruncated Overflowed Field at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
                 EventLogger.Warn(logData);
 
-                val = val?.Substring(0, f.maxLen);
+                val = val?.Substring(0, f.MaxLen);
             }
 
-            f.tagData = string.IsNullOrEmpty(val) ? string.Empty : val;
+            f.TagData = string.IsNullOrEmpty(val) ? string.Empty : val;
 
             IsEmpty = false;
 
@@ -657,6 +665,11 @@ namespace MotCommonLib
         /// <param name="doLogging"></param>
         protected void Write(NetworkStream stream, List<Field> fieldSet, bool doLogging = false)
         {
+            if (DontSend)
+            {
+                return;
+            }
+
             var record = "<Record>";
             var dataLen = 0;
 
@@ -677,19 +690,19 @@ namespace MotCommonLib
 
                 foreach (var tag in fieldSet)
                 {
-                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
                     {
-                        tag.tagData = "";
+                        tag.TagData = "";
                     }
 
-                    record += "<" + tag.tagName + ">" +
-                                    tag.tagData + "</" +
-                                    tag.tagName + ">";
+                    record += "<" + tag.TagName + ">" +
+                                    tag.TagData + "</" +
+                                    tag.TagName + ">";
 
                     // If there's no data other than Table and Action we should ignore it.
-                    if (tag.tagName.ToUpper() != "TABLE" && tag.tagName.ToUpper() != "ACTION")
+                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION")
                     {
-                        dataLen += tag.tagData.Length;
+                        dataLen += tag.TagData.Length;
                     }
 
                    
@@ -729,6 +742,11 @@ namespace MotCommonLib
         /// <param name="doLogging"></param>
         protected void Write(MotSocket socket, List<Field> fieldSet, bool doLogging = false)
         {
+            if (DontSend)
+            {
+                return;
+            }
+
             var record = "<Record>";
             var dataLen = 0;
 
@@ -749,24 +767,24 @@ namespace MotCommonLib
 
                 foreach (var tag in fieldSet)
                 {
-                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
                     {
-                        tag.tagData = "";
+                        tag.TagData = "";
                     }
 
-                    record += "<" + tag.tagName + ">" +
-                              tag.tagData + "</" +
-                              tag.tagName + ">";
+                    record += "<" + tag.TagName + ">" +
+                              tag.TagData + "</" +
+                              tag.TagName + ">";
 
                     // If there's no data other than Table and Action we should ignore it.
-                    if (tag.tagName.ToUpper() != "TABLE" && tag.tagName.ToUpper() != "ACTION")
+                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION")
                     {
-                        dataLen += tag.tagData.Length;
+                        dataLen += tag.TagData.Length;
                     }
 
-                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
                     {
-                        tag.tagData = "";
+                        tag.TagData = "";
                     }
                 }
 

@@ -62,6 +62,10 @@ namespace MotParserLib
         protected bool DebugMode { get; set; }
         protected bool AllowZeroTQ { get; set; }
 
+        // If a patient doesn't have a location, it gets put in the default store
+        // most of the time that's niot what we want
+        protected string DefaultStoreLoc { get; set; }
+
         protected List<string> responses;
         private PlatformOs _platform;
 
@@ -83,6 +87,7 @@ namespace MotParserLib
             WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
             DebugMode = (appSettings["Debug"] ?? "false") == "true";
             AllowZeroTQ = (appSettings["AllowZeroTQ"] ?? "false") == "true";
+            DefaultStoreLoc = appSettings["DefaultStoreLoc"] ?? "000000";
         }
 
         protected void SaveConfiguration()
@@ -96,7 +101,8 @@ namespace MotParserLib
             appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
             appSettings["WatchSocket"] = WatchSocket.ToString();
             appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
-            
+            appSettings["DefaultStoreLoc"] = DefaultStoreLoc;
+
         }
 
         public List<string> GetConfigList()
@@ -112,7 +118,9 @@ namespace MotParserLib
                 $"WatchFileSystem: {appSettings["WatchFileSystem"]}",
                 $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}",
                 $"Debug: {appSettings["Debug"] ?? "false"}",
-                $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}"
+                $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}",
+                $"DefaultStoreLoc: {appSettings["DefaultStoreLoc"]}"
+
             };
 
             return response;
@@ -177,7 +185,7 @@ namespace MotParserLib
 
             using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
             {
-                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ))
+                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
                 {
                     eventLogger.Info(p.ResponseMessage);
                     responseMessage = p.ResponseMessage;

@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("TransformerService")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("HL7 and other gateway interface for MOTALL and motNext")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Medicine-On-Time, LLC")]
 [assembly: AssemblyProduct("TransformerService")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright ©  2018 by Peter H. Jenney")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

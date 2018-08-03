@@ -208,8 +208,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxsys_docid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_docid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
@@ -235,8 +235,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("lastname")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("lastname")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "LastName");
@@ -251,8 +251,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("firstname")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("firstname")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "FirstName");
@@ -267,8 +267,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("middleinitial")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("middleinitial")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "MiddleInitial");
@@ -283,8 +283,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("address1")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("address1")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "Address1");
@@ -299,8 +299,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("address2")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("address2")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "Address2");
@@ -315,8 +315,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("city")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("city")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "City");
@@ -331,8 +331,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("state")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("state")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value?.ToUpper() ?? String.Empty, "State");
@@ -347,8 +347,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("zip")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("zip")));
+                return f?.TagData;
             }
 
             set
@@ -381,8 +381,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("phone")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("phone")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, NormalizeString(value ?? string.Empty), "Phone");
@@ -397,8 +397,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("comments")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? string.Empty, "Comments");
@@ -413,8 +413,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("dea_id")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("dea_id")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, ValidateDea(value ?? String.Empty), "DEA_ID");
@@ -429,8 +429,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("tpid")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("tpid")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? String.Empty, "TPID");
@@ -445,8 +445,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("speciality")));
-                return !string.IsNullOrEmpty(f.tagData) ? f.tagData : "None";
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("speciality")));
+                return !string.IsNullOrEmpty(f.TagData) ? f.TagData : "None";
             }
 
             set
@@ -464,8 +464,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("fax")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("fax")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? String.Empty, "Fax");
@@ -480,8 +480,8 @@ namespace MotCommonLib
         {
             get
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("pageringfo")));
-                return f?.tagData;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("pageringfo")));
+                return f?.TagData;
             }
 
             set => SetField(_fieldList, value ?? String.Empty, "PagerInfo");
@@ -496,8 +496,8 @@ namespace MotCommonLib
         {
             set
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("comments")));
-                f.tagData += "\nEmail: " + value;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
+                f.TagData += "\nEmail: " + value;
             }
         }
 
@@ -510,8 +510,8 @@ namespace MotCommonLib
         {
             set
             {
-                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("comments")));
-                f.tagData += "\nIM: " + value;
+                var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
+                f.TagData += "\nIM: " + value;
             }
         }
     }

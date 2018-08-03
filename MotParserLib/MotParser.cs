@@ -143,6 +143,8 @@ namespace MotParserLib
         /// </summary>
         public bool AllowZeroTQ { get; set; }
 
+        public string DefaultStoreLoc { get; set; }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -518,6 +520,7 @@ namespace MotParserLib
                 hl7Parser.AutoTruncate = AutoTruncate;
                 hl7Parser.debugMode = DebugMode;
                 hl7Parser.AllowZeroTQ = AllowZeroTQ;
+                hl7Parser.DefaultStoreLocation = DefaultStoreLoc;
                 hl7Parser.EventLogger = EventLogger;
                 hl7Parser.Go();
 
@@ -652,7 +655,7 @@ namespace MotParserLib
             }
         }
         /// <inheritdoc />
-        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool allowZeroTQ = false, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
+        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool allowZeroTQ = false, string defaultStoreLoc = null, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
         {
             GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to motParser");
 
@@ -665,6 +668,7 @@ namespace MotParserLib
             DebugMode = debugMode;
             AutoTruncate = autoTruncate;
             AllowZeroTQ = allowZeroTQ;
+            DefaultStoreLoc = defaultStoreLoc;
 
             try
             {

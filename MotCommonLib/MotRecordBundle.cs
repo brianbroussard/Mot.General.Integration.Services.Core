@@ -49,7 +49,7 @@ namespace MotCommonLib
 
         private readonly Logger _eventLogger;
 
-        public bool MakeDupScrip { get; set; } = false;
+        public bool MakeDupRnaScrip { get; set; } = false;
         public DateTime NewStartDate { get; set; }
 
         private readonly MotWriteQueue _writeQueue;
