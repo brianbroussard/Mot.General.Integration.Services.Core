@@ -1309,6 +1309,39 @@ namespace MotHL7Lib
             recBundle.Scrip.PatientID = recBundle.Patient.PatientID;
         }
 
+        int ConvertFromRoman(string number)
+        {
+            if (number.Contains("I") || number.Contains("V"))
+            {
+                switch (number)
+                {
+                    case "I":
+                        return 1;
+                    case "II":
+                        return 2;
+                    case "III":
+                        return 3;
+                    case "IV":
+                        return 4;
+                    case "V":
+                        return 5;
+                    case "VI":
+                        return 6;
+                    case "VII":
+                        return 7;
+                      
+                }
+            }
+
+            try
+            {
+                return Convert.ToInt32(number);
+            }
+            catch (Exception e)
+            {
+                return 0;
+            } 
+        }
         private void ProcessRXE(RecordBundle recBundle, RXE rxe)
         {
             if (recBundle == null || rxe == null)
@@ -1371,7 +1404,7 @@ namespace MotHL7Lib
 
             if (!string.IsNullOrEmpty(rxe.Get("RXE.35.1")))
             {
-                recBundle.Drug.DrugSchedule = Convert.ToInt32(rxe.Get("RXE.35.1"));
+                recBundle.Drug.DrugSchedule = ConvertFromRoman(rxe.Get("RXE.35.1") ?? "0");
             }
 
             recBundle.Scrip.DrugID = recBundle.Drug.NDCNum;
