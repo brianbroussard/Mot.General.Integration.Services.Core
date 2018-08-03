@@ -38,11 +38,11 @@ namespace MotListenerLib
         public bool RunAsService { get; set; }
         public Logger EventLogger { get; set; }
         public bool DebugMode { get; set; }
+        public bool AllowZeroTQ { get; set; }
 
         public MotSocket GatewaySocket { get; set; }
      
         private readonly MotSocket _listenerSocket;
-        public MotSocket workerSocket;
         private Thread _workerThread;
         private StringStringDelegate _stringCallback;
 

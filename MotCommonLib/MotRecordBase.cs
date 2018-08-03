@@ -677,6 +677,11 @@ namespace MotCommonLib
 
                 foreach (var tag in fieldSet)
                 {
+                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    {
+                        tag.tagData = "";
+                    }
+
                     record += "<" + tag.tagName + ">" +
                                     tag.tagData + "</" +
                                     tag.tagName + ">";
@@ -686,6 +691,8 @@ namespace MotCommonLib
                     {
                         dataLen += tag.tagData.Length;
                     }
+
+                   
                 }
 
                 record += "</Record>";
@@ -742,6 +749,11 @@ namespace MotCommonLib
 
                 foreach (var tag in fieldSet)
                 {
+                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    {
+                        tag.tagData = "";
+                    }
+
                     record += "<" + tag.tagName + ">" +
                               tag.tagData + "</" +
                               tag.tagName + ">";
@@ -750,6 +762,11 @@ namespace MotCommonLib
                     if (tag.tagName.ToUpper() != "TABLE" && tag.tagName.ToUpper() != "ACTION")
                     {
                         dataLen += tag.tagData.Length;
+                    }
+
+                    if (tag.tagName.ToUpper().Contains("DATE") && tag.tagData.Contains("0001"))
+                    {
+                        tag.tagData = "";
                     }
                 }
 

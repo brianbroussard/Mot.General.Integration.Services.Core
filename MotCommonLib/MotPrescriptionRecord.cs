@@ -296,7 +296,7 @@ namespace MotCommonLib
             get { return RxSys_PatID; }
             set => RxSys_PatID = value;
         }
-       
+
         /// <summary>
         /// Gets or sets the prescriber identifier.
         /// </summary>
@@ -377,7 +377,7 @@ namespace MotCommonLib
 
             set
             {
-                if (value.ToString("yyyy-MM-dd") != "1970-01-01" && 
+                if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
                     value.ToString("yyyy-MM-dd") != "0001-01-01")
                 {
                     SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStartDate");
@@ -386,72 +386,76 @@ namespace MotCommonLib
         }
 
         /// <summary>
-            /// Gets or sets the rx stop date.
-            /// </summary>
-            /// <value>The rx stop date.</value>
-            [JsonProperty("RxStopDate", ItemConverterType = typeof(DateTime))]
-            [XmlElement("RxStopDate", typeof(DateTime))]
-            public DateTime RxStopDate
+        /// Gets or sets the rx stop date.
+        /// </summary>
+        /// <value>The rx stop date.</value>
+        [JsonProperty("RxStopDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("RxStopDate", typeof(DateTime))]
+        public DateTime RxStopDate
+        {
+            get
             {
-                get
-                {
-                    var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstopdate")));
-                    return TransformDate(f?.tagData);
-                }
+                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("rxstopdate")));
+                return TransformDate(f?.tagData);
+            }
 
-                set
-                {
+            set
+            {
                 if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
                     value.ToString("yyyy-MM-dd") != "0001-01-01")
                 {
-                        SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
-                    }
+                    SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
                 }
             }
+        }
 
-            /// <summary>
-            /// Gets or sets the discontinue date.
-            /// </summary>
-            /// <value>The discontinue date.</value>
-            [JsonProperty("DiscontinueDate", ItemConverterType = typeof(DateTime))]
-            [XmlElement("DiscontinueDate", typeof(DateTime))]
-            public DateTime DiscontinueDate
+        /// <summary>
+        /// Gets or sets the discontinue date.
+        /// </summary>
+        /// <value>The discontinue date.</value>
+        [JsonProperty("DiscontinueDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("DiscontinueDate", typeof(DateTime))]
+        public DateTime DiscontinueDate
+        {
+            get
             {
-                get
-                {
-                    var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("discontinuedate")));
-                    return TransformDate(f?.tagData);
-                }
+                var f = _fieldList?.Find(x => x.tagName.ToLower().Contains(("discontinuedate")));
+                return TransformDate(f?.tagData);
+            }
 
-                set
-                {
+            set
+            {
                 if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
                     value.ToString("yyyy-MM-dd") != "0001-01-01")
                 {
-                        SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "DiscontinueDate");
-                    }
+                    SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "DiscontinueDate");
+                }
+                else
+                {
+                    SetField(_fieldList, DateTime.MinValue.ToString(), "DiscontinueDate");
                 }
             }
+        }
 
-            /// <summary>
-            /// Gets or sets the discontinue date.
-            /// </summary>
-            /// <value>The discontinue date.</value>
-            [JsonProperty("DCDate", ItemConverterType = typeof(DateTime))]
-            [XmlElement("DCDate", typeof(DateTime))]
-            public DateTime DCDate
-            {
-                get { return DiscontinueDate; }
-                set => DiscontinueDate = value;
-            }
+        /// <summary>
+        /// Gets or sets the discontinue date.
+        /// </summary>
+        /// <value>The discontinue date.</value>
+        [JsonProperty("DCDate", ItemConverterType = typeof(DateTime))]
+        [XmlElement("DCDate", typeof(DateTime))]
+        public DateTime DCDate
+        {
+            get { return DiscontinueDate; }
+            set => DiscontinueDate = value;
+        }
 
-            /// <summary>
-            /// Gets or sets the name of the dose schedule.
-            /// </summary>
-            /// <value>The name of the dose schedule.</value>
-            [JsonProperty("DoseScheduleName")]
-            [XmlElement("DoseScheduleName")]
-            public string DoseScheduleName
+        /// <summary>
+        /// Gets or sets the name of the dose schedule.
+        /// </summary>
+        /// <value>The name of the dose schedule.</value>
+        [JsonProperty("DoseScheduleName")]
+        [XmlElement("DoseScheduleName")]
+        public string DoseScheduleName
         {
             get
             {
@@ -719,6 +723,6 @@ namespace MotCommonLib
                     SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd")), "AnchorDate");
                 }
             }
-        }     
+        }
     }
 }

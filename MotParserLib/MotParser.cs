@@ -138,6 +138,12 @@ namespace MotParserLib
         public bool RunAsService { get; set; }
 
         /// <summary>
+        /// <c>AllowZeroTQ</c>
+        /// Allows parser to submit records without dose times or qtys
+        /// </summary>
+        public bool AllowZeroTQ { get; set; }
+
+        /// <summary>
         /// <c>Dispose</c>
         /// </summary>
         /// <param name="disposing"></param>
@@ -511,6 +517,7 @@ namespace MotParserLib
                 hl7Parser.Socket = GatewaySocket;
                 hl7Parser.AutoTruncate = AutoTruncate;
                 hl7Parser.debugMode = DebugMode;
+                hl7Parser.AllowZeroTQ = AllowZeroTQ;
                 hl7Parser.EventLogger = EventLogger;
                 hl7Parser.Go();
 
@@ -645,7 +652,7 @@ namespace MotParserLib
             }
         }
         /// <inheritdoc />
-        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
+        public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool allowZeroTQ = false, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
         {
             GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to motParser");
 
@@ -657,6 +664,7 @@ namespace MotParserLib
             SendEof = sendEof;
             DebugMode = debugMode;
             AutoTruncate = autoTruncate;
+            AllowZeroTQ = allowZeroTQ;
 
             try
             {

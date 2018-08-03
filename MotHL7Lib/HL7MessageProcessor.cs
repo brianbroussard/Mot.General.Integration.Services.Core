@@ -39,9 +39,11 @@ namespace MotHL7Lib
     public class HL7TransformerBase : IDisposable
     {
         public HL7Event7MessageArgs Hl7Event7MessageArgs { get; set; }
-        public bool service { get; set; }
-        protected string data { get; set; }
-        protected bool encrypt { get; set; }
+        public bool Service { get; set; }
+        protected string Data { get; set; }
+        protected bool Encrypt { get; set; }
+        public bool AllowZeroTQ { get; set; }
+
         public string ResponseMessage { get; set; }
 
         #region CommonVariables
@@ -62,7 +64,7 @@ namespace MotHL7Lib
 
         public HL7TransformerBase(string data)
         {
-            this.data = data;
+            this.Data = data;
             EventLogger = LogManager.GetLogger("MotHL7MessageProcessor.Library");
             Hl7Event7MessageArgs = new HL7Event7MessageArgs();
         }
@@ -179,8 +181,8 @@ namespace MotHL7Lib
             this.startListener = startListener;
             this.gatewayAddress = gatewayAddress;
             this.gatewayPort = gatewayPort;
-            this.service = service;
-            this.encrypt = encrypt;
+            this.Service = service;
+            this.Encrypt = encrypt;
 
             dataInputType = DataInputType.Socket;
 
@@ -219,18 +221,18 @@ namespace MotHL7Lib
         private string[] SegmentData()
         {
             // Clean delivery marks
-            if (data.Contains('\v'))
+            if (Data.Contains('\v'))
             {
                 dataInputType = DataInputType.Socket;
-                data = data.Remove(data.IndexOf('\v'), 1);
-                data = data.Remove(data.IndexOf('\x1C'), 1);
+                Data = Data.Remove(Data.IndexOf('\v'), 1);
+                Data = Data.Remove(Data.IndexOf('\x1C'), 1);
             }
             else
             {
                 dataInputType = DataInputType.File;
             }
 
-            return data.Split(new[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            return Data.Split(new[] { '\r' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
@@ -240,12 +242,12 @@ namespace MotHL7Lib
         /// <returns>true if the input is valid</returns>
         private bool ValidateInput()
         {
-            if (!string.IsNullOrEmpty(data))  // Data might be null depending on how it was initialized
+            if (!string.IsNullOrEmpty(Data))  // Data might be null depending on how it was initialized
             {
-                if (!data.Contains("\x0B") &&
-                    !data.Contains("\x1C"))
+                if (!Data.Contains("\x0B") &&
+                    !Data.Contains("\x1C"))
                 {
-                    if (!data.Contains("MSH") || !data.Contains(@"|^~\&")) // If its a file based input, it won't have the binary stuff
+                    if (!Data.Contains("MSH") || !Data.Contains(@"|^~\&")) // If its a file based input, it won't have the binary stuff
                     {
                         return false;
                     }
@@ -327,7 +329,7 @@ namespace MotHL7Lib
                 _msh = new MSH($@"MSH |^ ~\&|{Organization}|{Processor}|{ex.Message}|BAD MESSAGE|{DateTime.Now:yyyyMMddhhmm}|637300|UNKNOWN|2|T|276||||||UNICODE UTF-8|||||");
 
                 ResponseMessage = new NAK(_msh, "AR", Organization, Processor).NakString;
-                EventLogger.Error($"HL7 NAK: {ResponseMessage} Malormed Message: {data}");
+                EventLogger.Error($"HL7 NAK: {ResponseMessage} Malormed Message: {Data}");
 
                 // Update any subscribers and sending systems
                 WriteResponse(ResponseMessage);
@@ -374,7 +376,7 @@ namespace MotHL7Lib
         {
             if (inputStream != null)
             {
-                data = inputStream;
+                Data = inputStream;
             }
 
             PrepForProcessing();
@@ -390,7 +392,7 @@ namespace MotHL7Lib
                 {
                     case "RDE_O11":
                     case "RDE_011":
-                        Hl7Event7MessageArgs.Data = data;
+                        Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
                         Process_RDE_O11_Event(this, Hl7Event7MessageArgs);
                         break;
@@ -399,14 +401,14 @@ namespace MotHL7Lib
                     case "OMP_009":
                     case "OMP_OO9":
                     case "OMP_0O9":
-                        Hl7Event7MessageArgs.Data = data;
+                        Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
                         Process_OMP_O09_Event(this, Hl7Event7MessageArgs);
                         break;
 
                     case "RDS_O13":
                     case "RDS_013":
-                        Hl7Event7MessageArgs.Data = data;
+                        Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
                         Process_RDS_O13_Event(this, Hl7Event7MessageArgs);
                         break;
@@ -421,7 +423,7 @@ namespace MotHL7Lib
                     case "ADT_AO8":
                     case "ADT_A12":
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = data;
+                        Hl7Event7MessageArgs.Data = Data;
                         ProcessADTEvent(this, Hl7Event7MessageArgs);
                         break;
 
@@ -436,7 +438,7 @@ namespace MotHL7Lib
 
                 if (debugMode)
                 {
-                    EventLogger.Debug("MessageIn:\n{0}", data);
+                    EventLogger.Debug("MessageIn:\n{0}", Data);
                     EventLogger.Debug("HL7 ACK:\n{0}", ResponseMessage);
                 }
             }
@@ -455,7 +457,7 @@ namespace MotHL7Lib
                 WriteResponse(ResponseMessage, true);
 
                 EventLogger.Error("HL7 NAK: {0}", ResponseMessage);
-                EventLogger.Error("Failed Message: {0} Failed Reason: {1}", data, ex.Message);
+                EventLogger.Error("Failed Message: {0} Failed Reason: {1}", Data, ex.Message);
             }
             catch (Exception ex)
             {
@@ -685,7 +687,7 @@ namespace MotHL7Lib
             ProblemLocus = "AL1";
 
             return
-                $"Type Code: {al1.Get("AL1.2.1")}\n" + 
+                $"Type Code: {al1.Get("AL1.2.1")}\n" +
                 $"Mnemonic: {al1.Get("AL1.3.1")}\n" +
                 $"Desc: {al1.Get("AL1.3.2")}\n" +
                 $"Severity: {al1.Get("AL1.4.1")}\n" +
@@ -854,6 +856,8 @@ namespace MotHL7Lib
 
             var newScrip = false;
             var refillScrip = false;
+            var toDc = false;
+            var changeOrder = false;
 
             ProblemLocus = "ORC";
 
@@ -861,20 +865,25 @@ namespace MotHL7Lib
             {
                 case "NW": // New order/service
                     newScrip = true;
+                    recBundle.Scrip.Status = 1;
                     break;
 
                 case "DC":  // Discontinue order/service request
+                    toDc = true;
                     recBundle.Scrip.DiscontinueDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     recBundle.Scrip.Status = 0;
                     break;
 
                 case "RF":  // Refill order/service request                
                     refillScrip = true;
+                    recBundle.Scrip.Status = 1;
+                    recBundle.MakeDupScrip = true;
                     break;
 
                 case "XO":  // Change order/service request
                 case "CA":  // Change order/service request
-                    recBundle.Scrip.Status = 0;
+                    changeOrder = true;
+                    recBundle.Scrip.Status = 1;
                     recBundle.MakeDupScrip = true;
                     recBundle.NewStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     break;
@@ -900,31 +909,40 @@ namespace MotHL7Lib
             }
             else if (Hl7SendingApp == HL7SendingApplication.RNA)
             {
+                recBundle.Location.LocationID = orc.Get("ORC.21.3");
+                recBundle.Prescriber.TPID = orc.Get("ORC.12.10.1");
+
                 /* From Michael Dix at RNA
                  * I also wanted to mention how we populated ORC-2 and ORC-3.  In our system, the prescription number on an order will change for 
                  * various reasons, one being we only store 6 fills per prescription.  The 7th time it is filled it will generate a new number.
                  *
                  * When that occurs:
-                 *   ORC-2 will contain the new prescription number
-                 *   ORC-3 will always have the very original prescription number                
+                 *   ORC-2 will contain the current/new prescription number
+                 *   ORC-3 will always have the original prescription number                
                  *   ORC-4 will contain the last prescription number or be empty
+                 *
+                 *   If ORC-4 is empty and ORC-2 == ORC-3, its an original orderl regardless if its flagged "XO"
                  */
+                if (!newScrip || refillScrip)
+                {
+                    // If ORC-4 has a value, this is a Renew event and the last RxNum is not the first one
+                    if (string.IsNullOrEmpty(orc.Get("ORC.4.1")))
+                    {
+                        recBundle.Scrip.PrescriptionID = orc.Get("ORC.3.1");
+                    }
+                    else
+                    {
+                        recBundle.Scrip.PrescriptionID = orc.Get("ORC.4.1");
+                    }
 
-                // If ORC-4 has a value, this is a Renew event
-                if (string.IsNullOrEmpty(orc.Get("ORC.4.1")))
-                {
-                    recBundle.Scrip.PrescriptionID = orc.Get("ORC.3.1");
-                }
-                else
-                {
                     recBundle.Scrip.RxSys_NewRxNum = orc.Get("ORC.2.1");
-                    recBundle.Scrip.PrescriptionID = orc.Get("ORC.4.1");
                     recBundle.Scrip.DiscontinueDate = DateTime.Today;
                     recBundle.Scrip.Status = 100;
                 }
-
-                recBundle.Location.LocationID = orc.Get("ORC.21.3");
-                recBundle.Prescriber.TPID = orc.Get("ORC.12.10.1");
+                else
+                {
+                    recBundle.Scrip.PrescriptionID = orc.Get("ORC.3.1");
+                }
             }
             else
             {
@@ -1048,7 +1066,7 @@ namespace MotHL7Lib
 
             // Set the default patient status to active, it can be changed with an ADT^A03 or ADT^A08
             recBundle.Patient.Status = 1;
-            
+
 
             //__scrip.RxSys_PatID = __pr.RxSys_PatID;
         }
@@ -1350,15 +1368,10 @@ namespace MotHL7Lib
 
             recBundle.Drug.DoseForm = rxe.Get("RXE.6.1");
 
-            /*
-            if (rxe.Get("RXE.35.1") != string.Empty)
+            if (!string.IsNullOrEmpty(rxe.Get("RXE.35.1")))
             {
-                if (!string.IsNullOrEmpty(rxe.Get("RXE.35.1")))
-                {
-                    recBundle.Drug.DrugSchedule = Convert.ToInt32(_doseScheduleNameLookup.DrugSchedules[rxe.Get("RXE.35.1")]);
-                }
+                recBundle.Drug.DrugSchedule = Convert.ToInt32(rxe.Get("RXE.35.1"));
             }
-            */
 
             recBundle.Scrip.DrugID = recBundle.Drug.NDCNum;
             recBundle.Scrip.QtyPerDose = Rnatq1DoseQty = Convert.ToDouble(rxe.Get("RXE.3.1") ?? "0.00");
@@ -1392,20 +1405,20 @@ namespace MotHL7Lib
 
             if (string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName))
             {
-                recBundle.Scrip.DoseScheduleName = $"{DateTime.Now.ToString("yyyyddmmss")})";
+                recBundle.Scrip.DoseScheduleName = $"{DateTime.Now:yyyyddmmss}";
             }
-
 
             if (recBundle.Scrip.QtyDispensed == 0.00)
             {
                 recBundle.Scrip.QtyDispensed = Convert.ToDouble(rxe.Get("RXE.10") ?? "0.00");
             }
 
+            recBundle.Scrip.Refills = Convert.ToInt32(rxe.Get("RXE.16") ?? "0");
 
-            if (recBundle.Scrip.Refills == 0)
-            {
-                recBundle.Scrip.Refills = Convert.ToInt32(rxe.Get("RXE.16") ?? "0");
-            }
+            //if (recBundle.Scrip.Refills == 0)
+            //{
+            //   recBundle.Scrip.Refills = Convert.ToInt32(rxe.Get("RXE.16") ?? "0");
+            //}
 
             recBundle.Scrip.RxType = 0;
             recBundle.Scrip.PrescriberID = recBundle.Prescriber.PrescriberID;
@@ -1481,7 +1494,7 @@ namespace MotHL7Lib
             var doseScheduleName = tq1.Get("TQ1.3.1");
             var dosePriority = tq1.Get("TQ1.9.1");
 
-            if (dosePriority == "PRN")
+            if (dosePriority.Contains("PRN"))
             {
                 doseScheduleName = "PRN";
             }
@@ -1490,7 +1503,7 @@ namespace MotHL7Lib
             {
                 if (string.IsNullOrEmpty(doseScheduleName))
                 {
-                    doseScheduleName = $"{DateTime.Now.ToString("yyyyddmmss")})";
+                    doseScheduleName = $"{DateTime.Now:yyyyyddmmss})";
                 }
             }
 
@@ -1504,7 +1517,10 @@ namespace MotHL7Lib
 
                 if (tq141.Count == 0 && doseScheduleName != "PRN")
                 {
-                    throw new Exception("TQ1 Processing Failure - No Dose Times");
+                    if (!AllowZeroTQ)
+                    {
+                        throw new Exception("TQ1 Processing Failure - No Dose Times");
+                    }
                 }
 
                 if (doseScheduleName == "PRN")
@@ -1525,19 +1541,25 @@ namespace MotHL7Lib
             {
                 if (string.IsNullOrEmpty(tq2) || tq2 == "0")
                 {
-                    throw new Exception("TQ1 Processing Failure - Dose Quantity must be > 0");
+                    if (!AllowZeroTQ)
+                    {
+                        throw new Exception("TQ1 Processing Failure - Dose Quantity must be > 0");
+                    }
                 }
             }
             else
             {
-                if (Rnatq1DoseQty == 0.00)
+                if (recBundle.Scrip.QtyPerDose == 0.00)
                 {
-                    throw new Exception("RNA/TQ1 Processing Failure - Dose Quantity must be > 0");
+                    if (!AllowZeroTQ)
+                    {
+                        throw new Exception("RNA/TQ1 Processing Failure - Dose Quantity must be > 0");
+                    }
                 }
             }
 
             recBundle.Scrip.RxType = 0; // Default Type
-            recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : $"{DateTime.Now.ToString("yyyyddmmss")})";
+            recBundle.Scrip.DoseScheduleName = !string.IsNullOrEmpty(doseScheduleName) ? doseScheduleName : $"{DateTime.Now:yyyyddmmss})";
 
             var tqStartDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.7"));
             var tqStopDate = recBundle.Scrip.TransformDate(tq1.Get("TQ1.8"));
@@ -1737,11 +1759,10 @@ namespace MotHL7Lib
                 var ds = recBundle.Scrip.ShallowCopy();
                 ds.QueueWrites = false;
                 ds.RxStartDate = recBundle.Scrip.RxStartDate;
-                //ds.DiscontinueDate = DateTime.Today;
+                ds.DiscontinueDate = DateTime.MinValue;
                 ds.PrescriptionID = ds.RxSys_NewRxNum;
                 ds.RxSys_NewRxNum = string.Empty;
                 ds.Status = 1;
-                ds.Refills = 100;
                 ds.Write(Stream);
             }
         }
@@ -1779,6 +1800,14 @@ namespace MotHL7Lib
                 tempTq.LocationID = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? recBundle.Location.LocationID : "Home Care";
                 tempTq.DoseTimesQtys = ProcessTQ1(recBundle, tq1, newTq1Set, tq1RxType);
                 tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
+
+                // Sanity Check, TQ1 overrides RXE
+                var tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
+                if (recBundle.Scrip.QtyPerDose != tqDt)
+                {
+                    recBundle.Scrip.QtyPerDose = tqDt;
+                }
+
                 recBundle.TQList.Add(tempTq);
                 recBundle.Scrip.Comments += $"({++tq1RecordsProcessed}) Dose Schedule: {recBundle.Scrip.DoseScheduleName}\n";
 

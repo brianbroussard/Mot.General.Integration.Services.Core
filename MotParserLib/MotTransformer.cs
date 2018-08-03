@@ -60,6 +60,7 @@ namespace MotParserLib
         protected bool WatchFileSystem { get; set; }
         protected bool WatchSocket { get; set; }
         protected bool DebugMode { get; set; }
+        protected bool AllowZeroTQ { get; set; }
 
         protected List<string> responses;
         private PlatformOs _platform;
@@ -81,6 +82,7 @@ namespace MotParserLib
             WatchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
             WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
             DebugMode = (appSettings["Debug"] ?? "false") == "true";
+            AllowZeroTQ = (appSettings["AllowZeroTQ"] ?? "false") == "true";
         }
 
         protected void SaveConfiguration()
@@ -93,6 +95,8 @@ namespace MotParserLib
             appSettings["NixMonitorDirectory"] = NixMonitorDirectory;
             appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
             appSettings["WatchSocket"] = WatchSocket.ToString();
+            appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
+            
         }
 
         public List<string> GetConfigList()
@@ -107,7 +111,8 @@ namespace MotParserLib
                 $"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}",
                 $"WatchFileSystem: {appSettings["WatchFileSystem"]}",
                 $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}",
-                $"Debug: {appSettings["Debug"] ?? "false"}"
+                $"Debug: {appSettings["Debug"] ?? "false"}",
+                $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}"
             };
 
             return response;
@@ -172,7 +177,7 @@ namespace MotParserLib
 
             using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
             {
-                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode))
+                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ))
                 {
                     eventLogger.Info(p.ResponseMessage);
                     responseMessage = p.ResponseMessage;
@@ -211,6 +216,7 @@ namespace MotParserLib
                 SocketListener = new Hl7SocketListener(ListenerPort, Parse)
                 {
                     RunAsService = true,
+                    AllowZeroTQ = AllowZeroTQ,
                     DebugMode = DebugMode
                 };
                 SocketListener.Go();
