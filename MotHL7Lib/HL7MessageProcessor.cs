@@ -23,8 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Globalization;
 using System.Linq;
 using System.Net.Sockets;
 using NLog;
@@ -98,7 +96,9 @@ namespace MotHL7Lib
         #region variables
         private HL7SendingApplication Hl7SendingApp { get; set; }
         private int FirstDoW { get; set; }
+
         private HL7SendingApplication RxHl7SendingApp { get; set; }
+
         private readonly Dictionary<HL7SendingApplication, string> _rxSystem = new Dictionary<HL7SendingApplication, string>()
         {
             {HL7SendingApplication.Enterprise, "Enterprise" },
@@ -296,19 +296,19 @@ namespace MotHL7Lib
                 switch (ValidateMsh().ToLower())
                 {
                     case "frameworkltc":
-                        RxHl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.FrameworkLTC;
+                        Hl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.FrameworkLTC;
                         break;
 
                     case "epic":
-                        RxHl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.Epic;
+                        Hl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.Epic;
                         break;
 
                     case "rna":
-                        RxHl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.RNA;
+                        Hl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.RNA;
                         break;
 
                     default:
-                        RxHl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.AutoDiscover;
+                        Hl7SendingApp = Hl7Event7MessageArgs.Hl7SendingApp = HL7SendingApplication.AutoDiscover;
                         break;
                 }
 
@@ -373,6 +373,31 @@ namespace MotHL7Lib
             }
         }
 
+        private void GetEventCode()
+        {
+            EventCode = _msh.Get("MSH.9.2");
+        }
+
+        private void GetMessageType()
+        {
+            MessageType = _msh.Get("MSH.9.1");
+            if (MessageType == null)
+            {
+                throw new ArgumentNullException($"No Message Type");
+            }
+        }
+
+        System.Xml.Linq.XDocument GetStructuredData(string data)
+        {
+            if (data == null)
+            {
+                throw new ArgumentNullException($"Null Data in GetStructuredData");
+            }
+
+            var hl7Xml = new XmlToHL7Parser();
+            return hl7Xml.Go(data);
+        }
+
         public void Go(string inputStream = null)
         {
             if (inputStream != null)
@@ -384,18 +409,18 @@ namespace MotHL7Lib
 
             try
             {
-                var type91 = _msh.Get("MSH.9.1");
-                var type92 = _msh.Get("MSH.9.2");
-                var type93 = _msh.Get("MSH.9.3");
+                GetMessageType();
+                GetEventCode();
 
                 // Figure out what kind of message it is              
-                switch (type93.Contains("MALFORMED") ? $"{type91}_{type92}" : type93)
+                // switch (type93.Contains("MALFORMED") ? $"{type91}_{type92}" : type93)
+                switch ($"{MessageType}_{EventCode}")
                 {
                     case "RDE_O11":
                     case "RDE_011":
                         Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Process_RDE_O11_Event(this, Hl7Event7MessageArgs);
+                        ProcessRDEMessage(this, Hl7Event7MessageArgs);
                         break;
 
                     case "OMP_O09":
@@ -404,14 +429,14 @@ namespace MotHL7Lib
                     case "OMP_0O9":
                         Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Process_OMP_O09_Event(this, Hl7Event7MessageArgs);
+                        ProcessOMPMessage(this, Hl7Event7MessageArgs);
                         break;
 
                     case "RDS_O13":
                     case "RDS_013":
                         Hl7Event7MessageArgs.Data = Data;
                         Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Process_RDS_O13_Event(this, Hl7Event7MessageArgs);
+                        ProcessRDSMessage(this, Hl7Event7MessageArgs);
                         break;
 
                     case "ADT_A01":
@@ -725,7 +750,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "EVN";
             var currentDate = recBundle.Patient.TransformDate(evn.Get("EVN.2"));
-            
+
             switch (evn.Get("EVN.1"))
             {
                 case "A01": // Admit/Visit  
@@ -1329,7 +1354,7 @@ namespace MotHL7Lib
                         return 6;
                     case "VII":
                         return 7;
-                      
+
                 }
             }
 
@@ -1340,7 +1365,7 @@ namespace MotHL7Lib
             catch (Exception e)
             {
                 return 0;
-            } 
+            }
         }
         private void ProcessRXE(RecordBundle recBundle, RXE rxe)
         {
@@ -1442,6 +1467,7 @@ namespace MotHL7Lib
                 recBundle.Scrip.DoseScheduleName = $"{DateTime.Now:yyyyddmmss}";
             }
 
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             if (recBundle.Scrip.QtyDispensed == 0.00)
             {
                 recBundle.Scrip.QtyDispensed = Convert.ToDouble(rxe.Get("RXE.10") ?? "0.00");
@@ -1583,6 +1609,7 @@ namespace MotHL7Lib
             }
             else
             {
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (recBundle.Scrip.QtyPerDose == 0.00)
                 {
                     if (!AllowZeroTQ)
@@ -1842,6 +1869,8 @@ namespace MotHL7Lib
 
                 // Sanity Check, TQ1 overrides RXE
                 var tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
+
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
                 if (recBundle.Scrip.QtyPerDose != tqDt)
                 {
                     recBundle.Scrip.QtyPerDose = tqDt;
@@ -1907,21 +1936,21 @@ namespace MotHL7Lib
 
         }
 
-        public void ProcessADTEvent(Object sender, HL7Event7MessageArgs args)
+        public void ProcessADTEvent(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
             var tq = string.Empty;
             var temp = string.Empty;
 
-            recBundle.MessageType = "ADT";
-            Hl7SendingApp = args.Hl7SendingApp;
+            var problemSegment = $"{MessageType}^{EventCode}";
+
+            recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
 
-            var hl7Xml = new XmlToHL7Parser();
-            var xDoc = hl7Xml.Go(args.Data);
-            var adt = new ADT_A01(xDoc);
+            var xmlDoc = GetStructuredData(args.Data);
+            var adt = new ADT_A01(xmlDoc);
 
-            MessageType = "ADT";
+            // Setup fofr ADT processing
             EventCode = ProcessEVN(recBundle, adt.EVN);
 
             try
@@ -1969,24 +1998,28 @@ namespace MotHL7Lib
             }
         }
 
-        public void Process_OMP_O09_Event(Object sender, HL7Event7MessageArgs args)
+        public void ProcessOMPMessage(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var doseTq = string.Empty;
-            var temp = string.Empty;
-            var problemSegment = "OMP-O09";
+            var problemSegment = $"{MessageType}^{EventCode}";
 
-            recBundle.MessageType = "OMP";
-            Hl7SendingApp = args.Hl7SendingApp;
+            // Only OMP_0O9 for now, abstract this next and then specifiy it in the following switch
+            OMP_O09 omp;
+
+            recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
 
-            var hl7Xml = new XmlToHL7Parser();
-            var xmlDoc = hl7Xml.Go(args.Data);
-            var omp = new OMP_O09(xmlDoc);
+            var xmlDoc = GetStructuredData(args.Data);
 
-            MessageType = "OMP";
-            EventCode = "O09";
+            switch (EventCode)
+            {
+                case "O09":
+                    omp = new OMP_O09(xmlDoc);
+                    break;
+
+                default:
+                    throw new NotSupportedException($"RDE {EventCode} not supported");
+            }
 
             try // Process the Patient
             {
@@ -2006,7 +2039,7 @@ namespace MotHL7Lib
                             recBundle.Write();
                         }
 
-                        
+
                         recBundle.Commit(stream);
 
                         ProcessRnaRenewOrder(stream, recBundle);
@@ -2020,30 +2053,33 @@ namespace MotHL7Lib
                 EventLogger.Error("Processing Failure: {0}", ex.StackTrace);
                 throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
             }
-
         }
 
         // Drug Order       MSH, [ PID, [PV1] ], { ORC, [RXO, {RXR}, RXE, [{NTE}], {TQ1}, {RXR}, [{RXC}] }, [ZPI]
         // Literal Order    MSH, PID, [PV1], ORC, [TQ1], [RXE], [ZAS]
         // TODO:  CHeck the Framework SPec for where the order types live
-        public void Process_RDE_O11_Event(object sender, HL7Event7MessageArgs args)
+        public void ProcessRDEMessage(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var doseTq = string.Empty;
-            var tempString = string.Empty;
-            const string problemSegment = "RDE-O11";
+            var problemSegment = $"{MessageType}^{EventCode}";
 
-            recBundle.MessageType = "RDE";
-            Hl7SendingApp = args.Hl7SendingApp;
+            recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
 
-            var hl7Xml = new XmlToHL7Parser();
-            var xmlDoc = hl7Xml.Go(args.Data);
-            var rde = new RDE_O11(xmlDoc);
+            // Only RDE_O11 for now, abstract this next and then specifiy it in the following switch
+            RDE_O11 rde;
 
-            MessageType = "RDE";
-            EventCode = "O11";
+            var xmlDoc = GetStructuredData(args.Data);
+
+            switch (EventCode)
+            {
+                case "O11":
+                    rde = new RDE_O11(xmlDoc);
+                    break;
+
+                default:
+                    throw new NotSupportedException($"RDE {EventCode} not supported");
+            }
 
             try
             {
@@ -2057,7 +2093,7 @@ namespace MotHL7Lib
                         ProblemLocus = "Patient";
                         recBundle.Patient.Write(stream, debugMode);
 
-                        foreach (Order order in rde.Orders)
+                        foreach (var order in rde.Orders)
                         {
                             ProcessOrder(order, recBundle);
                             ProblemLocus = "Order";
@@ -2071,7 +2107,6 @@ namespace MotHL7Lib
                     }
                 }
 
-
                 EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
             }
             catch (Exception ex)
@@ -2082,25 +2117,28 @@ namespace MotHL7Lib
             }
         }
 
-        public void Process_RDS_O13_Event(Object sender, HL7Event7MessageArgs Args)
+        public void ProcessRDSMessage(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var doseTimeQty = string.Empty;
-            var tmp = string.Empty;
-            var hl7Xml = new XmlToHL7Parser();
-            var xmlDoc = hl7Xml.Go(Args.Data);
+            var problemSegment = $"{MessageType}^{EventCode}";
 
-            const string problemSegment = "RDS-O13";
-
-            recBundle.MessageType = "RDS";
-            Hl7SendingApp = Args.Hl7SendingApp;
+            recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
 
-            var rds = new RDS_O13(xmlDoc);
+            // Only RDS_O13 for now, abstract this next and then specifiy it in the following switch
+            RDS_O13 rds;
 
-            MessageType = "RDS";
-            EventCode = "O13";
+            var xmlDoc = GetStructuredData(args.Data);
+
+            switch (EventCode)
+            {
+                case "O13":
+                    rds = new RDS_O13(xmlDoc);
+                    break;
+
+                default:
+                    throw new NotSupportedException($"RDE {EventCode} not supported");
+            }
 
             try
             {
@@ -2126,7 +2164,7 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, Args.Data);
+                EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
             }
             catch (Exception ex)
             {
