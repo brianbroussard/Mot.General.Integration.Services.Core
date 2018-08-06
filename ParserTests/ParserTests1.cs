@@ -41,12 +41,12 @@ namespace ParserTests
                 return base.ParseAndReturnTagged(strData);
             }
 
-            public new XmlDocument ParseXml(string dataIn)
+            public XmlDocument ParseXml(string dataIn)
             {
                 return base.ParseXml(dataIn, false);
             }
 
-            public new string ParseJson(string dataIn)
+            public string ParseJson(string dataIn)
             {
                 return base.ParseJson(dataIn, false);
             }

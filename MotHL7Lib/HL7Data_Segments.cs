@@ -608,7 +608,8 @@ namespace MotHL7Lib
             //    MessageData.Add("MSH.9.3", "MALFORMED MESSAGE");
             //}
         }
-        public new string Get(string key)
+
+        public string Get(string key)
         {
             if (listParsed)
             {
@@ -619,6 +620,7 @@ namespace MotHL7Lib
 
             return base.Get(key);
         }
+
         public string FullMessage()
         {
             //string __out = @"MSH|^~\&||MOT_HL7Gateway|MOT_HL7Gateway|";
@@ -642,10 +644,12 @@ namespace MotHL7Lib
 
             return wholeThing;
         }
+
         public string AckString()
         {
             return null;
         }
+
         public string NakString()
         {
             return null;

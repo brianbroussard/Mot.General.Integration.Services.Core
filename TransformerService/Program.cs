@@ -50,6 +50,7 @@ namespace TransformerService
                 x.SetServiceName("motNextTransformer");
 
                 x.EnableShutdown();
+                
 
                 x.EnableServiceRecovery(r =>
                 {

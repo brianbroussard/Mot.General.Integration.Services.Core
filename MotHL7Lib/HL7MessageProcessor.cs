@@ -1362,11 +1362,12 @@ namespace MotHL7Lib
             {
                 return Convert.ToInt32(number);
             }
-            catch (Exception e)
+            catch
             {
                 return 0;
             }
         }
+
         private void ProcessRXE(RecordBundle recBundle, RXE rxe)
         {
             if (recBundle == null || rxe == null)

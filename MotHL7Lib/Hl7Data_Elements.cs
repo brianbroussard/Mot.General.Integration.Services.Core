@@ -114,7 +114,7 @@ namespace MotHL7Lib
                     }
                 }
             }
-            catch(Exception ex)
+            catch
             {
                 var itemList = GetList(key);
                 if(itemList.Count > 0)

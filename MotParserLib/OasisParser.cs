@@ -47,6 +47,7 @@ namespace MotParserLib
 
     class PsEdiData
     {
+#pragma warning disable CS0649
         [Layout(0, 19)]
         public string patientName;
         [Layout(20, 31)]
@@ -107,6 +108,7 @@ namespace MotParserLib
         public string facilityStation;
         [Layout(1995, 2010)]
         public string magicCookie;
+#pragma warning restore CS0649
     }
 
     class PsEdiParser : ParserBase, IDisposable

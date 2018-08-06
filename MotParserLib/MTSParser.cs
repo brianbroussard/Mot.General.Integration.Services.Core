@@ -70,6 +70,7 @@ namespace MotParserLib
     */
     class MTSData
     {
+#pragma warning disable CS0649
         [Layout(0, 4)]
         public string tableCode;
         [Layout(5, 14)]
@@ -186,6 +187,8 @@ namespace MotParserLib
         public string drugCautionMessages;
         [Layout(2547, 2566)]
         public string colorPassTimes;
+
+#pragma warning restore CS0649
     }
     class MtsRecord
     {
