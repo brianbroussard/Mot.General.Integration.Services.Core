@@ -1942,8 +1942,6 @@ namespace MotHL7Lib
             var tq = string.Empty;
             var temp = string.Empty;
 
-            var problemSegment = $"{MessageType}^{EventCode}";
-
             recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
 
@@ -1993,15 +1991,14 @@ namespace MotHL7Lib
             }
             catch (Exception ex)
             {
-                EventLogger.Error("{0} Processing Failure: {1}", $"{MessageType}^{EventCode}", ex.StackTrace);
-                throw new HL7Exception(199, $"Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
+                EventLogger.Error("Processing Failure: {0}", ex.StackTrace);
+                throw new HL7Exception(199, $"Message Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
 
         public void ProcessOMPMessage(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var problemSegment = $"{MessageType}^{EventCode}";
 
             // Only OMP_0O9 for now, abstract this next and then specifiy it in the following switch
             OMP_O09 omp;
@@ -2046,12 +2043,12 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
+                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
             }
             catch (Exception ex)
             {
                 EventLogger.Error("Processing Failure: {0}", ex.StackTrace);
-                throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
+                throw new HL7Exception(199, $"Message Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
 
@@ -2061,7 +2058,6 @@ namespace MotHL7Lib
         public void ProcessRDEMessage(object sender, HL7Event7MessageArgs args)
         {
             var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var problemSegment = $"{MessageType}^{EventCode}";
 
             recBundle.MessageType = MessageType;
             recBundle.SetDebug(debugMode);
@@ -2107,13 +2103,12 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
+                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
             }
             catch (Exception ex)
             {
                 EventLogger.Error("Processing Failure: {0}", ex.StackTrace);
-                throw new HL7Exception(199,
-                    $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
+                throw new HL7Exception(199, $"Message Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
 
@@ -2169,7 +2164,7 @@ namespace MotHL7Lib
             catch (Exception ex)
             {
                 EventLogger.Error("Processing Failure: {0}", ex.StackTrace);
-                throw new HL7Exception(199, $"{MessageType}_{EventCode} Processing Failure: {problemSegment}/{ProblemLocus}: {ex.Message}");
+                throw new HL7Exception(199, $"Message Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
     }
