@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageId>MotGatewayTooling1.01</PackageId>
+    <PackageId>MotGatewaySDK_1.01</PackageId>
     <PackageVersion>1.01</PackageVersion>
     <Authors>Pete Jenney</Authors>
     <Owners>Pete Jenney</Owners>

@@ -4,15 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
-    <PackageId>MOT00000001</PackageId>
-    <PackageVersion>1.0</PackageVersion>
-    <Authors>Pete Jenney</Authors>
-    <Owners>Pete Jenney</Owners>
-    <PackageProjectUrl>https://github.com/pjenney58/Mot-Integration-Support/tree/master/MotCommonLib</PackageProjectUrl>
-    <Summary>Medicine-On-Time Interface Building Tools</Summary>
-    <PackageTags>MOT</PackageTags>
-    <Title>MotCommonLib</Title>
-    <Description>Medicine-On-Time common objects to feed the motLegacy (MOTALL.EXE) and motNext doppleganger gateway interface.</Description>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
     <AssemblyVersion>1.0.12.12</AssemblyVersion>
     <FileVersion>1.0.12.12</FileVersion>
