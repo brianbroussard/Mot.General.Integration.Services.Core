@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageId>MotGatewayTooling1.0</PackageId>
-    <PackageVersion>1.0</PackageVersion>
+    <PackageId>MotGatewayTooling1.01</PackageId>
+    <PackageVersion>1.01</PackageVersion>
     <Authors>Pete Jenney</Authors>
     <Owners>Pete Jenney</Owners>
-    <PackageProjectUrl>https://github.com/pjenney58/Mot-Integration-Support</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/Medicine-On-Time/Mot.Integration.Support.Core</PackageProjectUrl>
     <Summary>Objects to support Pharmacy Management System Interface Development</Summary>
     <Title>Medicine-On-Time Gateway Interface Tooling</Title>
     <Description>Libraries to support interfacing Pharmacy Management Systems etceterra with Medicine-On-Time's Legacy (MOTALL.EXE) and motNext's Legacy Doppleganger gateways.</Description>
