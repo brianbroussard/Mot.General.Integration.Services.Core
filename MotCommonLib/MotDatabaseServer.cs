@@ -29,7 +29,7 @@ using Npgsql;
 using System.Data.Odbc;
 using System.Data.SqlClient;
 using System.IO;
-using Microsoft.Data.Sqlite;
+//using Microsoft.Data.Sqlite;
 using NLog;
 using System.Threading;
 
@@ -684,8 +684,9 @@ namespace motCommonLib
     /// </summary>
     public class MotSqliteServer : MotDbBase
     {
-        private SqliteConnection _connection;
-        private SqliteCommand _command;
+
+        // private SqliteConnection _connection;
+        //private SqliteCommand _command;
 
         /// <summary>
         /// <c>Dispose</c>
@@ -706,7 +707,7 @@ namespace motCommonLib
                 return;
             }
 
-            _connection?.Dispose();
+            //_connection?.Dispose();
         }
 
         /// <summary>
@@ -726,11 +727,11 @@ namespace motCommonLib
                     Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
                 }
 
-                using (_connection = new SqliteConnection($"Data Source={fullPath};Version=3;"))
-                {
-                    _connection.Open();
-                    _connection.Close();
-                }
+                // using (_connection = new SqliteConnection($"Data Source={fullPath};Version=3;"))
+                //{
+                //     _connection.Open();
+                //     _connection.Close();
+                // }
             }
             catch (Exception ex)
             {
@@ -755,7 +756,7 @@ namespace motCommonLib
             {
                 throw new ArgumentNullException($"Null Query String");
             }
-
+            /*
             try
             {
                 dbConMutex.WaitOne();
@@ -763,6 +764,7 @@ namespace motCommonLib
                 using (_connection = new SqliteConnection($"Data Source={dsn};Version=3;"))
                 {
                     _connection.Open();
+
 
                     using (_command = new SqliteCommand(strQuery, _connection))
                     {
@@ -782,8 +784,8 @@ namespace motCommonLib
                         }
 
                         _command.ExecuteNonQuery();
-                    }
-                }
+                    }                   
+                 }
             }
             catch (SqliteException ex)
             {
@@ -793,6 +795,7 @@ namespace motCommonLib
             {
                 dbConMutex?.ReleaseMutex();
             }
+            */
         }
 
         /// <summary>
@@ -824,6 +827,8 @@ namespace motCommonLib
         /// 
         public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
+            return new DataSet("foo");
+            /*
             try
             {
                 dbConMutex.WaitOne();
@@ -872,6 +877,7 @@ namespace motCommonLib
             {
                 dbConMutex?.ReleaseMutex();
             }
+            */
         }
 
         /// <summary>

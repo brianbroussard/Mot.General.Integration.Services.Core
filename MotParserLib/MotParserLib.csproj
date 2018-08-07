@@ -3,21 +3,25 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageId>MotGatewaySDK_1.01</PackageId>
+    <PackageId>Mot.Interface.Gateway.Sdk</PackageId>
     <PackageVersion>1.01</PackageVersion>
     <Authors>Pete Jenney</Authors>
     <Owners>Pete Jenney</Owners>
     <PackageProjectUrl>https://github.com/Medicine-On-Time/Mot.Integration.Support.Core</PackageProjectUrl>
+    <PackageOutputPath>..\..\packages</PackageOutputPath>
     <Summary>Objects to support Pharmacy Management System Interface Development</Summary>
     <Title>Medicine-On-Time Gateway Interface Tooling</Title>
     <Description>Libraries to support interfacing Pharmacy Management Systems etceterra with Medicine-On-Time's Legacy (MOTALL.EXE) and motNext's Legacy Doppleganger gateways.</Description>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageIconUrl>https://avatars0.githubusercontent.com/u/14909537?s=400&amp;u=c9732fc98f659e0affe84e56750404f2dea85bfa&amp;v=4</PackageIconUrl>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.14.14</AssemblyVersion>
-    <FileVersion>1.0.14.14</FileVersion>
+    <AssemblyVersion>1.0.19.14</AssemblyVersion>
+    <FileVersion>1.0.19.14</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
+    <Version>1.0.1</Version>
+    <Company>Medicine-On-Time, LLC.</Company>
+    <Product>Mot.Interface.Gateway.Sdk</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -29,9 +33,11 @@
       </CustomCommands>
     </CustomCommands>
   </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
   </ItemGroup>
 
   <ItemGroup>
