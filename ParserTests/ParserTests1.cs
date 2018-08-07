@@ -82,7 +82,7 @@ namespace ParserTests
 
 
 
-                using (var socket = new MotSocket("localhost", 24042))
+                using (var socket = new MotSocket("192.168.1.160", 24042))
                 {
                     p = new ParserTester(socket, xmlTestStore.InnerXml, false);
                     p = new ParserTester(socket, xmlTestLocation.InnerXml, false);

@@ -33,7 +33,7 @@ using System.IO;
 using NLog;
 using System.Threading;
 
-namespace motCommonLib
+namespace MotCommonLib
 {
     /// <summary>
     /// <c>dbType</c>
@@ -73,6 +73,13 @@ namespace motCommonLib
 
         public MotDbBase(string fullPath)
         {
+            if(string.IsNullOrEmpty(fullPath))
+            {
+                throw new ArgumentNullException($"Bad DSN passed to constructor");
+            }
+
+            dsn = fullPath;
+
             if (dbConMutex == null)
             {
                 dbConMutex = new Mutex(false, "MotDb");
@@ -1112,7 +1119,7 @@ namespace motCommonLib
                     case "MotSqliteServer":
                         _sqliteServer = new MotSqliteServer(connectString);
                         _thisDbType = DbType.SqlightServer;
-                        _eventLogger.Info("Setting up as SqlIteL Server");
+                        _eventLogger.Info("Setting up as Sqlite Server");
                         break;
 
                     default:

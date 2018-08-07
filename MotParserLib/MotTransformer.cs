@@ -24,7 +24,6 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Runtime.InteropServices;
 using MotCommonLib;
 using MotListenerLib;
 using NLog;
@@ -34,19 +33,6 @@ using NLog;
 
 namespace MotParserLib
 {
-    public enum PlatformOs
-    {
-        Unknown,
-        Windows,
-        Unix,
-        // ReSharper disable once InconsistentNaming
-        macOS,
-        Linux,
-        Android,
-        // ReSharper disable once InconsistentNaming
-        iOS
-    }
-
     public class MotTransformerBase : IDisposable
     {
         protected Logger eventLogger;
@@ -72,7 +58,7 @@ namespace MotParserLib
         public MotTransformerBase()
         {
             LoadConfiguration();
-            _platform = GetOs();
+            _platform = GetPlatformOs.Go();
         }
 
         protected void LoadConfiguration()
@@ -126,24 +112,7 @@ namespace MotParserLib
             return response;
         }
 
-        protected PlatformOs GetOs()
-        {
-            // just worry about Nix and Win for now
-            if (RuntimeInformation.OSDescription.Contains("Unix"))
-            {
-                _platform = PlatformOs.Unix;
-            }
-            else if (RuntimeInformation.OSDescription.Contains("Windows"))
-            {
-                _platform = PlatformOs.Windows;
-            }
-            else
-            {
-                _platform = PlatformOs.Unknown;
-            }
 
-            return _platform;
-        }
 
         /// <summary>
         /// Dispose
@@ -233,7 +202,7 @@ namespace MotParserLib
             if (WatchFileSystem)
             {
                 FilesystemListener =
-                    new FilesystemListener((GetOs() == PlatformOs.Windows) ? WinMonitorDirectory : NixMonitorDirectory, Parse)
+                    new FilesystemListener((GetPlatformOs.Go() == PlatformOs.Windows) ? WinMonitorDirectory : NixMonitorDirectory, Parse)
                     {
                         RunAsService = true,
                         Listening = true,

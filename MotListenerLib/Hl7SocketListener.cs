@@ -32,7 +32,7 @@ using NLog;
 
 namespace MotListenerLib
 {
-    public class Hl7SocketListener
+    public class Hl7SocketListener : IDisposable
     {
         public bool UseSsl { get; set; }
         public bool RunAsService { get; set; }
@@ -48,6 +48,27 @@ namespace MotListenerLib
 
         public string SenderAddress { get; set; }
         public string SenderPort { get; set; }
+
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GatewaySocket?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         public Hl7SocketListener(string httpUrl, int port, VoidStringDelegate callback, bool useSsl)
         {
@@ -67,7 +88,12 @@ namespace MotListenerLib
         public Hl7SocketListener(int port, StringStringDelegate callback, bool useSsl = false)
         {
             try
-            {
+            { 
+                if(port == 0)
+                {
+                    throw new ArgumentOutOfRangeException($"Port is 0");
+                }
+
                 this._stringCallback = callback ?? throw new ArgumentNullException($"callback null");
 
                 _listenerSocket = new MotSocket(port, callback)

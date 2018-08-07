@@ -1,9 +1,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
-using System.Runtime.InteropServices;
-using motCommonLib;
-using MotParserLib;
+using MotCommonLib;
 
 namespace CommonTests
 {
@@ -11,39 +9,49 @@ namespace CommonTests
     public class DatabaseTest
     {
         private PlatformOs _platform;
+        string userName = "dba";
+        string passWord = "pc410h426s7617";
 
-        protected PlatformOs GetOs()
+      
+        [TestMethod]
+        public void NullConstructor()
         {
-            // just worry about Nix and Win for now
-            if (RuntimeInformation.OSDescription.Contains("Unix") || RuntimeInformation.OSDescription.Contains("Linux"))
-            {
-                _platform = PlatformOs.Unix;
-            }
-            else if (RuntimeInformation.OSDescription.Contains("Windows"))
-            {
-                _platform = PlatformOs.Windows;
-            }
-            else
-            {
-                _platform = PlatformOs.Unknown;
-            }
+            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"C:\motNext\Tests\Sqlite\Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
-            return _platform;
+            try
+            {
+                var sqlite = new MotDatabaseServer<MotSqliteServer>(null);
+
+                Assert.Fail("Allowed to pass null DSN");
+
+                if (GetPlatformOs.Go() == PlatformOs.Windows)
+                {
+                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={userName};PWD={passWord}");
+                    Assert.Fail("Allowed to pass null DSN");
+                }
+
+                // CleanUp
+                File.Delete(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
         }
 
         [TestMethod]
         public void Construct()
         {
-            var userName = "dba";
-            var passWord = "pc410h426s7617";
-
-            var path = (GetOs() == PlatformOs.Windows) ? $@"C:\motNext\Tests\Sqlite\Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
+            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"C:\motNext\Tests\Sqlite\Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
             try
             {
                 var sqlite = new MotDatabaseServer<MotSqliteServer>(path);
-                var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={userName};PWD={passWord}");
 
+                if(GetPlatformOs.Go() == PlatformOs.Windows)
+                { 
+                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={userName};PWD={passWord}"); 
+                }
 
                 // CleanUp
                 File.Delete(path);

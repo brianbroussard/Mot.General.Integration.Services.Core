@@ -10,6 +10,17 @@
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 // 
+// MIT license
+//
+// Copyright (c) 2018 by Peter H. Jenney and Medicine-On-Time, LLC.
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
 // 
@@ -24,6 +35,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
@@ -32,27 +44,28 @@ using NLog;
 namespace MotCommonLib
 {
     /*
- * motRecord Usage Example:
- * 
-    using (var LocalTcpClient = new TcpClient(TargetIP, TargetPort))
-    {
-        using (var Stream = LocalTcpClient.GetStream())
+     * MotRecord Usage Example:
+     * 
+        using (var LocalTcpClient = new TcpClient(TargetIP, TargetPort))
         {
-            var obj = new motStoreRecord("Add", boolAutoTruncate)
+            using (var Stream = LocalTcpClient.GetStream())
             {
-                ID = "1001",
-                Name = "Phred's Pharmacy",
-                Address1 = "123 Med Street",
-                City = "MedVille",
-                State = "AK",
-                Zip = "908176",
-                DEANum = "AF1234567"
-            };
+                var obj = new motStoreRecord("Add", boolAutoTruncate)
+                {
+                    ID = "1001",
+                    Name = "Phred's Pharmacy",
+                    Address1 = "123 Med Street",
+                    City = "MedVille",
+                    State = "AK",
+                    Zip = "908176",
+                    DEANum = "AF1234567"
+                };
 
-            obj.Write(Streamh);
+                obj.Write(Streamh);
+            }
         }
-    }
- */
+    */
+
     /// <summary>
     /// <c>Field</c>
     /// Enhanced property defining data characteristics for Gateway suported data
