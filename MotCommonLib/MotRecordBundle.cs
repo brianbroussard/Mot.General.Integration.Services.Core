@@ -30,56 +30,38 @@ using NLog;
 namespace MotCommonLib
 {
     /// <summary>
-    /// <c>RecordBundle</c>
-    /// A collection of mot records that can be managed as a unit and written all at once. Spitting the records
-    /// to the gatweway all at once is significantly faster than sending them one at a time as they're built
+    ///     <c>RecordBundle</c>
+    ///     A collection of mot records that can be managed as a unit and written all at once. Spitting the records
+    ///     to the gatweway all at once is significantly faster than sending them one at a time as they're built
     /// </summary>
     public class RecordBundle : IDisposable
     {
-        public MotPatientRecord Patient;
-        public MotPrescriptionRecord Scrip;
-        public MotPrescriberRecord Prescriber;
-        public MotFacilityRecord Location;
-        public MotStoreRecord Store;
-        public MotDrugRecord Drug;
-        public List<MotTimesQtysRecord> TQList;
-
-        public List<MotStoreRecord> StoreList;
-        public List<MotPrescriberRecord> PrescriberList;
-
         private readonly Logger _eventLogger;
 
-        public bool MakeDupRnaScrip { get; set; } = false;
-        public DateTime NewStartDate { get; set; }
-
         private readonly MotWriteQueue _writeQueue;
+        public MotDrugRecord Drug;
+        public MotFacilityRecord Location;
+        public MotPatientRecord Patient;
+        public MotPrescriberRecord Prescriber;
+        public List<MotPrescriberRecord> PrescriberList;
+        public MotPrescriptionRecord Scrip;
+        public MotStoreRecord Store;
+
+        public List<MotStoreRecord> StoreList;
+        public List<MotTimesQtysRecord> TQList;
 
         protected bool UseQueue = true;
-        public bool SendEof { get; set; }
-        public bool DebugMode { get; set; }
-        public string MessageType { get; set; }
 
         /// <summary>
-        /// <c>SetDebug</c>
-        /// Toggles debugging for the current bundle
+        ///     Default constructor
         /// </summary>
-        /// <param name="on"></param>
-        /// <returns></returns>
-        public bool SetDebug(bool on)
+        /// <param name="relaxTq">Allows 0 qty records to be sent to gateway</param>
+        /// <param name="autoTruncate">Forces trim to max length for the field</param>
+        /// <param name="sendEof">Forces stream closure</param>
+        public RecordBundle(bool relaxTq = false, bool autoTruncate = false, bool sendEof = false)
         {
-            _writeQueue.debugMode = on;
-            return _writeQueue.debugMode;
-        }
+            SendEof = sendEof;
 
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        /// <param name="autoTruncate"></param>
-        /// <param name="sendEof"></param>
-        public RecordBundle(bool autoTruncate = false, bool sendEof = false)
-        {
-            this.SendEof = sendEof;
-            
             _eventLogger = LogManager.GetLogger("motRecordBundle.Manager");
             Patient = new MotPatientRecord("Add", autoTruncate);
             Scrip = new MotPrescriptionRecord("Add", autoTruncate);
@@ -92,50 +74,55 @@ namespace MotCommonLib
             StoreList = new List<MotStoreRecord>();
             PrescriberList = new List<MotPrescriberRecord>();
 
+            Patient.RelaxTqRequirements = Scrip.RelaxTqRequirements = Location.RelaxTqRequirements = Prescriber.RelaxTqRequirements = Store.RelaxTqRequirements = Drug.RelaxTqRequirements = relaxTq;
+
             if (UseQueue)
             {
                 _writeQueue = new MotWriteQueue();
-                Patient.LocalWriteQueue =
-                Scrip.LocalWriteQueue =
-                Location.LocalWriteQueue =
-                Prescriber.LocalWriteQueue =
-                Store.LocalWriteQueue =
-                Drug.LocalWriteQueue =
-                    _writeQueue;
+                Patient.LocalWriteQueue = Scrip.LocalWriteQueue = Location.LocalWriteQueue = Prescriber.LocalWriteQueue = Store.LocalWriteQueue = Drug.LocalWriteQueue = _writeQueue;
 
                 _writeQueue.SendEof = sendEof;
-                _writeQueue.debugMode = DebugMode;
+                _writeQueue.DebugMode = DebugMode;
             }
 
-            Patient.QueueWrites =
-            Scrip.QueueWrites =
-            Location.QueueWrites =
-            Prescriber.QueueWrites =
-            Store.QueueWrites =
-            Drug.QueueWrites =
-                UseQueue;
+            Patient.QueueWrites = Scrip.QueueWrites = Location.QueueWrites = Prescriber.QueueWrites = Store.QueueWrites = Drug.QueueWrites = UseQueue;
 
-            Patient.SendEof =
-            Scrip.SendEof =
-            Location.SendEof =
-            Prescriber.SendEof =
-            Store.SendEof =
-            Drug.SendEof =
-                sendEof;
+            Patient.SendEof = Scrip.SendEof = Location.SendEof = Prescriber.SendEof = Store.SendEof = Drug.SendEof = sendEof;
 
-            Patient.AutoTruncate =
-            Scrip.AutoTruncate =
-            Location.AutoTruncate =
-            Prescriber.AutoTruncate =
-            Store.AutoTruncate =
-            Drug.AutoTruncate =
-                autoTruncate;
+            Patient.AutoTruncate = Scrip.AutoTruncate = Location.AutoTruncate = Prescriber.AutoTruncate = Store.AutoTruncate = Drug.AutoTruncate = autoTruncate;
+        }
 
+        public bool MakeDupRnaScrip { get; set; } = false;
+        public DateTime NewStartDate { get; set; }
+        public bool SendEof { get; set; }
+        public bool DebugMode { get; set; }
+        public string MessageType { get; set; }
+
+        /// <summary>
+        ///     <c>Dispose</c>
+        ///     Direct IDisposable destructor that destroys and nullifies everything
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// <c>Write</c>
-        /// Depending on the queuing model selected, Write feeds the queue or does nothing
+        ///     <c>SetDebug</c>
+        ///     Toggles debugging for the current bundle
+        /// </summary>
+        /// <param name="on"></param>
+        /// <returns></returns>
+        public bool SetDebug(bool on)
+        {
+            _writeQueue.DebugMode = on;
+            return _writeQueue.DebugMode;
+        }
+
+        /// <summary>
+        ///     <c>Write</c>
+        ///     Depending on the queuing model selected, Write feeds the queue or does nothing
         /// </summary>
         public void Write()
         {
@@ -146,20 +133,17 @@ namespace MotCommonLib
                     if (MessageType != "ADT")
                     {
                         if (StoreList.Count > 0)
-                        {
                             foreach (var store in StoreList)
                             {
                                 store.SendEof = SendEof;
                                 store.AddToQueue(_writeQueue);
                             }
-                        }
                         else
-                        {
                             Store.AddToQueue(_writeQueue);
-                        }
 
                         foreach (var tq in TQList)
                         {
+                            tq.RelaxTqRequirements = Scrip.RelaxTqRequirements;
                             tq.SendEof = SendEof;
                             tq.AddToQueue(_writeQueue);
                         }
@@ -169,17 +153,13 @@ namespace MotCommonLib
                     }
 
                     if (PrescriberList.Count > 0)
-                    {
                         foreach (var prescriber in PrescriberList)
                         {
                             prescriber.SendEof = SendEof;
                             prescriber.AddToQueue(_writeQueue);
                         }
-                    }
                     else
-                    {
                         Prescriber.AddToQueue(_writeQueue);
-                    }
 
                     Patient.AddToQueue();
                     Location.AddToQueue();
@@ -195,9 +175,10 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Clear</c>
-        /// CLears all the records out and resets Lists
+        ///     <c>Clear</c>
+        ///     CLears all the records out and resets Lists
         /// </summary>
+        // ReSharper disable once UnusedMember.Global
         public void Clear()
         {
             StoreList.Clear();
@@ -210,10 +191,11 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Commit</c>
-        /// Commits the queueud items to the database over ta socket 
+        ///     <c>Commit</c>
+        ///     Commits the queueud items to the database over ta socket
         /// </summary>
         /// <param name="socket"></param>
+        // ReSharper disable once UnusedMember.Global
         public void Commit(MotSocket socket)
         {
             try
@@ -228,8 +210,8 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Commit</c>
-        /// Commits the queueud items to the database over ta stream 
+        ///     <c>Commit</c>
+        ///     Commits the queueud items to the database over ta stream
         /// </summary>
         /// <param name="stream"></param>
         public void Commit(NetworkStream stream)
@@ -246,8 +228,8 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Dispose</c>
-        /// Conditional IDisposable destructor
+        ///     <c>Dispose</c>
+        ///     Conditional IDisposable destructor
         /// </summary>
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
@@ -267,16 +249,6 @@ namespace MotCommonLib
                 TQList.Clear();
                 TQList = null;
             }
-        }
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// Direct IDisposable destructor that destroys and nullifies everything 
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
     }
 }

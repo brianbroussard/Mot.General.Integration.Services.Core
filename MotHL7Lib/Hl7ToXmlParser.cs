@@ -29,21 +29,27 @@ namespace MotHL7Lib
                 return Parse(reader);
             }
         }
+
         // Preprocess Escape Chars
-        string ProcessEscape(string val)
+        // ReSharper disable once UnusedMember.Local
+        private string ProcessEscape(string val)
         {
+            if (val == null)
+            {
+                return string.Empty;
+            }
+
             while (val.Contains("\\F\\"))
             {
-                if (val != null)
-                {
-                    int index = val.LastIndexOf("\\F\\");
-                    val = val.Remove(index, 3);
-                    val = val.Insert(index, "|");
-                }
+                // ReSharper disable once StringLastIndexOfIsCultureSpecific.1
+                int index = val.LastIndexOf("\\F\\");
+                val = val.Remove(index, 3);
+                val = val.Insert(index, "|");
             }
 
             return val;
         }
+
         public XDocument Parse(TextReader reader)
         {
             var startSegment = string.Concat((char)reader.Read(), (char)reader.Read(), (char)reader.Read());
@@ -109,7 +115,7 @@ namespace MotHL7Lib
                         }
                         else if (component != null)
                         {
-                            if(lastWasSplit) // PJ did this, if the indax wasn't reset to 1 the sequance skipped an element and then reset, e.g. 15.1, 15.3, 15.1
+                            if (lastWasSplit) // PJ did this, if the indax wasn't reset to 1 the sequance skipped an element and then reset, e.g. 15.1, 15.3, 15.1
                             {
                                 componentIndex = 1;
                             }

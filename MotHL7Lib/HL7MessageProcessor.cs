@@ -25,17 +25,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
-using NLog;
+using System.Xml.Linq;
 using MotCommonLib;
 using MotListenerLib;
+using NLog;
 
 namespace MotHL7Lib
 {
     public delegate void MotHl7OutputChangeEventHandler(object sender, HL7Event7MessageArgs e);
+
     public delegate void MotHl7ErrorEventHandler(object sender, HL7Event7MessageArgs e);
 
     public class HL7TransformerBase : IDisposable
     {
+        public HL7TransformerBase(string data)
+        {
+            Data = data;
+            EventLogger = LogManager.GetLogger("MotHL7MessageProcessor.Library");
+            Hl7Event7MessageArgs = new HL7Event7MessageArgs();
+        }
+
         public HL7Event7MessageArgs Hl7Event7MessageArgs { get; set; }
         public bool Service { get; set; }
         protected string Data { get; set; }
@@ -45,27 +54,13 @@ namespace MotHL7Lib
 
         public string ResponseMessage { get; set; }
 
-        #region CommonVariables
-        public Logger EventLogger;
-        public bool AutoTruncate { get; set; }
-        public bool SendEof { get; set; }
-        public bool debugMode { get; set; }
-        public MotSocket Socket { get; set; }
-        #endregion
-
-        #region Listener
-        public Hl7SocketListener dataIn;
-        public bool startListener;
-        protected string gatewayAddress { get; set; }
-        protected int gatewayPort { get; set; }
-        protected int returnPort { get; set; }
-        #endregion
-
-        public HL7TransformerBase(string data)
+        /// <summary>
+        ///     <c>Dispose</c>
+        /// </summary>
+        public void Dispose()
         {
-            this.Data = data;
-            EventLogger = LogManager.GetLogger("MotHL7MessageProcessor.Library");
-            Hl7Event7MessageArgs = new HL7Event7MessageArgs();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         ~HL7TransformerBase()
@@ -77,122 +72,66 @@ namespace MotHL7Lib
         {
             if (disposing)
             {
-                dataIn?.ShutDown();
+                DataIn?.ShutDown();
             }
         }
 
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        #region CommonVariables
+
+        public Logger EventLogger;
+        public bool AutoTruncate { get; set; }
+        public bool SendEof { get; set; }
+        public bool DebugMode { get; set; }
+        public MotSocket Socket { get; set; }
+
+        #endregion
+
+        #region Listener
+
+        public Hl7SocketListener DataIn;
+        public bool StartListener;
+        protected string GatewayAddress { get; set; }
+        protected int GatewayPort { get; set; }
+        protected int ReturnPort { get; set; }
+
+        #endregion
     }
 
     public class MotHl7MessageProcessor : HL7TransformerBase
     {
-        #region variables
-        private HL7SendingApplication Hl7SendingApp { get; set; }
-        private int FirstDoW { get; set; }
-
-        private HL7SendingApplication RxHl7SendingApp { get; set; }
-
-        private readonly Dictionary<HL7SendingApplication, string> _rxSystem = new Dictionary<HL7SendingApplication, string>()
-        {
-            {HL7SendingApplication.Enterprise, "Enterprise" },
-            {HL7SendingApplication.Epic, "Epic" },
-            {HL7SendingApplication.FrameworkLTC, "FrameworkLTC" },
-            {HL7SendingApplication.Pharmaserve, "Pharmaserve" },
-            {HL7SendingApplication.QS1,"QS1" },
-            {HL7SendingApplication.RX30, "RX30" },
-            {HL7SendingApplication.RNA, "RNA" },
-            {HL7SendingApplication.Unknown, "Unknown" }
-        };
-
-        private double Rnatq1DoseQty { get; set; }
-        private string[] GlobalMonth;
-
-        private string ProblemLocus { get; set; }
-        private string MessageType { get; set; }
-        private string EventCode { get; set; }
-        private string Organization { get; set; }
-        private string Processor { get; set; }
-        public string RxSysVendorName { get; set; }
-        private HL7SendingApplication RxSysType { get; set; } = HL7SendingApplication.Unknown;
-
-        private int CumulativeDoseCount { get; set; }
-        private MSH _msh;
-        private string[] _segments;
-        private DataInputType dataInputType = DataInputType.Unknown;
-
-        Dictionary<HL7SendingApplication, string> RxSystem = new Dictionary<HL7SendingApplication, string>()
-        {
-            {HL7SendingApplication.Enterprise, "Enterprise" },
-            {HL7SendingApplication.Epic, "Epic" },
-            {HL7SendingApplication.FrameworkLTC, "FrameworkLTC" },
-            {HL7SendingApplication.Pharmaserve, "Pharmaserve" },
-            {HL7SendingApplication.QS1,"QS1" },
-            {HL7SendingApplication.RX30, "RX30" },
-            {HL7SendingApplication.RNA, "RNA" },
-            {HL7SendingApplication.Unknown, "Unknown" }
-        };
-
-        #endregion
-
-
-        #region Messaging     
-        public event MotHl7OutputChangeEventHandler OutputTextChanged;
-        public event MotHl7ErrorEventHandler OutputErrorText;
-        /// <summary>
-        /// <c>OnOutputTextChanged</c>
-        /// Provides update message to any subscriber
-        /// </summary>
-        /// <param name="e">HL7Event7MessageArgs class with event data</param>
-        protected virtual void OnOutputTextChanged(HL7Event7MessageArgs e)
-        {
-            OutputTextChanged?.Invoke(this, e);
-        }
-
-        protected virtual void OnError(HL7Event7MessageArgs e)
-        {
-            OutputErrorText?.Invoke(this, e);
-        }
-        #endregion
+        public MSH GlobalMsh;
 
         public MotHl7MessageProcessor(string data) : base(data)
         {
-            dataInputType = DataInputType.Unknown;
+            _dataInputType = DataInputType.Unknown;
         }
 
         public MotHl7MessageProcessor(string data, int port, bool service, bool encrypt) : base(data)
         {
-            dataInputType = DataInputType.WebService;
+            _dataInputType = DataInputType.WebService;
         }
 
         public MotHl7MessageProcessor(string data, string dirName, bool service, bool encrypt) : base(data)
         {
-            dataInputType = DataInputType.File;
+            _dataInputType = DataInputType.File;
         }
 
         /// <inheritdoc />
         public MotHl7MessageProcessor(bool startListener, string data, string gatewayAddress, int gatewayPort, bool service, bool encrypt) : base(data)
         {
-            this.startListener = startListener;
-            this.gatewayAddress = gatewayAddress;
-            this.gatewayPort = gatewayPort;
-            this.Service = service;
-            this.Encrypt = encrypt;
+            StartListener = startListener;
+            GatewayAddress = gatewayAddress;
+            GatewayPort = gatewayPort;
+            Service = service;
+            Encrypt = encrypt;
 
-            dataInputType = DataInputType.Socket;
+            _dataInputType = DataInputType.Socket;
 
             // data might be provided at Go()
             if (data != null)
             {
                 if (!ValidateInput())
                 {
-                    // Not our data
                     throw new ArgumentException("Invalid Data Input - Not HL7");
                 }
             }
@@ -200,12 +139,7 @@ namespace MotHL7Lib
             try
             {
                 if (startListener)
-                {
-                    dataIn = new Hl7SocketListener(gatewayAddress, gatewayPort, Go, encrypt)
-                    {
-                        RunAsService = service
-                    };
-                }
+                    DataIn = new Hl7SocketListener(gatewayAddress, gatewayPort, Go, encrypt) { RunAsService = service };
             }
             catch (Exception ex)
             {
@@ -215,8 +149,8 @@ namespace MotHL7Lib
         }
 
         /// <summary>
-        /// <c>Segment Data</c>
-        /// Break up the incominng message into its component segments
+        ///     <c>Segment Data</c>
+        ///     Break up the incominng message into its component segments
         /// </summary>
         /// <returns></returns>
         private string[] SegmentData()
@@ -224,43 +158,36 @@ namespace MotHL7Lib
             // Clean delivery marks
             if (Data.Contains('\v'))
             {
-                dataInputType = DataInputType.Socket;
+                _dataInputType = DataInputType.Socket;
                 Data = Data.Remove(Data.IndexOf('\v'), 1);
                 Data = Data.Remove(Data.IndexOf('\x1C'), 1);
             }
             else
             {
-                dataInputType = DataInputType.File;
+                _dataInputType = DataInputType.File;
             }
 
             return Data.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         /// <summary>
-        /// <c>ValidateData</c>
-        /// Make sure the incoming data is valid HL7
+        ///     <c>ValidateData</c>
+        ///     Make sure the incoming data is valid HL7
         /// </summary>
         /// <returns>true if the input is valid</returns>
         private bool ValidateInput()
         {
-            if (!string.IsNullOrEmpty(Data))  // Data might be null depending on how it was initialized
-            {
-                if (!Data.Contains("\x0B") &&
-                    !Data.Contains("\x1C"))
-                {
+            if (!string.IsNullOrEmpty(Data)) // Data might be null depending on how it was initialized
+                if (!Data.Contains("\x0B") && !Data.Contains("\x1C"))
                     if (!Data.Contains("MSH") || !Data.Contains(@"|^~\&")) // If its a file based input, it won't have the binary stuff
-                    {
                         return false;
-                    }
-                }
-            }
 
             return true;
         }
 
         /// <summary>
-        /// <c>ValidateMas</c>
-        /// Make sure the MSH is valid and extract the sending system
+        ///     <c>ValidateMas</c>
+        ///     Make sure the MSH is valid and extract the sending system
         /// </summary>
         /// <returns></returns>
         private string ValidateMsh()
@@ -318,12 +245,8 @@ namespace MotHL7Lib
                 // case where systems don't self-identify the value will be specific and screw up if some other system
                 // trys to send anything.  Catch it here and deal with it
                 if (RxSysType != HL7SendingApplication.AutoDiscover && Hl7Event7MessageArgs.Hl7SendingApp != RxSysType)
-                {
                     if (Hl7Event7MessageArgs.Hl7SendingApp == HL7SendingApplication.Unknown)
-                    {
                         Hl7Event7MessageArgs.Hl7SendingApp = RxSysType;
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -344,19 +267,15 @@ namespace MotHL7Lib
         {
             // Update subscribers
             Hl7Event7MessageArgs.Data = message;
-            Hl7Event7MessageArgs.DataInputType = dataInputType;
+            Hl7Event7MessageArgs.DataInputType = _dataInputType;
             Hl7Event7MessageArgs.Timestamp = DateTime.Now;
 
             if (isError)
-            {
                 OnError(Hl7Event7MessageArgs);
-            }
             else
-            {
                 OnOutputTextChanged(Hl7Event7MessageArgs);
-            }
 
-            switch (dataInputType)
+            switch (_dataInputType)
             {
                 case DataInputType.File:
                     break;
@@ -368,6 +287,7 @@ namespace MotHL7Lib
                 case DataInputType.WebService:
                     break;
 
+                // ReSharper disable once RedundantEmptySwitchSection
                 default:
                     break;
             }
@@ -381,18 +301,12 @@ namespace MotHL7Lib
         private void GetMessageType()
         {
             MessageType = _msh.Get("MSH.9.1");
-            if (MessageType == null)
-            {
-                throw new ArgumentNullException($"No Message Type");
-            }
+            if (MessageType == null) throw new ArgumentNullException($"No Message Type");
         }
 
-        System.Xml.Linq.XDocument GetStructuredData(string data)
+        private XDocument GetStructuredData(string data)
         {
-            if (data == null)
-            {
-                throw new ArgumentNullException($"Null Data in GetStructuredData");
-            }
+            if (data == null) throw new ArgumentNullException($"Null Data in GetStructuredData");
 
             var hl7Xml = new XmlToHL7Parser();
             return hl7Xml.Go(data);
@@ -400,10 +314,7 @@ namespace MotHL7Lib
 
         public void Go(string inputStream = null)
         {
-            if (inputStream != null)
-            {
-                Data = inputStream;
-            }
+            if (inputStream != null) Data = inputStream;
 
             PrepForProcessing();
 
@@ -458,11 +369,11 @@ namespace MotHL7Lib
                         throw new HL7Exception(201, _msh.Get("MSH.9.3") + " - Missing or Unhandled Message Type");
                 }
 
-                ACK ackMessageOut = new ACK(_msh, Organization, Processor);
+                var ackMessageOut = new ACK(_msh, Organization, Processor);
                 ResponseMessage = ackMessageOut.AckString;
                 WriteResponse(ResponseMessage);
 
-                if (debugMode)
+                if (DebugMode)
                 {
                     EventLogger.Debug("MessageIn:\n{0}", Data);
                     EventLogger.Debug("HL7 ACK:\n{0}", ResponseMessage);
@@ -473,10 +384,7 @@ namespace MotHL7Lib
                 var errorCode = "AP";
 
                 // Parse the message, look for REJECTED
-                if (ex.Message.Contains("REJECTED"))
-                {
-                    errorCode = "AR";
-                }
+                if (ex.Message.Contains("REJECTED")) errorCode = "AR";
 
                 var nakMessageOut = new NAK(_msh, errorCode, Organization, Processor, ex.Message);
                 ResponseMessage = nakMessageOut.NakString;
@@ -493,7 +401,7 @@ namespace MotHL7Lib
         }
 
         //---------------------------------------------------------------
-        private string ParsePatternedDoseSchedule(string pattern, int thisRxType, TQ1 tq1, MotPrescriptionRecord scrip, DateTime StartDate, DateTime StopDate)
+        private string ParsePatternedDoseSchedule(string pattern, TQ1 tq1, MotPrescriptionRecord scrip, DateTime startDate, DateTime stopDate)
         {
             //  Frameworks repeat patterns are:
             //
@@ -505,34 +413,35 @@ namespace MotHL7Lib
             //DateTime.TryParseExact(sEndDate, "yyyyMMddhhmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime StopDate);
 
 
-            var startDoW = (int)StartDate.DayOfWeek;
+            var startDoW = (int)startDate.DayOfWeek;
             var tq14List = tq1.GetList("TQ1.4");
             var tq121 = tq1.Get("TQ1.2.1");
 
-            CumulativeDoseCount += Convert.ToInt32(tq121);  // Increment the Dose Count
+            CumulativeDoseCount += Convert.ToInt32(tq121); // Increment the Dose Count
 
             scrip.DoseScheduleName = pattern;
 
             // Brute force the determination
-            if (pattern[1] == 'J')   // Ex: QJ135 DoW field, Sunday = 1 "XX0XX0"
+            var i1 = 0;
+            if (pattern[1] == 'J') // Ex: QJ135 DoW field, Sunday = 1 "XX0XX0"
             {
-                string newPattern = string.Empty;
+                var newPattern = string.Empty;
                 char[] dayBytes = { 'O', 'O', 'O', 'O', 'O', 'O', 'O' };
-                var i1 = 0;
 
                 // Each digit that follows J is an adjusted offset into the array
                 var numberPattern = pattern.Substring(pattern.IndexOf("J", StringComparison.Ordinal) + 1);
 
                 var dayArray = new[,]
-                { // Dose Day
-                  // S M T W T F S
-                    {1,2,3,4,5,6,7 }, // S - First Day of Week
-                    {7,1,2,3,4,5,6 }, // M
-                    {6,5,4,3,2,1,7 }, // T 
-                    {5,4,3,2,1,7,6 }, // W
-                    {4,3,2,1,7,6,5 }, // T
-                    {3,2,1,7,6,5,4 }, // F
-                    {2,1,0,6,5,4,3 }  // S
+                {
+                    // Dose Day
+                    // S M T W T F S
+                    {1, 2, 3, 4, 5, 6, 7}, // S - First Day of Week
+                    {7, 1, 2, 3, 4, 5, 6}, // M
+                    {6, 5, 4, 3, 2, 1, 7}, // T 
+                    {5, 4, 3, 2, 1, 7, 6}, // W
+                    {4, 3, 2, 1, 7, 6, 5}, // T
+                    {3, 2, 1, 7, 6, 5, 4}, // F
+                    {2, 1, 0, 6, 5, 4, 3} // S
                 };
 
                 if (Hl7SendingApp == HL7SendingApplication.FrameworkLTC)
@@ -547,7 +456,7 @@ namespace MotHL7Lib
 
                     while (j < 7)
                     {
-                        if (dayArray[FirstDoW, j] == i1)
+                        if (dayArray[FirstDoW, j] == 0)
                         {
                             dayBytes[dayArray[0, j] - 1] = 'X';
                             break;
@@ -566,46 +475,33 @@ namespace MotHL7Lib
                 scrip.DoW = newPattern;
                 scrip.RxType = 5;
 
-                foreach (var tq14 in tq14List)
-                {
-                    scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}";
-                }
+                foreach (var tq14 in tq14List) scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}";
             }
-            else if (pattern[0] == 'Q' && pattern.Contains("D"))  // Daily, need to qualify with the Q
+            else if (pattern[0] == 'Q' && pattern.Contains("D")) // Daily, need to qualify with the Q
             {
-                string[] monthBuf = new string[35];  // 7x5 Card, HHMM + Total DoseQty/Day or HHMM00.00 if there is no dose
-                                                     // The HHMM is ignored by the system, and is there to mintain format continuity
+                var monthBuf = new string[35]; // 7x5 Card, HHMM + Total DoseQty/Day or HHMM00.00 if there is no dose
+                // The HHMM is ignored by the system, and is there to mintain format continuity
 
                 var skipDays = Convert.ToInt32(pattern.Substring(1, 1));
                 var i = 0;
 
                 while (i < monthBuf.Length) // Intialize the entire array
-                {
                     monthBuf[i++] = "HHMM00.00";
-                }
 
                 for (i = 0; i < monthBuf.Length; i += skipDays)
-                {
-                    monthBuf[i] = $"HHMM{Convert.ToDouble(CumulativeDoseCount):00.00}";  // SpecialDoses:  Monthly Pattern (00.00/Day for RxType 18 [Alternating])
-                                                                                         //                The number represents total doses per day
-                }
+                    monthBuf[i] = $"HHMM{Convert.ToDouble(CumulativeDoseCount):00.00}"; // SpecialDoses:  Monthly Pattern (00.00/Day for RxType 18 [Alternating])
+                //                The number represents total doses per day
 
 
                 i = 1;
-                while (i < monthBuf.Length)
-                {
-                    monthBuf[0] += monthBuf[i++];
-                }
+                while (i < monthBuf.Length) monthBuf[0] += monthBuf[i++];
 
                 scrip.RxType = 18;
-                scrip.MDOMStart = pattern.Substring(1, 1);  // Extract the number 
-                scrip.DoseScheduleName = pattern;           // => This is the key part.  The DoseScheduleName has to exist on MOTALL 
+                scrip.MDOMStart = pattern.Substring(1, 1); // Extract the number 
+                scrip.DoseScheduleName = pattern; // => This is the key part.  The DoseScheduleName has to exist on MOTALL 
                 scrip.SpecialDoses = monthBuf[0];
 
-                foreach (var tq14 in tq14List)
-                {
-                    scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}";
-                }
+                foreach (var tq14 in tq14List) scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}";
             }
             else if (pattern[1] == 'L') // Monthly TCustom (Unsupported by MOTALL) -- QLn,n,n,...
             {
@@ -615,41 +511,26 @@ namespace MotHL7Lib
                 pattern = pattern.Substring(2);
                 var days = pattern.Split(toks);
 
-                scrip.DoseScheduleName = pattern;            // => This is a key part.  The DosScheduleName has to be unique in MOTALL 
-                foreach (var d in days)
-                {
-                    scrip.DoseScheduleName += d;
-                }
+                scrip.DoseScheduleName = pattern; // => This is a key part.  The DosScheduleName has to be unique in MOTALL 
+                foreach (var d in days) scrip.DoseScheduleName += d;
 
                 if (GlobalMonth == null)
                 {
                     GlobalMonth = new string[35];
 
-                    while (i < GlobalMonth.Length)
-                    {
-                        GlobalMonth[i++] = "00.00";
-                    }
+                    while (i < GlobalMonth.Length) GlobalMonth[i++] = "00.00";
                 }
 
-                foreach (var d in days)
-                {
-                    GlobalMonth[Convert.ToInt16(d) - 1] = $"HHMM{Convert.ToDouble(CumulativeDoseCount):00.00}";
-                }
+                foreach (var d in days) GlobalMonth[Convert.ToInt16(d) - 1] = $"HHMM{Convert.ToDouble(CumulativeDoseCount):00.00}";
 
-                scrip.RxType = 20;  // Not Supported in Legacy -- Reported by PCHS 20160822, they "suggest" trying 18
+                scrip.RxType = 20; // Not Supported in Legacy -- Reported by PCHS 20160822, they "suggest" trying 18
 
                 i = 1;
-                while (i < GlobalMonth.Length)
-                {
-                    GlobalMonth[0] += GlobalMonth[i++];
-                }
+                while (i < GlobalMonth.Length) GlobalMonth[0] += GlobalMonth[i++];
 
-                scrip.SpecialDoses = GlobalMonth[0];  //  HHMM00.00 * 35  replaces -->"01011011011 ...  Up to 35
+                scrip.SpecialDoses = GlobalMonth[0]; //  HHMM00.00 * 35  replaces -->"01011011011 ...  Up to 35
 
-                foreach (var tq14 in tq14List)
-                {
-                    scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}"; // 080001.00120002.00180001.00200002.00
-                }
+                foreach (var tq14 in tq14List) scrip.DoseTimesQtys += $"{tq14}{Convert.ToDouble(tq121):00.00}"; // 080001.00120002.00180001.00200002.00
 
                 EventLogger.Warn("Logging QLX record with new values: Special Doses {0}, DoseTimeQtys {1}", scrip.SpecialDoses, scrip.DoseTimesQtys);
             }
@@ -659,8 +540,9 @@ namespace MotHL7Lib
         }
 
         /// <summary>
-        /// IsHL7DoseSchedule()
-        /// HL7 v2.7 defines a collection of stock Dose Schedules that are in general use.  Several were set up for Frameworks already.  Many more are defined by Hl7.
+        ///     IsHL7DoseSchedule()
+        ///     HL7 v2.7 defines a collection of stock Dose Schedules that are in general use.  Several were set up for Frameworks
+        ///     already.  Many more are defined by Hl7.
         /// </summary>
         /// <param name="schedulePattern"></param>
         /// <returns></returns>
@@ -668,15 +550,12 @@ namespace MotHL7Lib
         {
             var hasNum = schedulePattern.Any(char.IsDigit);
 
-            if (!hasNum)
-            {
-                return false;
-            }
+            if (!hasNum) return false;
 
-            if (schedulePattern[0] == 'Q' && schedulePattern[2] == 'D')         // QnD - Every n Days
+            if (schedulePattern[0] == 'Q' && schedulePattern[2] == 'D') // QnD - Every n Days
                 return true;
 
-            if (schedulePattern[0] == 'Q' && schedulePattern[1] == 'J')         // QJn - Frameworks - QJ135 DoW field, Sunday = 1, pattern = "XX0XX0"
+            if (schedulePattern[0] == 'Q' && schedulePattern[1] == 'J') // QJn - Frameworks - QJ135 DoW field, Sunday = 1, pattern = "XX0XX0"
                 return true;
 
             /*
@@ -684,7 +563,7 @@ namespace MotHL7Lib
                 return true;
             */
 
-            if (schedulePattern[0] == 'Q' && schedulePattern[1] == 'L')         // QnL - - Every n Months
+            if (schedulePattern[0] == 'Q' && schedulePattern[1] == 'L') // QnL - - Every n Months
                 return true;
 
             /*
@@ -712,14 +591,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "AL1";
 
-            return
-                $"Type Code: {al1.Get("AL1.2.1")}\n" +
-                $"Mnemonic: {al1.Get("AL1.3.1")}\n" +
-                $"Desc: {al1.Get("AL1.3.2")}\n" +
-                $"Severity: {al1.Get("AL1.4.1")}\n" +
-                $"Reaction: {al1.Get("AL1.5")}\n" +
-                $"ID Date: {al1.Get("AL1.6")}\n" +
-                $"**\n";
+            return $"Type Code: {al1.Get("AL1.2.1")}\n" + $"Mnemonic: {al1.Get("AL1.3.1")}\n" + $"Desc: {al1.Get("AL1.3.2")}\n" + $"Severity: {al1.Get("AL1.4.1")}\n" + $"Reaction: {al1.Get("AL1.5")}\n" + $"ID Date: {al1.Get("AL1.6")}\n" + $"**\n";
         }
 
         private string ProcessDG1(RecordBundle recBundle, DG1 dg1)
@@ -731,14 +603,13 @@ namespace MotHL7Lib
 
             ProblemLocus = "DG1";
 
-            return string.Format("Coding Method: {0}\nDiagnosis Code: {1}\nDescription: {2}\nDate/Time: {3}\nDiagnosis Type: {4}\nMajor Catagory: {5}\nDiagnostic Related Group: {6}\n******\n",
-                                 dg1.Get("DG1.2"),   // 0 - Diagnosis Coding Method
-                                 dg1.Get("DG1.3"),   // 1 - Diagnosis Code
-                                 dg1.Get("DG1.4"),   // 2 - Diagnosis Description
-                                 dg1.Get("DG1.5"),   // 3 - Diagnosis Date/Time
-                                 dg1.Get("DG1.6"),   // 4 - Diagnosis Type
-                                 dg1.Get("DG1.7"),   // 5 - Major Diagnostic Catagory
-                                 dg1.Get("DG1.8"));  // 6 - Diagnostic Related Group
+            return string.Format("Coding Method: {0}\nDiagnosis Code: {1}\nDescription: {2}\nDate/Time: {3}\nDiagnosis Type: {4}\nMajor Catagory: {5}\nDiagnostic Related Group: {6}\n******\n", dg1.Get("DG1.2"), // 0 - Diagnosis Coding Method
+                dg1.Get("DG1.3"), // 1 - Diagnosis Code
+                dg1.Get("DG1.4"), // 2 - Diagnosis Description
+                dg1.Get("DG1.5"), // 3 - Diagnosis Date/Time
+                dg1.Get("DG1.6"), // 4 - Diagnosis Type
+                dg1.Get("DG1.7"), // 5 - Major Diagnostic Catagory
+                dg1.Get("DG1.8")); // 6 - Diagnostic Related Group
         }
 
         private string ProcessEVN(RecordBundle recBundle, EVN evn)
@@ -790,8 +661,8 @@ namespace MotHL7Lib
 
             //                              Ins/Group
             recBundle.Patient.InsPNo = in1.Get("IN1.2.1") + "/" + in1.Get("IN1.8");
-            recBundle.Patient.InsName = in1.Get("IN1.4.1") + "/" + in1.Get("IN1.8"); ;
-
+            recBundle.Patient.InsName = in1.Get("IN1.4.1") + "/" + in1.Get("IN1.8");
+         
             // No Insurancec Policy Number per se, but there is a group name(1-9) and a group number(1-8) 
             //__recs.__pr.InsPNo = __in1.Get("IN1.1.9") + "-" + __in1.Get("IN1.1.8");
         }
@@ -805,10 +676,7 @@ namespace MotHL7Lib
 
             ProblemLocus = "IN2";
 
-            if (string.IsNullOrEmpty(recBundle.Patient.SSN))
-            {
-                recBundle.Patient.SSN = in2.Get("IN2.1.1");
-            }
+            if (string.IsNullOrEmpty(recBundle.Patient.SSN)) recBundle.Patient.SSN = in2.Get("IN2.1.1");
         }
 
         private string ProcessNK1(RecordBundle recBundle, NK1 nk1)
@@ -829,6 +697,7 @@ namespace MotHL7Lib
             {
                 return string.Empty;
             }
+
             ProblemLocus = "NTE";
 
             return nte.Get("NTE.3");
@@ -859,7 +728,6 @@ namespace MotHL7Lib
 
             if (obx.Get("OBX.3.2").ToLower().Contains("height"))
             {
-
                 if (obx.Get("OBX.6.1").ToLower().Contains("cm"))
                 {
                     var doubleTmp = Convert.ToDouble(obx.Get("OBX.5"));
@@ -882,7 +750,7 @@ namespace MotHL7Lib
 
             var newScrip = false;
             var refillScrip = false;
-            var toDc = false;
+            var dcScrip = false;
             var changeOrder = false;
 
             ProblemLocus = "ORC";
@@ -894,27 +762,28 @@ namespace MotHL7Lib
                     recBundle.Scrip.Status = 1;
                     break;
 
-                case "DC":  // Discontinue order/service request
-                    toDc = true;
+                case "DC": // Discontinue order/service request
+                    // ReSharper disable once RedundantAssignment
+                    dcScrip = true;
                     recBundle.Scrip.DiscontinueDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     recBundle.Scrip.Status = 0;
                     break;
 
-                case "RF":  // Refill order/service request                
+                case "RF": // Refill order/service request                
                     refillScrip = true;
                     recBundle.Scrip.Status = 1;
                     //recBundle.MakeDupRnaScrip = true;
                     break;
 
-                case "XO":  // Change order/service request
-                case "CA":  // Change order/service request
+                case "XO": // Change order/service request
+                case "CA": // Change order/service request
                     changeOrder = true;
                     recBundle.Scrip.Status = 1;
-                    recBundle.MakeDupRnaScrip = true;
                     recBundle.NewStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.15.1"));
                     break;
 
-                case "RE":  // Observations/Performed Service to follow
+                // ReSharper disable once RedundantCaseLabel
+                case "RE": // Observations/Performed Service to follow
                 default:
                     break;
             }
@@ -951,19 +820,33 @@ namespace MotHL7Lib
                  */
                 if (!newScrip && !refillScrip)
                 {
-                    // If ORC-4 has a value, this is a Renew event and the last RxNum is not the first one
-                    if (string.IsNullOrEmpty(orc.Get("ORC.4.1")))
+                    var orc4 = orc.Get("ORC.4.1");
+                    var orc3 = orc.Get("ORC.3.1");
+                    var orc2 = orc.Get("ORC.2.1");
+
+                    // Original order but changing?
+                    if (changeOrder && orc3 == orc4 && string.IsNullOrEmpty(orc4))
                     {
-                        recBundle.Scrip.PrescriptionID = orc.Get("ORC.3.1");
+                        recBundle.MakeDupRnaScrip = false;
+                        recBundle.Scrip.PrescriptionID = orc3;
+                    }
+                    // Renew event?
+                    else if (changeOrder && !string.IsNullOrEmpty(orc4))
+                    {
+                        // DC the old scrip and flag the creation of a new one.  The effective date is the pivot
+                        recBundle.MakeDupRnaScrip = true;
+                        recBundle.Scrip.PrescriptionID = orc4;
+                        recBundle.Scrip.RxSys_NewRxNum = orc2;
+                        recBundle.Scrip.DiscontinueDate = recBundle.NewStartDate;
+                        recBundle.Scrip.Status = 100;
                     }
                     else
                     {
-                        recBundle.Scrip.PrescriptionID = orc.Get("ORC.4.1");
+                        // Don't know what it is, treat it like a new scrip
+                        recBundle.MakeDupRnaScrip = false;
+                        recBundle.Scrip.PrescriptionID = orc3;
+                        recBundle.Scrip.RxStartDate = recBundle.NewStartDate;
                     }
-
-                    recBundle.Scrip.RxSys_NewRxNum = orc.Get("ORC.2.1");
-                    recBundle.Scrip.DiscontinueDate = DateTime.Today;
-                    recBundle.Scrip.Status = 100;
                 }
                 else
                 {
@@ -975,9 +858,6 @@ namespace MotHL7Lib
                 recBundle.Location.LocationID = orc.Get("ORC.21.3");
                 recBundle.Scrip.PrescriptionID = orc.Get("ORC.2.1");
             }
-
-            recBundle.Scrip.RxStartDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.19") ?? "");
-            recBundle.Scrip.RxStopDate = recBundle.Scrip.TransformDate(orc.Get("ORC.11.20") ?? "");
 
             recBundle.Location.LocationName = orc.Get("ORC.21.1");
             recBundle.Location.Address1 = orc.Get("ORC.22.1");
@@ -1012,10 +892,7 @@ namespace MotHL7Lib
 
         private void ProcessPID(RecordBundle recBundle, PID pid)
         {
-            if (recBundle == null || pid == null)
-            {
-                return;
-            }
+            if (recBundle == null || pid == null) return;
 
             ProblemLocus = "PID";
 
@@ -1037,7 +914,7 @@ namespace MotHL7Lib
             {
                 char[] delim = { '|', '\\' };
 
-                string tmp = pid.Get("PID.3");
+                var tmp = pid.Get("PID.3");
                 if (!string.IsNullOrEmpty(tmp))
                 {
                     var part = tmp.Split(delim);
@@ -1073,8 +950,8 @@ namespace MotHL7Lib
             recBundle.Patient.FirstName = pid.Get("PID.5.2");
             recBundle.Patient.MiddleInitial = pid.Get("PID.5.3");
 
-            var date = pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7");
-            recBundle.Patient.DOB = recBundle.Patient.TransformDate(date);
+            //var date = pid.Get("PID.7").Length >= 8 ? pid.Get("PID.7")?.Substring(0, 8) : pid.Get("PID.7");
+            recBundle.Patient.DOB = recBundle.Patient.TransformDate(pid.Get("PID.7"));
 
             if (!string.IsNullOrEmpty(pid.Get("PID.8")))
             {
@@ -1092,9 +969,6 @@ namespace MotHL7Lib
 
             // Set the default patient status to active, it can be changed with an ADT^A03 or ADT^A08
             recBundle.Patient.Status = 1;
-
-
-            //__scrip.RxSys_PatID = __pr.RxSys_PatID;
         }
 
         private void ProcessPV1(RecordBundle recBundle, PV1 pv1)
@@ -1106,17 +980,14 @@ namespace MotHL7Lib
 
             ProblemLocus = "PV1";
 
-            var Temp = pv1.Get("PV1.7.1");
+            var temp = pv1.Get("PV1.7.1");
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && (temp.Length > 9))
             {
-                if (Temp.Length > 9)
-                {
-                    Temp = Temp.Substring(0, 9);
-                }
+                temp = temp.Substring(0, 9);
             }
 
-            recBundle.Prescriber.PrescriberID = Temp;
+            recBundle.Prescriber.PrescriberID = temp;
             recBundle.Prescriber.LastName = pv1.Get("PV1.7.2");
             recBundle.Prescriber.FirstName = pv1.Get("PV1.7.3");
             recBundle.Prescriber.MiddleInitial = pv1.Get("PV1.7.4");
@@ -1127,7 +998,7 @@ namespace MotHL7Lib
             // Check for the Patient DocID to match the Visit DocID, update as needed [Frameworks Message]
             if (string.IsNullOrEmpty(recBundle.Patient.PrimaryPrescriberID))
             {
-                recBundle.Patient.PrimaryPrescriberID = Temp;
+                recBundle.Patient.PrimaryPrescriberID = temp;
             }
         }
 
@@ -1151,7 +1022,7 @@ namespace MotHL7Lib
             ProblemLocus = "PD1";
         }
 
-        private void ProcessPRT(RecordBundle recBundle, PRT prt)  // this is an EPIC or 2.7 record
+        private void ProcessPRT(RecordBundle recBundle, PRT prt) // this is an EPIC or 2.7 record
         {
             if (recBundle == null || prt == null)
             {
@@ -1163,16 +1034,12 @@ namespace MotHL7Lib
 
             ProblemLocus = "PRT";
 
-
             // Participant Person
             var tempId = prt.Get("PRT.5.1");
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && (tempId.Length > 9))
             {
-                if (tempId.Length > 9)
-                {
-                    tempId = tempId.Substring(0, 9);
-                }
+                tempId = tempId.Substring(0, 9);
             }
 
             tempDoc.PrescriberID = tempId;
@@ -1223,7 +1090,7 @@ namespace MotHL7Lib
             }
         }
 
-        private void ProcessRXC(RecordBundle recBundle, RXC rxc)  // Process Compound Components
+        private void ProcessRXC(RecordBundle recBundle, RXC rxc) // Process Compound Components
         {
             if (recBundle == null || rxc == null)
             {
@@ -1263,17 +1130,12 @@ namespace MotHL7Lib
             // This  popped up in McKesson Pharmaserv.  RNA also sends over 4 extra 0's with each so we need to strip those off
             var tempDea = rxd.Get("RXD.10.1");
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && (tempDea.Length > 9))
             {
-                if (tempDea.Length > 9)
-                {
-                    tempDea = tempDea.Substring(0, 9);
-                }
+                tempDea = tempDea.Substring(0, 9);
             }
 
             recBundle.Prescriber.DEA_ID = tempDea;
-
-            //__recs.__doc.DEA_ID = __rxd.Get("RXD.10.1");
 
             var tempLastName = rxd.Get("RXD.10.2");
             var tempFirstName = rxd.Get("RXD.10.3");
@@ -1291,12 +1153,9 @@ namespace MotHL7Lib
 
             var tempDocId = rxd.Get("RXD.10.1");
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && (tempDocId.Length > 9))
             {
-                if (tempDocId.Length > 9)
-                {
-                    tempDocId = tempDocId.Substring(0, 9);
-                }
+                tempDocId = tempDocId.Substring(0, 9);
             }
 
             // Test to make sure there's a valid DocID [Frameworks Doesn't Seem to send one in RXD]
@@ -1334,8 +1193,13 @@ namespace MotHL7Lib
             recBundle.Scrip.PatientID = recBundle.Patient.PatientID;
         }
 
-        int ConvertFromRoman(string number)
+        private int ConvertFromRoman(string number)
         {
+            if (string.IsNullOrEmpty(number))
+            {
+                return 0;
+            }
+
             if (number.Contains("I") || number.Contains("V"))
             {
                 switch (number)
@@ -1354,7 +1218,6 @@ namespace MotHL7Lib
                         return 6;
                     case "VII":
                         return 7;
-
                 }
             }
 
@@ -1377,14 +1240,11 @@ namespace MotHL7Lib
 
             ProblemLocus = "RXE";
 
-            var tempDea = rxe.Get("RXE.13.1");
+            var tempDea = rxe.Get("RXE.13.1") ?? "XX0000000";
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && (tempDea.Length > 9))
             {
-                if (tempDea.Length > 9)
-                {
-                    tempDea = tempDea.Substring(0, 9);
-                }
+                tempDea = tempDea.Substring(0, 9);
             }
 
             recBundle.Prescriber.DEA_ID = tempDea;
@@ -1403,7 +1263,6 @@ namespace MotHL7Lib
 
             if (rxe.Get("RXE.25") != string.Empty)
             {
-                // Check for concatenated RXE.25 & 26 -- RNA Helix does it, maybe others do too
                 if (!string.IsNullOrEmpty(rxe.Get("RXE.25")))
                 {
                     var dose = rxe.Get("RXE.25");
@@ -1560,28 +1419,22 @@ namespace MotHL7Lib
                 doseScheduleName = "PRN";
             }
 
-            if (Hl7SendingApp == HL7SendingApplication.RNA)
+            if (Hl7SendingApp == HL7SendingApplication.RNA && string.IsNullOrEmpty(doseScheduleName))
             {
-                if (string.IsNullOrEmpty(doseScheduleName))
-                {
-                    doseScheduleName = $"{DateTime.Now:yyyyyddmmss})";
-                }
+                doseScheduleName = $"{DateTime.Now:yyyyyddmmss})";
             }
 
             // Sanity Check
-            string tq2 = tq1.Get("TQ1.2.1");
+            var tq2 = tq1.Get("TQ1.2.1");
             var tq141 = tq1.GetList("TQ1.4.1");
 
             if (tq141.Count == 0)
             {
                 tq141 = tq1.GetList("TQ1.4");
 
-                if (tq141.Count == 0 && doseScheduleName != "PRN")
+                if (tq141.Count == 0 && doseScheduleName != "PRN" && !AllowZeroTQ)
                 {
-                    if (!AllowZeroTQ)
-                    {
-                        throw new Exception("TQ1 Processing Failure - No Dose Times");
-                    }
+                    throw new Exception("TQ1 Processing Failure - No Dose Times");
                 }
 
                 if (doseScheduleName == "PRN")
@@ -1600,23 +1453,17 @@ namespace MotHL7Lib
 
             if (Hl7SendingApp != HL7SendingApplication.RNA)
             {
-                if (string.IsNullOrEmpty(tq2) || tq2 == "0")
+                if (string.IsNullOrEmpty(tq2) || tq2 == "0" && !AllowZeroTQ)
                 {
-                    if (!AllowZeroTQ)
-                    {
-                        throw new Exception("TQ1 Processing Failure - Dose Quantity must be > 0");
-                    }
+                    throw new Exception("TQ1 Processing Failure - Dose Quantity must be > 0");
                 }
             }
             else
             {
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (recBundle.Scrip.QtyPerDose == 0.00)
+                if (recBundle.Scrip.QtyPerDose == 0.00 && !AllowZeroTQ)
                 {
-                    if (!AllowZeroTQ)
-                    {
-                        throw new Exception("RNA/TQ1 Processing Failure - Dose Quantity must be > 0");
-                    }
+                    throw new Exception("RNA/TQ1 Processing Failure - Dose Quantity must be > 0");
                 }
             }
 
@@ -1685,7 +1532,7 @@ namespace MotHL7Lib
             // HL7 specific dose schedule pattern?
             if (IsHL7DoseSchedule(recBundle.Scrip.DoseScheduleName))
             {
-                return ParsePatternedDoseSchedule(recBundle.Scrip.DoseScheduleName, tq1RxType, tq1, recBundle.Scrip, tqStartDate, tqStopDate);
+                return ParsePatternedDoseSchedule(recBundle.Scrip.DoseScheduleName, tq1, recBundle.Scrip, tqStartDate, tqStopDate);
             }
 
             // See if its a dose schedule we know about
@@ -1705,10 +1552,6 @@ namespace MotHL7Lib
             {
                 throw new Exception("Failure processing TQ1: " + ex.Message);
             }
-
-
-            // recBundle.Scrip.QtyPerDose = TQ2;
-            // return DoseTQ;
         }
 
         private void ProcessZAS(RecordBundle recBundle, ZAS zas)
@@ -1758,8 +1601,8 @@ namespace MotHL7Lib
 
             ProblemLocus = "ZFI";
 
-            recBundle.Drug.DrugID = zfi.Get("ZF1.1");  // Item Id
-            recBundle.Drug.TradeName = zfi.Get("ZF1.1");  // Item Id
+            recBundle.Drug.DrugID = zfi.Get("ZF1.1"); // Item Id
+            recBundle.Drug.TradeName = zfi.Get("ZF1.1"); // Item Id
             recBundle.Drug.DrugName = zfi.Get("ZFI.4");
             recBundle.Drug.GenericFor = zfi.Get("ZFI-4");
             recBundle.Drug.DoseForm = zfi.Get("ZFI.5");
@@ -1776,23 +1619,22 @@ namespace MotHL7Lib
         {
             if (recBundle == null || Cx1 == null)
             {
+                return;
             }
         }
 
         public string StackTrace(string st)
         {
-            string trace = string.Empty;
+            var trace = string.Empty;
 
-            if (debugMode)
+            if (DebugMode)
             {
                 var lines = st.Split('\n');
-                trace = lines.Where(l => l.Contains(" in ")).Aggregate(trace, (current, l) => current + (l.Substring(l.IndexOf("in", StringComparison.Ordinal)) + "\n"));
+                trace = lines.Where(l => l.Contains(" in ")).Aggregate(trace, (current, l) => current + l.Substring(l.IndexOf("in", StringComparison.Ordinal)) + "\n");
             }
 
             return trace;
         }
-
-        public MSH GlobalMsh;
 
         private bool ProcessHeader(Header header, RecordBundle recBundle)
         {
@@ -1810,15 +1652,16 @@ namespace MotHL7Lib
             ProcessIN2(recBundle, newPatient.IN2);
 
             foreach (var prt in newPatient.PRT) { ProcessPRT(recBundle, prt); }
-            foreach (var nte in newPatient.NTE) { recBundle.Patient.Comments += ProcessNTE(recBundle, nte); }
-            foreach (var al1 in newPatient.AL1) { recBundle.Patient.Allergies += ProcessAL1(recBundle, al1); }
-            foreach (var dg1 in newPatient.DG1) { recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1); }
+            foreach (var nte in newPatient.NTE) recBundle.Patient.Comments += ProcessNTE(recBundle, nte);
+            foreach (var al1 in newPatient.AL1) recBundle.Patient.Allergies += ProcessAL1(recBundle, al1);
+            foreach (var dg1 in newPatient.DG1) recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1);
 
             return true;
         }
 
         #region RNA Special Processing
-        void ProcessRnaRenewOrder(NetworkStream stream, RecordBundle recBundle)
+
+        private void ProcessRnaRenewOrder(NetworkStream stream, RecordBundle recBundle)
         {
             if (recBundle.MakeDupRnaScrip && Hl7SendingApp == HL7SendingApplication.RNA)
             {
@@ -1833,6 +1676,7 @@ namespace MotHL7Lib
                 ds.Write(stream);
             }
         }
+
         #endregion
 
         private bool ProcessOrder(Order newOrder, RecordBundle recBundle)
@@ -1847,38 +1691,54 @@ namespace MotHL7Lib
             recBundle.Store.Clear();
             recBundle.Drug.Clear();
 
+            recBundle.Scrip.RelaxTqRequirements = AllowZeroTQ;
+
             ProcessORC(recBundle, newOrder.ORC);
             ProcessRXD(recBundle, newOrder.RXD);
             ProcessRXE(recBundle, newOrder.RXE);
             ProcessRXO(recBundle, newOrder.RXO);
 
-            foreach (var prt in newOrder.PRT)
-            {
-                ProcessPRT(recBundle, prt);
-            }
+            foreach (var prt in newOrder.PRT) ProcessPRT(recBundle, prt);
 
             var newTq1Set = true;
 
             foreach (var tq1 in newOrder.TQ1)
             {
+                var tqDt = 0.00;
                 var tempTq = new MotTimesQtysRecord("Add", AutoTruncate);
-
                 var tq1RxType = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? Convert.ToInt32(recBundle.Scrip.RxType) : 0;
+
                 tempTq.LocationID = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? recBundle.Location.LocationID : "Home Care";
                 tempTq.DoseTimesQtys = ProcessTQ1(recBundle, tq1, newTq1Set, tq1RxType);
                 tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
 
                 // Sanity Check, TQ1 overrides RXE
-                var tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
+                if (!string.IsNullOrEmpty(tempTq.DoseTimesQtys) && tempTq.DoseTimesQtys.Length >= 4) tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
 
                 // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (recBundle.Scrip.QtyPerDose != tqDt)
+                if (recBundle.Scrip.QtyPerDose != 0 && tqDt != 0 && recBundle.Scrip.QtyPerDose != tqDt)
                 {
                     recBundle.Scrip.QtyPerDose = tqDt;
                 }
 
+                // Match schedule names for good measure, should only happen with the first TQ1
+                if (string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && !string.IsNullOrEmpty(tempTq.DoseScheduleName))
+                {
+                    recBundle.Scrip.DoseScheduleName = tempTq.DoseScheduleName;
+                }
+
+                // This could happen for every TQ1 record
+                if (!string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && string.IsNullOrEmpty(tempTq.DoseScheduleName))
+                {
+                    tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
+                }
+
                 recBundle.TQList.Add(tempTq);
-                recBundle.Scrip.Comments += $"({++tq1RecordsProcessed}) Dose Schedule: {recBundle.Scrip.DoseScheduleName}\n";
+
+                if (DebugMode)
+                {
+                    recBundle.Scrip.Comments += $"({++tq1RecordsProcessed}) Dose Schedule: {recBundle.Scrip.DoseScheduleName}\n";
+                }
 
                 newTq1Set = false;
             }
@@ -1892,6 +1752,7 @@ namespace MotHL7Lib
             {
                 recBundle.Scrip.Comments += "Patient Notes:";
             }
+
             foreach (var nte in newOrder.NTE)
             {
                 recBundle.Scrip.Comments += $"\n  {commentCounter++}) {ProcessNTE(recBundle, nte)}\n";
@@ -1920,7 +1781,7 @@ namespace MotHL7Lib
         }
 
         /// <summary>
-        /// Returns result codes from MOT 
+        ///     Returns result codes from MOT
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -1934,17 +1795,16 @@ namespace MotHL7Lib
             // Process return code here ...
             EventLogger.Error("!!! {0} Failed to write {1}", DateTime.Now, data);
             throw new Exception("Data IO Failed [" + data + "]");
-
         }
 
         public void ProcessADTEvent(object sender, HL7Event7MessageArgs args)
         {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var tq = string.Empty;
-            var temp = string.Empty;
+            var recBundle = new RecordBundle(AllowZeroTQ, AutoTruncate, SendEof)
+            {
+                MessageType = MessageType
+            };
 
-            recBundle.MessageType = MessageType;
-            recBundle.SetDebug(debugMode);
+            recBundle.SetDebug(DebugMode);
 
             var xmlDoc = GetStructuredData(args.Data);
             var adt = new ADT_A01(xmlDoc);
@@ -1963,12 +1823,12 @@ namespace MotHL7Lib
                         ProcessPV2(recBundle, adt.PV2);
                         ProcessPD1(recBundle, adt.PD1);
 
-                        foreach (var obx in adt.OBX) { ProcessOBX(recBundle, obx); }
-                        foreach (var al1 in adt.AL1) { recBundle.Patient.Allergies += ProcessAL1(recBundle, al1); }
-                        foreach (var dg1 in adt.DG1) { recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1); }
-                        foreach (var in1 in adt.IN1) { ProcessIN1(recBundle, in1); }
-                        foreach (var in2 in adt.IN2) { ProcessIN2(recBundle, in2); }
-                        foreach (var nk1 in adt.NK1) { recBundle.Patient.ResponisbleName += ProcessNK1(recBundle, nk1); }
+                        foreach (var obx in adt.OBX) ProcessOBX(recBundle, obx);
+                        foreach (var al1 in adt.AL1) recBundle.Patient.Allergies += ProcessAL1(recBundle, al1);
+                        foreach (var dg1 in adt.DG1) recBundle.Patient.DxNotes += ProcessDG1(recBundle, dg1);
+                        foreach (var in1 in adt.IN1) ProcessIN1(recBundle, in1);
+                        foreach (var in2 in adt.IN2) ProcessIN2(recBundle, in2);
+                        foreach (var nk1 in adt.NK1) recBundle.Patient.ResponisbleName += ProcessNK1(recBundle, nk1);
 
                         // Make sure the proper actions are taken for the event
                         ProcessEVN(recBundle, adt.EVN);
@@ -1988,7 +1848,7 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
+                if (DebugMode) EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
             }
             catch (Exception ex)
             {
@@ -1999,13 +1859,16 @@ namespace MotHL7Lib
 
         public void ProcessOMPMessage(object sender, HL7Event7MessageArgs args)
         {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
+            var recBundle = new RecordBundle(AllowZeroTQ, AutoTruncate, SendEof)
+            {
+                MessageType = MessageType
+            };
 
             // Only OMP_0O9 for now, abstract this next and then specifiy it in the following switch
             OMP_O09 omp;
 
             recBundle.MessageType = MessageType;
-            recBundle.SetDebug(debugMode);
+            recBundle.SetDebug(DebugMode);
 
             var xmlDoc = GetStructuredData(args.Data);
 
@@ -2028,10 +1891,10 @@ namespace MotHL7Lib
                 {
                     using (var stream = localTcpClient.GetStream())
                     {
-                        recBundle.Patient.Write(stream, debugMode);
+                        recBundle.Patient.Write(stream, DebugMode);
                         recBundle.Patient.SetField("Action", "Change");
 
-                        foreach (Order order in omp.Orders)
+                        foreach (var order in omp.Orders)
                         {
                             ProcessOrder(order, recBundle);
                             recBundle.Write();
@@ -2044,7 +1907,10 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
+                if (DebugMode)
+                {
+                    EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -2058,10 +1924,12 @@ namespace MotHL7Lib
         // TODO:  CHeck the Framework SPec for where the order types live
         public void ProcessRDEMessage(object sender, HL7Event7MessageArgs args)
         {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
+            var recBundle = new RecordBundle(AllowZeroTQ, AutoTruncate, SendEof)
+            {
+                MessageType = MessageType
+            };
 
-            recBundle.MessageType = MessageType;
-            recBundle.SetDebug(debugMode);
+            recBundle.SetDebug(DebugMode);
 
             // Only RDE_O11 for now, abstract this next and then specifiy it in the following switch
             RDE_O11 rde;
@@ -2088,7 +1956,7 @@ namespace MotHL7Lib
                         ProcessPatient(rde.Patient, recBundle);
 
                         ProblemLocus = "Patient";
-                        recBundle.Patient.Write(stream, debugMode);
+                        recBundle.Patient.Write(stream, DebugMode);
 
                         foreach (var order in rde.Orders)
                         {
@@ -2104,7 +1972,10 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
+                if (DebugMode)
+                {
+                    EventLogger.Info("Processed {0}\n{1}", $"{MessageType}^{EventCode}", args.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -2115,11 +1986,12 @@ namespace MotHL7Lib
 
         public void ProcessRDSMessage(object sender, HL7Event7MessageArgs args)
         {
-            var recBundle = new RecordBundle(AutoTruncate, SendEof);
-            var problemSegment = $"{MessageType}^{EventCode}";
+            var recBundle = new RecordBundle(AllowZeroTQ, AutoTruncate, SendEof)
+            {
+                MessageType = MessageType
+            };
 
-            recBundle.MessageType = MessageType;
-            recBundle.SetDebug(debugMode);
+            recBundle.SetDebug(DebugMode);
 
             // Only RDS_O13 for now, abstract this next and then specifiy it in the following switch
             RDS_O13 rds;
@@ -2145,10 +2017,10 @@ namespace MotHL7Lib
                         ProcessHeader(rds.Header, recBundle);
                         ProcessPatient(rds.Patient, recBundle);
 
-                        recBundle.Patient.Write(stream, debugMode);
+                        recBundle.Patient.Write(stream, DebugMode);
                         recBundle.Patient.SetField("Action", "Change");
 
-                        foreach (Order order in rds.Orders)
+                        foreach (var order in rds.Orders)
                         {
                             ProcessOrder(order, recBundle);
                             recBundle.Write();
@@ -2160,7 +2032,10 @@ namespace MotHL7Lib
                     }
                 }
 
-                EventLogger.Info("Processed {0}\n{1}", problemSegment, args.Data);
+                if (DebugMode)
+                {
+                    EventLogger.Info($"Processed {MessageType}^{EventCode}\n{0}, ", args.Data);
+                }
             }
             catch (Exception ex)
             {
@@ -2168,5 +2043,69 @@ namespace MotHL7Lib
                 throw new HL7Exception(199, $"Message Processing Failure: {MessageType}^{EventCode}/{ProblemLocus}: {ex.Message}");
             }
         }
+
+        #region variables
+
+        private HL7SendingApplication Hl7SendingApp { get; set; }
+        private int FirstDoW { get; set; }
+
+        private HL7SendingApplication RxHl7SendingApp { get; set; }
+
+        private readonly Dictionary<HL7SendingApplication, string> _rxSystem = new Dictionary<HL7SendingApplication, string> { { HL7SendingApplication.Enterprise, "Enterprise" }, { HL7SendingApplication.Epic, "Epic" }, { HL7SendingApplication.FrameworkLTC, "FrameworkLTC" }, { HL7SendingApplication.Pharmaserve, "Pharmaserve" }, { HL7SendingApplication.QS1, "QS1" }, { HL7SendingApplication.RX30, "RX30" }, { HL7SendingApplication.RNA, "RNA" }, { HL7SendingApplication.Unknown, "Unknown" } };
+
+        private double Rnatq1DoseQty { get; set; }
+        private string[] GlobalMonth;
+
+        private string ProblemLocus { get; set; }
+        private string MessageType { get; set; }
+        private string EventCode { get; set; }
+        private string Organization { get; set; }
+        private string Processor { get; set; }
+        public string RxSysVendorName { get; set; }
+        private HL7SendingApplication RxSysType { get; set; } = HL7SendingApplication.Unknown;
+
+        private int CumulativeDoseCount { get; set; }
+        private MSH _msh;
+        private string[] _segments;
+
+        // ReSharper disable once MemberInitializerValueIgnored
+        private DataInputType _dataInputType = DataInputType.Unknown;
+
+        private Dictionary<HL7SendingApplication, string> _rxSystemDictionary = new Dictionary<HL7SendingApplication, string>
+        {
+            { HL7SendingApplication.Enterprise, "Enterprise" },
+            { HL7SendingApplication.Epic, "Epic" },
+            { HL7SendingApplication.FrameworkLTC, "FrameworkLTC" },
+            { HL7SendingApplication.Pharmaserve, "Pharmaserve" },
+            { HL7SendingApplication.QS1, "QS1" },
+            { HL7SendingApplication.RX30, "RX30" },
+            { HL7SendingApplication.RNA, "RNA" },
+            { HL7SendingApplication.Unknown, "Unknown" }
+        };
+
+        #endregion
+
+
+        #region Messaging     
+
+        public event MotHl7OutputChangeEventHandler OutputTextChanged;
+        public event MotHl7ErrorEventHandler OutputErrorText;
+
+        /// <summary>
+        ///     <c>OnOutputTextChanged</c>
+        ///     Provides update message to any subscriber
+        /// </summary>
+        /// <param name="e">HL7Event7MessageArgs class with event data</param>
+        protected virtual void OnOutputTextChanged(HL7Event7MessageArgs e)
+        {
+            OutputTextChanged?.Invoke(this, e);
+        }
+
+        protected virtual void OnError(HL7Event7MessageArgs e)
+        {
+            OutputErrorText?.Invoke(this, e);
+        }
+
+        #endregion
     }
 }

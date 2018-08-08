@@ -39,32 +39,43 @@ namespace TransformerService
         {
             Logger.Info("Starting MOT Transformer Service");
 
-            HostFactory.Run(x =>
+            try
             {
-                x.Service<MotTransformerInterface>(s =>
+                HostFactory.Run(x =>
                 {
-                    s.ConstructUsing(name => new MotTransformerInterface());
-                    s.WhenStarted(tc => tc.Start());
-                    s.WhenStopped(tc => tc.Stop());
+                    x.Service<MotTransformerInterface>(s =>
+                    {
+                        s.ConstructUsing(name => new MotTransformerInterface());
+                        s.WhenStarted(tc => tc.Start());
+                        s.WhenStopped(tc => tc.Stop());
+                    });
 
+                    x.StartAutomatically();
+                    x.RunAsLocalSystem();
+
+                    x.SetDescription("MOT Data Transformation Interface");
+                    x.SetDisplayName("motNext Transformer");
+                    x.SetServiceName("motNextTransformer");
+
+                    x.EnableShutdown();
+                    x.BeforeUninstall(StopService);
+
+                    x.EnableServiceRecovery(r => { r.RestartService(0); });
                 });
 
-                x.StartAutomatically();
-                x.RunAsLocalSystem();
+                Logger.Info($"Service started and reports status as {GetStatus()}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error($"Failed to start service: {ex.Message}");
+                throw;
+            }
+        }
 
-                x.SetDescription("MOT Data Transformation Interface");
-                x.SetDisplayName("motNext Transformer");
-                x.SetServiceName("motNextTransformer");
-
-                x.EnableShutdown();
-                x.BeforeUninstall(() => StopService());
-
-                x.EnableServiceRecovery(r =>
-                {
-                    r.RestartService(0);
-                });
-
-            });
+        private static string GetStatus()
+        {
+            var service = new ServiceController("motNextTransformer");
+            return service.Status.ToString();
         }
 
         private static void StopService()
@@ -86,13 +97,12 @@ namespace TransformerService
             }
         }
 
-        class Program
+        private class Program
         {
             public static void Main()
             {
-                ConfigureService.Configure();
+                Configure();
             }
         }
     }
 }
-

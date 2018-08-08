@@ -39,7 +39,7 @@ namespace MotCommonLib
     {
         private readonly List<Field> _fieldList;
 
-        private void createRecord(string tableAction)
+        private void CreateRecord(string tableAction)
         {
             try
             {
@@ -56,6 +56,7 @@ namespace MotCommonLib
                 _fieldList.Add(new Field("Fax", "", 10, false, 'a'));
                 _fieldList.Add(new Field("DEANum", "", 10, false, 'a'));
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -71,17 +72,17 @@ namespace MotCommonLib
         /// <summary>
         /// MotStoreRecord
         /// </summary>
-        /// <param name="Action"></param>
-        /// <param name="AutoTruncate"></param>
+        /// <param name="action"></param>
+        /// <param name="autoTruncate"></param>
         /// <exception cref="Exception"></exception>
-        public MotStoreRecord(string Action, bool AutoTruncate = false) : base()
+        public MotStoreRecord(string action, bool autoTruncate = false)
         {
-            base.AutoTruncate = AutoTruncate;
+            AutoTruncate = autoTruncate;
 
             try
             {
                 _fieldList = new List<Field>();
-                createRecord(Action);
+                CreateRecord(action);
             }
             catch (Exception ex)
             {
@@ -91,12 +92,13 @@ namespace MotCommonLib
             }
         }
 
-        public void SetField(string FieldName, string Val, bool OverrideTruncation = false)
+        public void SetField(string fieldName, string val, bool overrideTruncation = false)
         {
             try
             {
-                base.SetField(_fieldList, Val, FieldName, OverrideTruncation);
+                base.SetField(_fieldList, val, fieldName, overrideTruncation);
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -106,16 +108,16 @@ namespace MotCommonLib
         /// <summary>
         /// AddToQueue
         /// </summary>
-        /// <param name="NewQueue"></param>
-        public void AddToQueue(MotWriteQueue NewQueue = null)
+        /// <param name="newQueue"></param>
+        public void AddToQueue(MotWriteQueue newQueue = null)
         {
             var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("rxsys_storeid")));
 
             if (f != null && !string.IsNullOrEmpty(f.TagData))
             {
-                if (NewQueue != null)
+                if (newQueue != null)
                 {
-                    LocalWriteQueue = NewQueue;
+                    LocalWriteQueue = newQueue;
                 }
 
                 AddToQueue("A", _fieldList);
@@ -153,9 +155,9 @@ namespace MotCommonLib
         /// Write
         /// </summary>
         /// <param name="stream"></param>
-        /// <param name="DoLogging"></param>
+        /// <param name="logRecords"></param>
         /// <exception cref="Exception"></exception>
-        public void Write(NetworkStream stream, bool DoLogging = false)
+        public void Write(NetworkStream stream, bool logRecords = false)
         {
             try
             {
@@ -165,7 +167,7 @@ namespace MotCommonLib
                 }
                 else
                 {
-                    Write(stream, _fieldList, DoLogging);
+                    Write(stream, _fieldList, logRecords);
                 }
             }
             catch (Exception ex)
@@ -190,6 +192,7 @@ namespace MotCommonLib
         /// <value>The store identifier.</value>
         [JsonProperty("RxSys_StoreID")]
         [XmlElement("RxSys_StoreID")]
+        // ReSharper disable once InconsistentNaming
         public string RxSys_StoreID
         {
             get
@@ -295,11 +298,12 @@ namespace MotCommonLib
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("state")));
                 return f?.TagData;
             }
+
             set
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    SetField(_fieldList, value?.ToUpper(), "State");
+                    SetField(_fieldList, value.ToUpper(), "State");
                 }
             }
         }
@@ -324,7 +328,7 @@ namespace MotCommonLib
                 {
                     while (value.Contains("-"))
                     {
-                        value = value.Remove(value.IndexOf("-"), 1);
+                        value = value.Remove(value.IndexOf("-", StringComparison.Ordinal), 1);
                     }
                 }
 
@@ -394,7 +398,12 @@ namespace MotCommonLib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += string.Format("\nWebsite: {0}\n", value);
+
+                if (f != null)
+                {
+                    f.TagData += string.Format("\nWebsite: {0}\n", value);
+                }
+
             }
 
         }
@@ -410,7 +419,11 @@ namespace MotCommonLib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += $"\nEmail: {value}\n";
+
+                if (f != null)
+                {
+                    f.TagData += $"\nEmail: {value}\n";
+                }
             }
         }
     }

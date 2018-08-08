@@ -76,13 +76,15 @@ namespace MotHL7Lib
             var n = s.Split(c);
             return n.Length;
         }
-                /// <summary>
+
+        /// <summary>
         /// <c>Get</c>
         /// Gets the value of a sp
         /// </summary>
         /// <param name="key"></param>
+        /// <param name="element"></param>
         /// <returns></returns>
-        public string Get(string key, object Element = null)
+        public string Get(string key, object element = null)
         {
             string retVal = string.Empty;
 
@@ -102,9 +104,9 @@ namespace MotHL7Lib
 
                 if (string.IsNullOrEmpty(retVal))
                 {
-                    var Tag = Hl7XmLset.Descendants().SingleOrDefault(p => p.Name.LocalName == key);
+                    var tag = Hl7XmLset.Descendants().SingleOrDefault(p => p.Name.LocalName == key);
 
-                    if (Tag == null && NumOf('.', key) > 1 && key.Last() == '1')
+                    if (tag == null && NumOf('.', key) > 1 && key.Last() == '1')
                     {
                         retVal = (from elem in Hl7XmLset.Descendants(key.Substring(0, key.LastIndexOf('.'))) select elem.Value).FirstOrDefault();
                         if (!string.IsNullOrEmpty(retVal))
@@ -145,24 +147,16 @@ namespace MotHL7Lib
                 return null;
             }
 
-            var ResultList = (from elem in Hl7XmLset.Descendants(key) select elem.Value).ToList();
-            /*
-            if((ResultList == null || ResultList.Count == 0) && Key.Contains(".1"))
-            {
-                var SecondTry = (from elem in hl7XMLset.Descendants(Key.Substring(0, Key.Length - 2)) select elem.Value).ToList();
-                ResultList = SecondTry;
-            }
-            */
-
-            return ResultList ?? new List<string>();
-
+           return (from elem in Hl7XmLset.Descendants(key) select elem.Value).ToList();           
         }
+
         /// <summary>
         /// <c>ClearNewLines</c>
         /// Cleans a value of unwanted newlines
         /// </summary>
         /// <param name="stringList"></param>
         /// <returns></returns>
+        // ReSharper disable once UnusedMember.Global
         protected string[] ClearNewlines(string[] stringList)
         {
             for (int i = 0; i < stringList.Length; i++)

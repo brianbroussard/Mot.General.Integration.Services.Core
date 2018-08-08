@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using MotCommonLib;
 
 namespace MotParserLib
@@ -72,121 +69,121 @@ namespace MotParserLib
     {
 #pragma warning disable CS0649
         [Layout(0, 4)]
-        public string tableCode;
+        public string TableCode;
         [Layout(5, 14)]
-        public string fillActionCode;
+        public string FillActionCode;
         [Layout(15, 24)]
-        public string dailyActivityLogNum;
+        public string DailyActivityLogNum;
         [Layout(25, 33)]
-        public string rxOrderNum;
+        public string RXOrderNum;
         [Layout(34, 41)]
-        public string facilityNum;
+        public string FacilityNum;
         [Layout(42, 49)]
-        public string patientNum;
+        public string PatientNum;
         [Layout(50, 59)]
-        public string nursingStation;
+        public string NursingStation;
         [Layout(60, 64)]
-        public string room;
+        public string Room;
         [Layout(65, 66)]
-        public string bed;
+        public string Bed;
         [Layout(67, 91)]
-        public string lastName;
+        public string LastName;
         [Layout(92, 111)]
-        public string firstName;
+        public string FirstName;
         [Layout(112, 112)]
-        public string middleInitial;
+        public string MiddleInitial;
         [Layout(113, 120)]
-        public DateTime orderDate;
+        public DateTime OrderDate;
         [Layout(121, 128)]
-        public DateTime entryDate;
+        public DateTime EntryDate;
         [Layout(129, 134)]
-        public DateTime entryTimeInternal;
+        public DateTime EntryTimeInternal;
         [Layout(135, 148)]
-        public string orderedItemCode;
+        public string OrderedItemCode;
         [Layout(149, 162)]
-        public string shippedItemCode;
+        public string ShippedItemCode;
         [Layout(163, 212)]
-        public string itemLikeText;
+        public string ItemLikeText;
         [Layout(213, 218)]
-        public int quantity;
+        public int Quantity;
         [Layout(219, 221)]
-        public int daysSupply;
+        public int DaysSupply;
         [Layout(222, 229)]
-        public string userCode;
+        public string UserCode;
         [Layout(230, 237)]
-        public string rphInitials;
+        public string RphInitials;
         [Layout(238, 239)]
-        public string trueNumberOfLabels;
+        public string TrueNumberOfLabels;
         [Layout(240, 240)]
-        public string substitutionTypeIndicator;
+        public string SubstitutionTypeIndicator;
         [Layout(241, 243)]
-        public string refillsRemaining;
+        public string RefillsRemaining;
         [Layout(244, 443)]
-        public string sigDirections;
+        public string SigDirections;
         [Layout(444, 743)]
-        public string expandedDirections;
+        public string ExpandedDirections;
         [Layout(744, 768)]
-        public string physicianLastName;
+        public string PhysicianLastName;
         [Layout(769, 793)]
-        public string physicianFirstName;
+        public string PhysicianFirstName;
         [Layout(794, 802)]
-        public string physcianDeaCode;
+        public string PhyscianDeaCode;
         [Layout(803, 812)]
-        public string patientStatus;
+        public string PatientStatus;
         [Layout(813, 822)]
-        public string specialProcessingCode;
+        public string SpecialProcessingCode;
         [Layout(823, 823)]
-        public string newOrderIndicator;
+        public string NewOrderIndicator;
         [Layout(824, 838)]
-        public string trackingId;
+        public string TrackingId;
         [Layout(839, 846)]
-        public DateTime originalOrderDate;
+        public DateTime OriginalOrderDate;
         [Layout(847, 1146)]
-        public string orderNotes;
+        public string OrderNotes;
         [Layout(1147, 1156)]
-        public string toteId;
+        public string ToteId;
         [Layout(1157, 1191)]
-        public string passTimes;
+        public string PassTimes;
         [Layout(1192, 1226)]
-        public DateTime passDoses;
+        public DateTime PassDoses;
         [Layout(1227, 1251)]
-        public string weeklyFrequency;
+        public string WeeklyFrequency;
         [Layout(1252, 1276)]
-        public string monthlyFrequency;
+        public string MonthlyFrequency;
         [Layout(1277, 1286)]
-        public string rollingFrequency;
+        public string RollingFrequency;
         [Layout(1287, 1294)]
-        public DateTime orderStartDate;
+        public DateTime OrderStartDate;
         [Layout(1294, 1300)]
-        public string responsibleParty;
+        public string ResponsibleParty;
         [Layout(1301, 1310)]
-        public string oelDeliveryCode;
+        public string OelDeliveryCode;
         [Layout(1311, 1320)]
-        public DateTime reorderDate;
+        public DateTime ReorderDate;
         [Layout(1321, 1321)]
-        public string billToIndicator;
+        public string BillToIndicator;
         [Layout(1322, 1361)]
-        public string rphName;
+        public string RphName;
         [Layout(1362, 1362)]
-        public string useFrequencyIndicator;
+        public string UseFrequencyIndicator;
         [Layout(1363, 1370)]
-        public DateTime fillStartDate;
+        public DateTime FillStartDate;
         [Layout(1371, 1371)]
-        public DateTime cycleFill;
+        public DateTime CycleFill;
         [Layout(1372, 1451)]
-        public string fullPassTimes;
+        public string FullPassTimes;
         [Layout(1452, 1486)]
-        public string fullPassDoses;
+        public string FullPassDoses;
         [Layout(1487, 1511)]
-        public string fullWeeklyFrequency;
+        public string FullWeeklyFrequency;
         [Layout(1512, 1536)]
-        public string fullMonthlyFrequency;
+        public string FullMonthlyFrequency;
         [Layout(1537, 1546)]
-        public string fullRollingFrequency;
+        public string FullRollingFrequency;
         [Layout(1547, 2546)]
-        public string drugCautionMessages;
+        public string DrugCautionMessages;
         [Layout(2547, 2566)]
-        public string colorPassTimes;
+        public string ColorPassTimes;
 
 #pragma warning restore CS0649
     }
@@ -258,28 +255,28 @@ namespace MotParserLib
                 {
                     Patient =
                     {
-                        PatientID = mtsData.patientNum,
-                        LastName = mtsData.lastName,
-                        FirstName = mtsData.firstName,
-                        MiddleInitial = mtsData.middleInitial,
-                        Room = mtsData.room,
-                        ResponisbleName = mtsData.rphName
+                        PatientID = mtsData.PatientNum,
+                        LastName = mtsData.LastName,
+                        FirstName = mtsData.FirstName,
+                        MiddleInitial = mtsData.MiddleInitial,
+                        Room = mtsData.Room,
+                        ResponisbleName = mtsData.RphName
                     },
                     Scrip =
                     {
-                        DrugID = mtsData.orderedItemCode,
-                        RxSys_RxNum = mtsData.rxOrderNum,
-                        RxStartDate = mtsData.fillStartDate,
-                        Refills = Convert.ToInt32(mtsData.refillsRemaining ?? "0"),
-                        Sig = $"{mtsData.sigDirections}\n{mtsData.expandedDirections}",
-                        Comments = mtsData.drugCautionMessages
+                        DrugID = mtsData.OrderedItemCode,
+                        RxSys_RxNum = mtsData.RXOrderNum,
+                        RxStartDate = mtsData.FillStartDate,
+                        Refills = Convert.ToInt32(mtsData.RefillsRemaining ?? "0"),
+                        Sig = $"{mtsData.SigDirections}\n{mtsData.ExpandedDirections}",
+                        Comments = mtsData.DrugCautionMessages
                     },
-                    Facility = {LocationID = mtsData.facilityNum},
+                    Facility = {LocationID = mtsData.FacilityNum},
                     Doc =
                     {
-                        LastName = mtsData.physicianLastName,
-                        FirstName = mtsData.physicianFirstName,
-                        DEA_ID = mtsData.physcianDeaCode
+                        LastName = mtsData.PhysicianLastName,
+                        FirstName = mtsData.PhysicianFirstName,
+                        DEA_ID = mtsData.PhyscianDeaCode
                     }
                 };
 
@@ -307,21 +304,21 @@ namespace MotParserLib
         public void Go()
         {
             // Process protected data
-            if (string.IsNullOrEmpty(data))
+            if (string.IsNullOrEmpty(Data))
             {
                 throw new ArgumentNullException();
             }
 
-            if ((data.Length % 2011) != 0)
+            if ((Data.Length % 2011) != 0)
             {
                 throw new ArgumentException("Invalid data length");
             }
 
-            var blockCount = data.Length / 2011;
+            var blockCount = Data.Length / 2011;
 
             for (var i = 0; i < blockCount; i += 2566)
             {
-                var chunk = data.Substring(i, 2566);
+                var chunk = Data.Substring(i, 2566);
                 var record = new MTSData();
 
                 using (var dataBlock = new FixedLengthReader(chunk))

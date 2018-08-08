@@ -35,7 +35,16 @@ namespace MotParserLib
 {
     public class MotTransformerBase : IDisposable
     {
-        protected Logger eventLogger;
+        public PlatformOs Platform { get; }
+        protected Logger EventLogger;
+        protected List<string> Responses;
+
+        public MotTransformerBase()
+        {
+            LoadConfiguration();
+            Platform = GetPlatformOs.Go();
+        }
+
         protected Hl7SocketListener SocketListener { get; set; }
         protected FilesystemListener FilesystemListener { get; set; }
         protected string GatewayAddress { get; set; }
@@ -52,13 +61,10 @@ namespace MotParserLib
         // most of the time that's niot what we want
         protected string DefaultStoreLoc { get; set; }
 
-        protected List<string> responses;
-        private PlatformOs _platform;
-
-        public MotTransformerBase()
+        public void Dispose()
         {
-            LoadConfiguration();
-            _platform = GetPlatformOs.Go();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected void LoadConfiguration()
@@ -88,34 +94,19 @@ namespace MotParserLib
             appSettings["WatchSocket"] = WatchSocket.ToString();
             appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
             appSettings["DefaultStoreLoc"] = DefaultStoreLoc;
-
         }
 
         public List<string> GetConfigList()
         {
             var appSettings = ConfigurationManager.AppSettings;
-            var response = new List<string>
-            {
-                $"ListenerPort: {appSettings["ListenerPort"] ?? "24025"}",
-                $"GatewayPort: {appSettings["GatewayPort"] ?? "24042"}",
-                $"Gateway Address: {appSettings["GatewayAddress"] ?? "127.0.0.1"}",
-                $"WinMonitorDirectory: {appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io"}",
-                $"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}",
-                $"WatchFileSystem: {appSettings["WatchFileSystem"]}",
-                $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}",
-                $"Debug: {appSettings["Debug"] ?? "false"}",
-                $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}",
-                $"DefaultStoreLoc: {appSettings["DefaultStoreLoc"]}"
-
-            };
+            var response = new List<string> {$"ListenerPort: {appSettings["ListenerPort"] ?? "24025"}", $"GatewayPort: {appSettings["GatewayPort"] ?? "24042"}", $"Gateway Address: {appSettings["GatewayAddress"] ?? "127.0.0.1"}", $"WinMonitorDirectory: {appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io"}", $"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}", $"WatchFileSystem: {appSettings["WatchFileSystem"]}", $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}", $"Debug: {appSettings["Debug"] ?? "false"}", $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}", $"DefaultStoreLoc: {appSettings["DefaultStoreLoc"]}"};
 
             return response;
         }
 
 
-
         /// <summary>
-        /// Dispose
+        ///     Dispose
         /// </summary>
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
@@ -125,17 +116,27 @@ namespace MotParserLib
                 FilesystemListener?.Dispose();
             }
         }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
     }
 
     public class MotTransformerInterface : MotTransformerBase
     {
         private InputDataFormat _inputDataFormat = InputDataFormat.AutoDetect;
+
+        /// <summary>
+        ///     Constructor
+        /// </summary>
+        public MotTransformerInterface()
+        {
+            try
+            {
+                EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
+            }
+            catch (Exception ex)
+            {
+                EventLogger?.Fatal($"Failed to start construct MotTransformerInterface: {ex.Message}");
+                throw new Exception("Constructor Failure");
+            }
+        }
 
         public string Parse(string data, InputDataFormat inputDataFormat)
         {
@@ -145,20 +146,20 @@ namespace MotParserLib
 
         public string Parse(string data)
         {
-            if(data == null)
+            if (data == null)
             {
                 return "Null data";
             }
 
-            var responseMessage = data;
+            string responseMessage;
 
             using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
             {
                 using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
                 {
-                    eventLogger.Info(p.ResponseMessage);
+                    EventLogger.Info(p.ResponseMessage);
                     responseMessage = p.ResponseMessage;
-                    responses.Add(responseMessage);
+                    Responses.Add(responseMessage);
                 }
             }
 
@@ -166,56 +167,32 @@ namespace MotParserLib
         }
 
         /// <summary>
-        /// Constructor
-        /// </summary>
-        public MotTransformerInterface()
-        {
-            try
-            {
-                LoadConfiguration();
-                responses = new List<string>();
-                eventLogger = LogManager.GetLogger("Mot.Transformer.Service");
-            }
-            catch (Exception ex)
-            {
-                eventLogger?.Fatal("Failed to start construct HL7Execute: {0}", ex.Message);
-                throw new Exception("Constructor Failure");
-            }
-        }
-        /// <summary>
-        /// <c>Startup</c>
-        /// The method caled by Topshelf to start the service running
+        ///     <c>Startup</c>
+        ///     The method caled by Topshelf to start the service running
         /// </summary>
         public void Start()
         {
+            LoadConfiguration();
+            Responses = new List<string>();
+
             if (WatchSocket)
             {
-                SocketListener = new Hl7SocketListener(ListenerPort, Parse)
-                {
-                    RunAsService = true,
-                    AllowZeroTQ = AllowZeroTQ,
-                    DebugMode = DebugMode
-                };
+                SocketListener = new Hl7SocketListener(ListenerPort, Parse) {RunAsService = true, AllowZeroTQ = AllowZeroTQ, DebugMode = DebugMode};
                 SocketListener.Go();
             }
 
             if (WatchFileSystem)
             {
-                FilesystemListener =
-                    new FilesystemListener((GetPlatformOs.Go() == PlatformOs.Windows) ? WinMonitorDirectory : NixMonitorDirectory, Parse)
-                    {
-                        RunAsService = true,
-                        Listening = true,
-                        DebugMode = DebugMode
-                    };
+                FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse) {RunAsService = true, Listening = true, DebugMode = DebugMode};
                 FilesystemListener.Go();
             }
 
-            eventLogger.Info("Service started");
+            EventLogger.Info("Service started");
         }
+
         /// <summary>
-        /// <c>StopListener</c>
-        /// The method called by Topshelf to halt the service
+        ///     <c>StopListener</c>
+        ///     The method called by Topshelf to halt the service
         /// </summary>
         public void Stop()
         {
@@ -229,19 +206,21 @@ namespace MotParserLib
                 FilesystemListener.ShutDown();
             }
 
-            eventLogger.Info("sevice stopped");
+            EventLogger.Info("sevice stopped");
         }
+
         /// <summary>
-        /// <c>ShutDown</c>
-        /// Same as stop for now
+        ///     <c>ShutDown</c>
+        ///     Same as stop for now
         /// </summary>
         public void ShutDown()
         {
             Stop();
         }
+
         /// <summary>
-        /// <c>Restart</c>
-        /// Method called by Topshellf to restart the service
+        ///     <c>Restart</c>
+        ///     Method called by Topshellf to restart the service
         /// </summary>
         public void Restart()
         {
@@ -257,8 +236,7 @@ namespace MotParserLib
                 FilesystemListener.Go();
             }
 
-            eventLogger.Info("Service restarted");
+            EventLogger.Info("Service restarted");
         }
     }
 }
-

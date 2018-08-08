@@ -49,65 +49,65 @@ namespace MotParserLib
     {
 #pragma warning disable CS0649
         [Layout(0, 19)]
-        public string patientName;
+        public string PatientName;
         [Layout(20, 31)]
-        public string pationLoc;
+        public string PationLoc;
         [Layout(32, 43)]
-        public string patientId;
+        public string PatientId;
         [Layout(44, 58)]
-        public string medId;
+        public string MedId;
         [Layout(59, 64)]
-        public DateTime medAdminDate;
+        public DateTime MedAdminDate;
         [Layout(65, 68)]
-        public DateTime medAdminTime;
+        public DateTime MedAdminTime;
         [Layout(69, 70)]
-        public ushort dose;
+        public ushort Dose;
         [Layout(71, 96)]
-        public string prescriberName;
+        public string PrescriberName;
         [Layout(97, 112)]
-        public string rxOrderNumber;
+        public string RXOrderNumber;
         [Layout(114, 136)]
-        public string notes;
+        public string Notes;
         [Layout(137, 144)]
-        public string facilityId;
+        public string FacilityId;
         [Layout(145, 169)]
-        public string patientLastName;
+        public string PatientLastName;
         [Layout(170, 189)]
-        public string patientFirstName;
+        public string PatientFirstName;
         [Layout(190, 190)]
-        public string patientMiddleInitial;
+        public string PatientMiddleInitial;
         [Layout(191, 220)]
-        public string facilityName;
+        public string FacilityName;
         [Layout(221, 231)]
-        public string ndc11;
+        public string Ndc11;
         [Layout(232, 431)]
-        public string sig;
+        public string Sig;
         [Layout(432, 731)]
-        public string expandedDirections;
+        public string ExpandedDirections;
         [Layout(732, 745)]
-        public string orderedItemCode;
+        public string OrderedItemCode;
         [Layout(746, 759)]
-        public string shippedItemCode;
+        public string ShippedItemCode;
         [Layout(760, 760)]
-        public string substitutionTypeIndicator;
+        public string SubstitutionTypeIndicator;
         [Layout(761, 810)]
-        public string itemLikeText;
+        public string ItemLikeText;
         [Layout(811, 813)]
-        public string refillsRemaining;
+        public string RefillsRemaining;
         [Layout(814, 1813)]
-        public string drugCautionMessages;
+        public string DrugCautionMessages;
         [Layout(1814, 1921)]
-        public string patientAddressOrFacilityAddress;
+        public string PatientAddressOrFacilityAddress;
         [Layout(1922, 1929)]
-        public string pv1Initials;
+        public string PV1Initials;
         [Layout(1930, 1979)]
-        public string pharmacyName;
+        public string PharmacyName;
         [Layout(1980, 1984)]
-        public string branchId;
+        public string BranchId;
         [Layout(1985, 1994)]
-        public string facilityStation;
+        public string FacilityStation;
         [Layout(1995, 2010)]
-        public string magicCookie;
+        public string MagicCookie;
 #pragma warning restore CS0649
     }
 
@@ -176,20 +176,20 @@ namespace MotParserLib
             {
                 var ediRecord = new EdiRecord();
 
-                ediRecord.Patient.LastName = ediData.patientLastName;
-                ediRecord.Patient.FirstName = ediData.patientFirstName;
-                ediRecord.Patient.MiddleInitial = ediData.patientMiddleInitial;
+                ediRecord.Patient.LastName = ediData.PatientLastName;
+                ediRecord.Patient.FirstName = ediData.PatientFirstName;
+                ediRecord.Patient.MiddleInitial = ediData.PatientMiddleInitial;
 
-                ediRecord.Scrip.DrugID = ediData.ndc11;
-                ediRecord.Scrip.PrescriptionID = ediData.rxOrderNumber;
-                ediRecord.Scrip.RxStartDate = ediData.medAdminDate;
-                ediRecord.Scrip.DoseTimesQtys = ediData.medAdminTime.ToString("HHmm") + ediData.dose.ToString("00");
-                ediRecord.Scrip.QtyPerDose = Convert.ToDouble(ediData.dose);
-                ediRecord.Scrip.Refills = Convert.ToInt32(ediData.refillsRemaining ?? "0");
-                ediRecord.Scrip.Sig = $"{ediData.sig}\n{ediData.expandedDirections}";
+                ediRecord.Scrip.DrugID = ediData.Ndc11;
+                ediRecord.Scrip.PrescriptionID = ediData.RXOrderNumber;
+                ediRecord.Scrip.RxStartDate = ediData.MedAdminDate;
+                ediRecord.Scrip.DoseTimesQtys = ediData.MedAdminTime.ToString("HHmm") + ediData.Dose.ToString("00");
+                ediRecord.Scrip.QtyPerDose = Convert.ToDouble(ediData.Dose);
+                ediRecord.Scrip.Refills = Convert.ToInt32(ediData.RefillsRemaining ?? "0");
+                ediRecord.Scrip.Sig = $"{ediData.Sig}\n{ediData.ExpandedDirections}";
 
-                ediRecord.Facility.LocationID = ediData.facilityId;
-                ediRecord.Facility.LocationName = ediData.facilityName;
+                ediRecord.Facility.LocationID = ediData.FacilityId;
+                ediRecord.Facility.LocationName = ediData.FacilityName;
 
                 //
                 // Apparently the system will send over a record per dose.  We'll treat the first data found as the start date
@@ -208,21 +208,21 @@ namespace MotParserLib
         }
         public void Go()
         {
-            if (string.IsNullOrEmpty(data))
+            if (string.IsNullOrEmpty(Data))
             {
                 throw new ArgumentNullException();
             }
 
-            if ((data.Length % 2011) != 0)
+            if ((Data.Length % 2011) != 0)
             {
                 throw new ArgumentException("Invalid data length");
             }
 
-            var blockCount = data.Length / 2011;
+            var blockCount = Data.Length / 2011;
 
             for (var i = 0; i < blockCount; i += 2011)
             {
-                var chunk = data.Substring(i, 2011);
+                var chunk = Data.Substring(i, 2011);
                 var record = new PsEdiData();
                 using (var dataBlock = new FixedLengthReader(chunk))
                 {

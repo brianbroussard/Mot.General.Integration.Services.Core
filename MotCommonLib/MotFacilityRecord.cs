@@ -38,7 +38,7 @@ namespace MotCommonLib
     {
         private readonly List<Field> _fieldList;
 
-        private void createRecord(string tableAction)
+        private void CreateRecord(string tableAction)
         {
             try
             {
@@ -57,6 +57,7 @@ namespace MotCommonLib
                 _fieldList.Add(new Field("CycleDays", "", 2, false, 'n'));
                 _fieldList.Add(new Field("CycleType", "", 2, false, 'n'));
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -82,7 +83,7 @@ namespace MotCommonLib
             try
             {
                 _fieldList = new List<Field>();
-                createRecord(action);
+                CreateRecord(action);
             }
             catch (Exception ex)
             {
@@ -98,6 +99,7 @@ namespace MotCommonLib
             {
                 base.SetField(_fieldList, val, fieldName, overrideTruncation);
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -164,6 +166,7 @@ namespace MotCommonLib
         /// <value>The location identifier.</value>
         [JsonProperty("RxSys_LocID")]
         [XmlElement("RxSys_LocID")]
+        // ReSharper disable once InconsistentNaming
         public string RxSys_LocID
         {
             get
@@ -192,6 +195,7 @@ namespace MotCommonLib
         /// <value>The store identifier.</value>
         [JsonProperty("RxSys_StoreID")]
         [XmlElement("RxSys_StoreID")]
+        // ReSharper disable once InconsistentNaming
         public string RxSys_StoreID
         {
             get
@@ -315,7 +319,7 @@ namespace MotCommonLib
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    SetField(_fieldList, value?.ToUpper(), "State");
+                    SetField(_fieldList, value.ToUpper(), "State");
                 }
             }
         }
@@ -340,7 +344,7 @@ namespace MotCommonLib
                 {
                     while (value.Contains("-"))
                     {
-                        value = value.Remove(value.IndexOf("-"), 1);
+                        value = value.Remove(value.IndexOf("-", StringComparison.Ordinal), 1);
                     }
                 }
 
@@ -393,7 +397,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("cycledays")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set
@@ -418,7 +422,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("cycletype")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set

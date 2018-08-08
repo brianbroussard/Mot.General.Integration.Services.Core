@@ -22,7 +22,7 @@
 // 
 
 using System;
-using System.Collections.Generic;
+
 // ReSharper disable InconsistentNaming
 
 
@@ -30,8 +30,6 @@ namespace MotHL7Lib
 {
     public class ADT_A21 : Hl7ElementBase   // Delete a Patient
     {
-        public List<Dictionary<string, string>> MessageStore { get; }
-
         // A23 - Not in Spec
         public ADT_A21()
         {

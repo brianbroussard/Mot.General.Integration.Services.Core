@@ -67,6 +67,7 @@ namespace MotParserLib
                {17,new KeyValuePair<bool, string>(true, "RxSys_DocID") }
            };
 
+        // ReSharper disable once UnusedMember.Local
         private Dictionary<int, string> _practitionerTableV2 = new Dictionary<int, string>()
            {
                {1, "LastName" },
@@ -113,6 +114,7 @@ namespace MotParserLib
                {22, new KeyValuePair<bool, string>(true,"RxSys_DrugID") }
             };
 
+        // ReSharper disable once UnusedMember.Local
         private Dictionary<int, string> _drugTableV2 = new Dictionary<int, string>()
             {
                {1, "LblCode" },
@@ -155,6 +157,7 @@ namespace MotParserLib
                {16, new KeyValuePair<bool, string>(false, "RFReminderDays") }
            };
 
+        // ReSharper disable once UnusedMember.Local
         private readonly Dictionary<int, string> _facilityTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_StoreID" },
@@ -220,6 +223,7 @@ namespace MotParserLib
                {45, new KeyValuePair<bool, string>(true, "ChartOnly") }
             };
 
+        // ReSharper disable once UnusedMember.Local
         private readonly Dictionary<int, string> _patientTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_PatID" },
@@ -291,6 +295,7 @@ namespace MotParserLib
                {24, new KeyValuePair<bool, string>(true, "RxSys_DrugID") }   //v2 only
             };
 
+        // ReSharper disable once UnusedMember.Local
         private readonly Dictionary<int, string> _rxTableV2 = new Dictionary<int, string>()
             {
                {1, "RxSys_PatID" },
@@ -852,21 +857,21 @@ namespace MotParserLib
         /// <param name="v1Data">Indicates documented binary delimited format if true</param>
         public void Go(bool v1Data = false)
         {
-            var retVal = PreParseQs1(data);
+            var retVal = PreParseQs1(Data);
 
             if (retVal != string.Empty)
             {
-                data = retVal;
+                Data = retVal;
                 v1Data = true;
             }
 
-            retVal = PreParseByteStream(data);
+            retVal = PreParseByteStream(Data);
             if (retVal != string.Empty)
             {
-                data = retVal;
+                Data = retVal;
             }
 
-            data = NormalizeDelimiters(data);
+            Data = NormalizeDelimiters(Data);
 
             var tc = new TableConverter();
 
@@ -875,7 +880,7 @@ namespace MotParserLib
             var table = string.Empty;
 
             // Unravel the delimited stream
-            var items = data.Split(recordDelimiter);
+            var items = Data.Split(recordDelimiter);
             string[] fields = null;
 
             foreach (var item in items)

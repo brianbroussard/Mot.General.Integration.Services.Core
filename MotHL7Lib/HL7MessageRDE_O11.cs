@@ -45,7 +45,7 @@ namespace MotHL7Lib
         public List<Order> Orders;
         public hl7Patient Patient;
 
-        public RDE_O11() : base()
+        public RDE_O11()
         {
         }
         /// <summary>
@@ -152,6 +152,7 @@ namespace MotHL7Lib
                             if (!currentOrder.Empty()) // Is this a new order
                             {
                                 Orders.Add(currentOrder);
+                                // ReSharper disable once RedundantAssignment
                                 currentOrder = null;
                             }
 
@@ -198,6 +199,7 @@ namespace MotHL7Lib
                             Header.SFT.Add(new SFT(xElement));
                             break;
 
+                        // ReSharper disable once RedundantEmptySwitchSection
                         default:
                             break;
                     }

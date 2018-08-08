@@ -30,9 +30,6 @@ namespace MotParserLib
 {
     class DispillParser : ParserBase, IDisposable
     {
-        /// <summary>
-        /// Dispill uses a simple CSV file made of three components, with each component identified by the first character of each line.
-        /// </summary>
         /*
          NEW RECORD P                                   (Pharmacy)
             STORE NAME PBestRx Pharmacy,
@@ -139,11 +136,11 @@ namespace MotParserLib
         {
             try
             {
-                var workingData = data.Split('\n');
+                var workingData = Data.Split('\n');
                 var writeQueue = new MotWriteQueue
                 {
                     SendEof = false,  // Has to be off so we don't lose the socket.
-                    debugMode = DebugMode
+                    DebugMode = DebugMode
                 };
 
                 string lastPatId = string.Empty;

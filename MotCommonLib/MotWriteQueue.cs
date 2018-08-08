@@ -18,7 +18,7 @@ namespace MotCommonLib
         private static Mutex _queueMutex;
         private List<KeyValuePair<string, string>> Records { get; set; }
         public bool SendEof { get; set; } = false;
-        public bool debugMode { get; set; } = false;
+        public bool DebugMode { get; set; } = false;
         private readonly Logger _eventLogger;
 
         /// <inheritdoc />
@@ -67,7 +67,7 @@ namespace MotCommonLib
                 {
                     socket.Write(record.Value);
 
-                    if (debugMode)
+                    if (DebugMode)
                     {
                         _eventLogger.Debug(record);
                     }
@@ -91,15 +91,14 @@ namespace MotCommonLib
             try
             {
                 var buf = new byte[1024];
-                var bytesRead = 0;
 
                 // Push it to the port
                 foreach (var record in Records)
                 {
                     stream.Write(Encoding.UTF8.GetBytes(record.Value), 0, record.Value.Length);
-                    bytesRead = stream.Read(buf, 0, buf.Length);
+                    stream.Read(buf, 0, buf.Length);
 
-                    if (debugMode)
+                    if (DebugMode)
                     {
                         _eventLogger.Debug(record);
                     }

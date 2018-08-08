@@ -82,7 +82,7 @@ namespace MotCommonLib
         /// <param name="autoTruncate"></param>
         public MotPrescriberRecord(string action, bool autoTruncate = false)
         {
-            base.AutoTruncate = autoTruncate;
+            AutoTruncate = autoTruncate;
 
             try
             {
@@ -110,6 +110,7 @@ namespace MotCommonLib
             {
                 SetField(_fieldList, val, fieldName, overrideTruncation);
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -204,6 +205,7 @@ namespace MotCommonLib
         /// </summary>
         [JsonProperty("RxSys_DocID")]
         [XmlElement("RxSys_DocID")]
+        // ReSharper disable once InconsistentNaming
         public string RxSys_DocID
         {
             get
@@ -222,7 +224,7 @@ namespace MotCommonLib
         [XmlElement("PrescriberID")]
         public string PrescriberID
         {
-            get { return RxSys_DocID; }
+            get => RxSys_DocID;
             set => RxSys_DocID = value;
         }
 
@@ -357,9 +359,9 @@ namespace MotCommonLib
                 {
                     while (value.Contains("-"))
                     {
-                        if (value.Length > value.IndexOf("-"))
+                        if (value.Length > value.IndexOf("-", StringComparison.Ordinal))
                         {
-                            value = value.Remove(value.IndexOf("-"), 1);
+                            value = value.Remove(value.IndexOf("-", StringComparison.Ordinal), 1);
                         }
                     }
 
@@ -409,6 +411,7 @@ namespace MotCommonLib
         /// </summary>
         [JsonProperty("DEA_ID")]
         [XmlElement("DEA_ID")]
+        // ReSharper disable once InconsistentNaming
         public string DEA_ID
         {
             get
@@ -425,6 +428,7 @@ namespace MotCommonLib
         /// </summary>
         [JsonProperty("TPID")]
         [XmlElement("TPID")]
+        // ReSharper disable once InconsistentNaming
         public string TPID
         {
             get
@@ -446,13 +450,10 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("speciality")));
-                return !string.IsNullOrEmpty(f.TagData) ? f.TagData : "None";
+                return !string.IsNullOrEmpty(f?.TagData) ? f.TagData : "None";
             }
 
-            set
-            {
-                SetField(_fieldList, value, "Specialty");
-            }
+            set => SetField(_fieldList, value, "Specialty");
         }
 
         /// <summary>
@@ -497,7 +498,10 @@ namespace MotCommonLib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += "\nEmail: " + value;
+                if (f?.TagData != null)
+                {
+                    f.TagData += "\nEmail: " + value;
+                }
             }
         }
 
@@ -511,7 +515,10 @@ namespace MotCommonLib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += "\nIM: " + value;
+                if (f != null)
+                {
+                    f.TagData += "\nIM: " + value;
+                }
             }
         }
     }

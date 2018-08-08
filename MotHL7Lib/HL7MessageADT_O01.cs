@@ -63,9 +63,9 @@ namespace MotHL7Lib
         public List<NK1> NK1;
         public List<DB1> DB1;
 
-        private List<Dictionary<string, string>> MessageStore;
+        public List<Dictionary<string, string>> MessageStore { get; }
 
-        public ADT_A01(XDocument xmlDoc, List<Dictionary<string, string>> messageStore = null) : base()
+        public ADT_A01(XDocument xmlDoc)
         {
             if (xmlDoc == null)
             {
@@ -163,6 +163,7 @@ namespace MotHL7Lib
                             ROL.Add(new ROL(xElement));
                             break;
 
+                        // ReSharper disable once RedundantEmptySwitchSection
                         default:
                             break;
                     }
@@ -170,7 +171,7 @@ namespace MotHL7Lib
             }
         }
 
-        public ADT_A01(List<Dictionary<string, string>> messageStore) : base()
+        public ADT_A01(List<Dictionary<string, string>> messageStore)
         {
             MessageStore = messageStore ?? throw new ArgumentNullException(nameof(messageStore));
         }

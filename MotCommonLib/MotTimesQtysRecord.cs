@@ -53,6 +53,7 @@ namespace MotCommonLib
                 _fieldList.Add(new Field("DoseScheduleName", "", 10, true, 'k'));
                 _fieldList.Add(new Field("DoseTimesQtys", "", 256, true, 'a'));
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;

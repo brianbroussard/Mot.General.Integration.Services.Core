@@ -39,159 +39,161 @@ namespace MotHL7Lib
         public hl7Patient Patient;
         public Header Header;
 
-        public RDS_O13(XDocument __xdoc) : base()
+        public RDS_O13(XDocument xdoc)
         {
-            string __last_significant_item = "NONE";
+            var __last_significant_item = "NONE";
 
             Orders = new List<Order>();
             Header = new Header();
             Patient = new hl7Patient();
 
-            Order __current_order = new Order();
+            var currentOrder = new Order();
 
-            foreach (XElement __xe in __xdoc.Root.Elements())
+            if (xdoc.Root == null)
             {
-                switch (__xe.Name.ToString())
+                return;
+            }
+
+            foreach (var xe in xdoc.Root.Elements())
+            {
+                switch (xe.Name.ToString())
                 {
                     case "AL1":
-                        Patient.AL1.Add(new AL1(__xe));
+                        Patient.AL1.Add(new AL1(xe));
                         break;
 
                     case "MSH":
-                        Header.MSH = new MSH(__xe);
+                        Header.MSH = new MSH(xe);
                         __last_significant_item = "MSH";
                         break;
 
                     case "OBX":
-                        __current_order.OBX.Add(new OBX(__xe));
+                        currentOrder.OBX.Add(new OBX(xe));
                         break;
 
                     case "PID":
-                        Patient.PID = new PID(__xe);
+                        Patient.PID = new PID(xe);
                         __last_significant_item = "PID";
                         break;
 
                     case "PV1":
-                        Patient.PV1 = new PV1(__xe);
+                        Patient.PV1 = new PV1(xe);
                         __last_significant_item = "PV1";
                         break;
 
                     case "PV2":
-                        Patient.PV2 = new PV2(__xe);
+                        Patient.PV2 = new PV2(xe);
                         __last_significant_item = "PV2";
                         break;
 
                     case "PD1":
-                        Patient.PD1 = new PD1(__xe);
+                        Patient.PD1 = new PD1(xe);
                         break;
 
                     case "PRT":
 
                         if (__last_significant_item == "PID" || __last_significant_item.Contains("PV"))
                         {
-                            Patient.PRT.Add(new PRT(__xe));
+                            Patient.PRT.Add(new PRT(xe));
                         }
                         else
                         {
-                            __current_order.PRT.Add(new PRT(__xe));
+                            currentOrder.PRT.Add(new PRT(xe));
                         }
 
                         break;
 
                     case "IN1":
-                        Patient.IN1 = new IN1(__xe);
+                        Patient.IN1 = new IN1(xe);
                         break;
 
                     case "IN2":
-                        Patient.IN2 = new IN2(__xe);
+                        Patient.IN2 = new IN2(xe);
                         break;
 
                     case "TQ1":
-                        __current_order.TQ1.Add(new TQ1(__xe));
+                        currentOrder.TQ1.Add(new TQ1(xe));
                         break;
 
                     case "RXC":
-                        __current_order.RXC.Add(new RXC(__xe));
+                        currentOrder.RXC.Add(new RXC(xe));
                         break;
 
                     case "RXD":
-                        __current_order.RXD = new RXD(__xe);
+                        currentOrder.RXD = new RXD(xe);
                         break;
 
                     case "RXE":
-                        __current_order.RXE = new RXE(__xe);
+                        currentOrder.RXE = new RXE(xe);
                         __last_significant_item = "RXE";
                         break;
 
                     case "RXO":
-                        __current_order.RXO = new RXO(__xe);
+                        currentOrder.RXO = new RXO(xe);
                         break;
 
                     case "RXR":
-                        __current_order.RXR.Add(new RXR(__xe));
+                        currentOrder.RXR.Add(new RXR(xe));
                         break;
 
-                    case "ORC":  // Need to parse the order       
-                        if (!__current_order.Empty()) // Is this a new order
+                    case "ORC": // Need to parse the order       
+                        if (!currentOrder.Empty()) // Is this a new order
                         {
-                            Orders.Add(__current_order);
-                            __current_order = null;
+                            Orders.Add(currentOrder);
+                            // ReSharper disable once RedundantAssignment
+                            currentOrder = null;
                         }
 
-                        __current_order = new Order
-                        {
-                            ORC = new ORC(__xe)
-                        };
+                        currentOrder = new Order { ORC = new ORC(xe) };
                         __last_significant_item = "ORC";
                         break;
 
                     case "ZAS":
-                        Header.ZAS = new ZAS(__xe);
+                        Header.ZAS = new ZAS(xe);
                         break;
 
                     case "ZLB":
-                        Header.ZLB = new ZLB(__xe);
+                        Header.ZLB = new ZLB(xe);
                         break;
 
                     case "ZPI":
-                        Header.ZPI = new ZPI(__xe);
+                        Header.ZPI = new ZPI(xe);
                         break;
 
                     case "NTE":
                         if (__last_significant_item == "PID")
                         {
-                            Patient.NTE.Add(new NTE(__xe));
+                            Patient.NTE.Add(new NTE(xe));
                         }
                         else if (__last_significant_item == "MSH")
                         {
-                            Header.NTE.Add(new NTE(__xe));
+                            Header.NTE.Add(new NTE(xe));
                         }
                         else
                         {
-                            __current_order.NTE.Add(new NTE(__xe));
+                            currentOrder.NTE.Add(new NTE(xe));
                         }
+
                         break;
 
                     case "DG1":
-                        Patient.DG1.Add(new DG1(__xe));
+                        Patient.DG1.Add(new DG1(xe));
                         break;
 
                     case "SFT":
-                        Header.SFT.Add(new SFT(__xe));
+                        Header.SFT.Add(new SFT(xe));
                         break;
 
+                    // ReSharper disable once RedundantEmptySwitchSection
                     default:
                         break;
                 }
             }
 
-            if (__current_order != null)
-            {
-                Orders.Add(__current_order);
-            }
+            Orders.Add(currentOrder);
         }
 
-        public RDS_O13() : base()
+        public RDS_O13()
         { }
     }
 };

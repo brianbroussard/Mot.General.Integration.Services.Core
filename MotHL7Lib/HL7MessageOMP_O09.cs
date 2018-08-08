@@ -41,7 +41,7 @@ namespace MotHL7Lib
         public hl7Patient Patient { get; set; }
         public Header Header1 { get; set; }
 
-        public OMP_O09(XDocument xmlDoc) : base()
+        public OMP_O09(XDocument xmlDoc)
         {
             var lastSignificantItem = "NONE";
 
@@ -123,6 +123,7 @@ namespace MotHL7Lib
                             if (!currentOrder.Empty()) // Is this a new order
                             {
                                 Orders.Add(currentOrder);
+                                // ReSharper disable once RedundantAssignment
                                 currentOrder = null;
                             }
 
@@ -182,6 +183,7 @@ namespace MotHL7Lib
                             Header1.SFT.Add(new SFT(xElement));
                             break;
 
+                        // ReSharper disable once RedundantEmptySwitchSection
                         default:
                             break;
                     }

@@ -91,11 +91,12 @@ namespace MotParserLib
     /// </summary>
     public class ParserBase : IDisposable
     {
-        protected string data;
+        protected string Data { get; set; }
+
         public string ResponseMessage { get; set; }
 
         /// <summary>
-        /// debugMode - Flag for extra debug output
+        /// DebugMode - Flag for extra debug output
         /// </summary>
         public bool DebugMode { get; set; }
 
@@ -182,7 +183,7 @@ namespace MotParserLib
                 throw new ArgumentNullException(errorString);
             }
 
-            data = inputStream;
+            Data = inputStream;
         }
 
         protected virtual void WriteListToGateway()
@@ -518,7 +519,7 @@ namespace MotParserLib
             {
                 hl7Parser.Socket = GatewaySocket;
                 hl7Parser.AutoTruncate = AutoTruncate;
-                hl7Parser.debugMode = DebugMode;
+                hl7Parser.DebugMode = DebugMode;
                 hl7Parser.AllowZeroTQ = AllowZeroTQ;
                 hl7Parser.DefaultStoreLocation = DefaultStoreLoc;
                 hl7Parser.EventLogger = EventLogger;
@@ -619,6 +620,7 @@ namespace MotParserLib
             }
         }
         /// <inheritdoc />
+        // ReSharper disable once UnusedParameter.Local
         public MotParser(string inputStream, InputDataFormat inputDataFormat, bool autoTruncate = false, bool sendEof = false, bool debugMode = false) : base(inputStream)
         {
             try

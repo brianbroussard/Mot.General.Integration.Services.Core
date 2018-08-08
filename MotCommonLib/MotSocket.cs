@@ -41,173 +41,76 @@ namespace MotCommonLib
 {
 #pragma warning disable 1591
     public delegate string StringStringDelegate(string data);
+
     public delegate void VoidStringDelegate(string data);
+
     public delegate byte[] ByteByteDelegate(byte[] data);
+
     public delegate void VoidByteDelegate(byte[] data);
+
     public delegate bool BoolStringDelegate(string data);
+
     public delegate bool BoolByteDelegate(byte[] data);
 #pragma warning restore 1591
 
     /// <summary>
-    /// <c>motSocket</c>
-    /// A simple socket abstraction used for listeners and direct socket manipulation
+    ///     <c>motSocket</c>
+    ///     A simple socket abstraction used for listeners and direct socket manipulation
     /// </summary>
     public class MotSocket : IDisposable
     {
-        private bool serviceRunning;
-        private string stringIoBuffer;
-        private byte[] byteIoBuffer;
-        private bool doBinaryIo;
-
         /// <summary>
-        /// <c>Disposed</c>
-        /// Flag to trap disposed object
-        /// </summary>
-        public bool Disposed { get; set; }
-
-        /// <summary>
-        /// <c>UseSSL</c>
-        /// Property to flag the use of TLS/SSL for the instance
-        /// </summary>
-        public bool UseSsl { get; set; }
-
-        /// <summary>
-        /// <c>Port</c>
-        /// Property to set the target tcp/ip port for the instance 
-        /// </summary>
-        public int Port { get; set; }
-
-        /// <summary>
-        /// <c>Address</c>
-        /// Property to resolve the target IP from a FQDN
-        /// </summary>
-        public string Address
-        {
-            get => internalAddress;
-            set
-            {
-                var hostList = Dns.GetHostAddresses(value);
-
-                foreach (var h in hostList)
-                {
-                    if (h.AddressFamily == AddressFamily.InterNetwork)
-                    {
-                        internalAddress = h.ToString();
-                    }
-                }
-
-                openForListening = false;
-            }
-        }
-
-        /// <summary>
-        /// <c>TCP_TIMEOUT</c>
-        /// Property to set the default I/O timeout values for the instance
-        /// </summary>
-        public int TcpTimeout { get; set; } = 5000;
-
-
-        private string internalAddress = string.Empty;
-        private TcpClient localTcpClient;
-        private TcpListener messageTrigger;
-#pragma warning disable 1591
-        public EndPoint remoteEndPoint;
-#pragma warning restore 1591
-        private EndPoint localEndPoint;
-        private Logger eventLogger;
-
-        /// <summary>
-        /// <c>StringArgCallback</c>
-        /// Callback delegate returning void taking a string argument used to call parsers
-        /// </summary>
-        public StringStringDelegate StringArgCallback { get; set; }
-
-        /// <summary>
-        /// <c>ByteArgCallback</c>
-        /// Callback delegate returning void taking a byte[] argument used to call parsers
-        /// </summary>
-        public ByteByteDelegate ByteArgCallback { get; set; }
-
-        /// <summary>
-        /// <c>StringArgProtocolProcessor</c>
-        /// Delegate returning bool and taking a string argument used to process return values
-        /// </summary>
-        public BoolStringDelegate StringArgProtocolProcessor { get; set; } = null;
-
-        /// <summary>
-        /// <c>ByteArgProtocolProcessor</c>
-        /// Delegate returning a bool taking a byte[] argument used to process return values
-        /// </summary>
-        public BoolByteDelegate ByteArgProtocolProcessor { get; set; } = DefaultProtocolProcessor;
-
-        bool openForListening;
-#pragma warning disable 1591
-        public NetworkStream netStream;
-        public SslStream netSslStream;
-#pragma warning restore 1591
-        /// <summary>
-        /// <c>SocketMutex</c>
-        /// Instance Mutex to manage overlapping I/O
+        ///     <c>SocketMutex</c>
+        ///     Instance Mutex to manage overlapping I/O
         /// </summary>
         public static Mutex SocketMutex;
 
+        private byte[] _byteIoBuffer;
+        private bool _doBinaryIo;
+        private Logger _eventLogger;
+
+
+        private string _internalAddress = string.Empty;
+        // ReSharper disable once NotAccessedField.Local
+        private EndPoint _localEndPoint;
+        private TcpClient _localTcpClient;
+        private TcpListener _messageTrigger;
+
+        private bool _openForListening;
+#pragma warning disable 1591
+        public EndPoint RemoteEndPoint;
+#pragma warning restore 1591
+        private bool _serviceRunning;
+        private string _stringIoBuffer;
+
         /// <summary>
-        /// <c>tcpClientConnected</c>
-        /// Instance listener reset manager
+        ///     <c>tcpClientConnected</c>
+        ///     Instance listener reset manager
         /// </summary>
         public ManualResetEvent TcpClientConnected = new ManualResetEvent(false);
 
-        private X509Certificate x509Certificate;
-        private X509Certificate2Collection x509Collection;
-        private X509Certificate2Collection x509ValidCollection;
-        private X509Store x509Store;
+        private X509Certificate _x509Certificate;
+        // ReSharper disable once NotAccessedField.Local
+        private X509Certificate2Collection _x509Collection;
+        private X509Store _x509Store;
+        private X509Certificate2Collection _x509ValidCollection;
 
-        private void MotSetCertificate()
-        {
-            try
-            {
-                x509Store = new X509Store("MY", StoreLocation.LocalMachine);
-                x509Store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
-
-                x509Collection = x509Store.Certificates;
-                x509ValidCollection =
-                    x509Store.Certificates.Find(X509FindType.FindByTimeValid, DateTime.Now,
-                        false);
-
-                foreach (X509Certificate2 x in x509ValidCollection)
-                {
-                    if (x.FriendlyName.ToUpper() == Dns.GetHostName().ToUpper())
-                    {
-                        x509Certificate = x;
-                        return;
-                    }
-                }
-
-                x509Certificate = null;
-            }
-            catch (Exception ex)
-            {
-                eventLogger.Warn($"Failed to set SSL certificate: {ex.Message}");
-            }
-        }
         /// <summary>
-        /// <c>motSocket</c>
-        /// Core constructor
+        ///     <c>motSocket</c>
+        ///     Core constructor
         /// </summary>
         public MotSocket()
         {
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
 
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
+            if (SocketMutex == null) SocketMutex = new Mutex();
 
             MotSetCertificate();
         }
+
         /// <summary>
-        /// <c>motSocket</c>
-        /// Constructor setting the target port as an int and setting a callback function for processing Read() data
+        ///     <c>motSocket</c>
+        ///     Constructor setting the target port as an int and setting a callback function for processing Read() data
         /// </summary>
         /// <param name="port"></param>
         /// <param name="stringArgCallback"></param>
@@ -215,9 +118,10 @@ namespace MotCommonLib
         {
             StartUp(port, stringArgCallback);
         }
+
         /// <summary>
-        /// <c>motSocket</c>
-        /// Constructor setting the target port as an int and setting a callback function for processing Binary Read() data
+        ///     <c>motSocket</c>
+        ///     Constructor setting the target port as an int and setting a callback function for processing Binary Read() data
         /// </summary>
         /// <param name="port"></param>
         /// <param name="byteArgCallback"></param>
@@ -225,9 +129,10 @@ namespace MotCommonLib
         {
             StartUp(port, byteArgCallback);
         }
+
         /// <summary>
-        /// <c>motSocket</c>
-        /// Constructor setting the target port as a string and setting a callback function for processing binary Read() data
+        ///     <c>motSocket</c>
+        ///     Constructor setting the target port as a string and setting a callback function for processing binary Read() data
         /// </summary>
         /// <param name="port"></param>
         /// <param name="byteArgCallback"></param>
@@ -235,9 +140,10 @@ namespace MotCommonLib
         {
             StartUp(Convert.ToInt32(port), byteArgCallback);
         }
+
         /// <summary>
-        /// <c>motSocket</c>
-        /// Constructor setting the target port as a string and setting a callback function for processing Read() data
+        ///     <c>motSocket</c>
+        ///     Constructor setting the target port as a string and setting a callback function for processing Read() data
         /// </summary>
         /// <param name="port"></param>
         /// <param name="stringArgCallback"></param>
@@ -245,126 +151,38 @@ namespace MotCommonLib
         {
             StartUp(Convert.ToInt32(port), stringArgCallback);
         }
+
         /// <summary>
-        /// <c>StartUp</c>
-        /// Constructor helper that can be called on an empty instance
-        /// </summary>
-        /// <param name="port"></param>
-        /// <param name="stringArgCallback"></param>
-        public void StartUp(int port, StringStringDelegate stringArgCallback = null)
-        {
-            openForListening = true;
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
-
-            MotSetCertificate();
-
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
-
-            try
-            {
-                StringArgCallback = stringArgCallback;
-                Port = port;
-
-                OpenAsServer();
-
-                eventLogger.Info("Listening on port {0}", port);
-                serviceRunning = true;
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Failed to connect to remote socket " + e.Message);
-            }
-        }
-        /// <summary>
-        /// <c>StartUp</c>
-        /// Constructor helper that can be called on an empty instance
-        /// </summary>
-        /// <param name="port"></param>
-        /// <param name="byteArgCallback"></param>
-        public void StartUp(int port, ByteByteDelegate byteArgCallback = null)
-        {
-            openForListening = true;
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
-
-            MotSetCertificate();
-
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
-
-            try
-            {
-                ByteArgCallback = byteArgCallback;
-                Port = port;
-                doBinaryIo = true;
-
-                OpenAsServer();
-
-                eventLogger.Info($"Listening on port: {port}");
-                serviceRunning = true;
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"Failed to connect to remote socket {e.Message}");
-            }
-        }
-        /// <summary>
-        /// <c>motSocket</c>
-        /// Constructor to set the socket up as a server listing on Port
+        ///     <c>motSocket</c>
+        ///     Constructor to set the socket up as a server listing on Port
         /// </summary>
         /// <param name="port">Port to listen on as an int</param>
         public MotSocket(int port)
         {
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
-            openForListening = true;
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+            _openForListening = true;
 
             MotSetCertificate();
 
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
+            if (SocketMutex == null) SocketMutex = new Mutex();
 
             try
             {
                 Port = port;
 
                 OpenAsServer();
-                eventLogger.Info("Listening on port {0}", port);
-                serviceRunning = true;
+                _eventLogger.Info("Listening on port {0}", port);
+                _serviceRunning = true;
             }
             catch (Exception e)
             {
                 throw new Exception("Failed to connect to remote socket " + e.Message);
             }
         }
-        /// <summary>
-        /// <c>ValidateServerCertificate</c>
-        /// Ensures the certificate being used by the listener is valid
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="serverCert"></param>
-        /// <param name="certChain"></param>
-        /// <param name="sslPolicyErrors"></param>
-        /// <returns></returns>
-        public bool ValidateServerCertificate(object sender, X509Certificate serverCert, X509Chain certChain, SslPolicyErrors sslPolicyErrors)
-        {
-            if (sslPolicyErrors == SslPolicyErrors.None)
-            {
-                return true;
-            }
 
-            eventLogger.Error("Server certificate validation errors: {0}", sslPolicyErrors);
-
-            return false;   // burn the connection
-        }
         /// <summary>
-        /// <c>motSocket</c>
-        /// Socket used for writing and processing return valus uusing a BoolByteDelegate for return value processing
+        ///     <c>motSocket</c>
+        ///     Socket used for writing and processing return valus uusing a BoolByteDelegate for return value processing
         /// </summary>
         /// <param name="targetAddress"></param>
         /// <param name="targetPort"></param>
@@ -374,21 +192,19 @@ namespace MotCommonLib
             Port = targetPort;
             Address = targetAddress;
             ByteArgProtocolProcessor = byteProtocolProcessor ?? DefaultProtocolProcessor;
-            openForListening = false;
-			eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+            _openForListening = false;
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
 
             MotSetCertificate();
 
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
+            if (SocketMutex == null) SocketMutex = new Mutex();
 
             OpenAsClient();
         }
+
         /// <summary>
-        /// <c>motSocket</c>
-        /// Socket used for writing with the option of enabling SSL and using a BoolByteDelegate for return value processing
+        ///     <c>motSocket</c>
+        ///     Socket used for writing with the option of enabling SSL and using a BoolByteDelegate for return value processing
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param>
@@ -400,22 +216,204 @@ namespace MotCommonLib
             Address = address;
             ByteArgProtocolProcessor = byteProtocolProcessor ?? DefaultProtocolProcessor;
             UseSsl = secureConnection;
-            openForListening = false;
+            _openForListening = false;
 
-            eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
 
             MotSetCertificate();
 
-            if (SocketMutex == null)
-            {
-                SocketMutex = new Mutex();
-            }
+            if (SocketMutex == null) SocketMutex = new Mutex();
 
             OpenAsClient();
         }
+
         /// <summary>
-        /// <c>~motSocket</c>
-        /// Simple destructor that calls the Dispose function
+        ///     <c>Disposed</c>
+        ///     Flag to trap disposed object
+        /// </summary>
+        public bool Disposed { get; set; }
+
+        /// <summary>
+        ///     <c>UseSSL</c>
+        ///     Property to flag the use of TLS/SSL for the instance
+        /// </summary>
+        public bool UseSsl { get; set; }
+
+        /// <summary>
+        ///     <c>Port</c>
+        ///     Property to set the target tcp/ip port for the instance
+        /// </summary>
+        public int Port { get; set; }
+
+        /// <summary>
+        ///     <c>Address</c>
+        ///     Property to resolve the target IP from a FQDN
+        /// </summary>
+        public string Address
+        {
+            get => _internalAddress;
+            set
+            {
+                var hostList = Dns.GetHostAddresses(value);
+
+                foreach (var h in hostList)
+                    if (h.AddressFamily == AddressFamily.InterNetwork)
+                        _internalAddress = h.ToString();
+
+                _openForListening = false;
+            }
+        }
+
+        /// <summary>
+        ///     <c>TCP_TIMEOUT</c>
+        ///     Property to set the default I/O timeout values for the instance
+        /// </summary>
+        public int TcpTimeout { get; set; } = 5000;
+
+        /// <summary>
+        ///     <c>StringArgCallback</c>
+        ///     Callback delegate returning void taking a string argument used to call parsers
+        /// </summary>
+        public StringStringDelegate StringArgCallback { get; set; }
+
+        /// <summary>
+        ///     <c>ByteArgCallback</c>
+        ///     Callback delegate returning void taking a byte[] argument used to call parsers
+        /// </summary>
+        public ByteByteDelegate ByteArgCallback { get; set; }
+
+        /// <summary>
+        ///     <c>StringArgProtocolProcessor</c>
+        ///     Delegate returning bool and taking a string argument used to process return values
+        /// </summary>
+        public BoolStringDelegate StringArgProtocolProcessor { get; set; } = null;
+
+        /// <summary>
+        ///     <c>ByteArgProtocolProcessor</c>
+        ///     Delegate returning a bool taking a byte[] argument used to process return values
+        /// </summary>
+        public BoolByteDelegate ByteArgProtocolProcessor { get; set; } = DefaultProtocolProcessor;
+
+        /// <inheritdoc />
+        /// <summary>
+        ///     <c>Dispose</c>
+        ///     Direct IDisposable destructor that destroys and nullifies everything
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void MotSetCertificate()
+        {
+            try
+            {
+                _x509Store = new X509Store("MY", StoreLocation.LocalMachine);
+                _x509Store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+                _x509Collection = _x509Store.Certificates;
+                _x509ValidCollection = _x509Store.Certificates.Find(X509FindType.FindByTimeValid, DateTime.Now, false);
+
+                foreach (var x in _x509ValidCollection)
+                    if (x.FriendlyName.ToUpper() == Dns.GetHostName().ToUpper())
+                    {
+                        _x509Certificate = x;
+                        return;
+                    }
+
+                _x509Certificate = null;
+            }
+            catch (Exception ex)
+            {
+                _eventLogger.Warn($"Failed to set SSL certificate: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        ///     <c>StartUp</c>
+        ///     Constructor helper that can be called on an empty instance
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="stringArgCallback"></param>
+        public void StartUp(int port, StringStringDelegate stringArgCallback = null)
+        {
+            _openForListening = true;
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+
+            MotSetCertificate();
+
+            if (SocketMutex == null) SocketMutex = new Mutex();
+
+            try
+            {
+                StringArgCallback = stringArgCallback;
+                Port = port;
+
+                OpenAsServer();
+
+                _eventLogger.Info("Listening on port {0}", port);
+                _serviceRunning = true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception("Failed to connect to remote socket " + e.Message);
+            }
+        }
+
+        /// <summary>
+        ///     <c>StartUp</c>
+        ///     Constructor helper that can be called on an empty instance
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="byteArgCallback"></param>
+        public void StartUp(int port, ByteByteDelegate byteArgCallback = null)
+        {
+            _openForListening = true;
+            _eventLogger = LogManager.GetLogger("motCommonLib.Socket");
+
+            MotSetCertificate();
+
+            if (SocketMutex == null) SocketMutex = new Mutex();
+
+            try
+            {
+                ByteArgCallback = byteArgCallback;
+                Port = port;
+                _doBinaryIo = true;
+
+                OpenAsServer();
+
+                _eventLogger.Info($"Listening on port: {port}");
+                _serviceRunning = true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Failed to connect to remote socket {e.Message}");
+            }
+        }
+
+        /// <summary>
+        ///     <c>ValidateServerCertificate</c>
+        ///     Ensures the certificate being used by the listener is valid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="serverCert"></param>
+        /// <param name="certChain"></param>
+        /// <param name="sslPolicyErrors"></param>
+        /// <returns></returns>
+        public bool ValidateServerCertificate(object sender, X509Certificate serverCert, X509Chain certChain, SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None) return true;
+
+            _eventLogger.Error("Server certificate validation errors: {0}", sslPolicyErrors);
+
+            return false; // burn the connection
+        }
+
+        /// <summary>
+        ///     <c>~motSocket</c>
+        ///     Simple destructor that calls the Dispose function
         /// </summary>
         ~MotSocket()
         {
@@ -423,21 +421,20 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>AsyncHandler</c>
-        /// Callback to handle inbound traffic and process it using the registered processing callback
+        ///     <c>AsyncHandler</c>
+        ///     Callback to handle inbound traffic and process it using the registered processing callback
         /// </summary>
         /// <param name="asyncResult"></param>
         private void AsyncHandler(IAsyncResult asyncResult)
         {
             try
             {
-
-				// While testing on a Linux VM, if we didn't slow things down it jumpped right out of 
-				// the method whithout processing anything.  Adding the sleep slowed it down enough
-				Thread.Sleep(50);
+                // While testing on a Linux VM, if we didn't slow things down it jumpped right out of 
+                // the method whithout processing anything.  Adding the sleep slowed it down enough
+                Thread.Sleep(50);
 
                 Thread.CurrentThread.Name = "IAsyncHandler (" + Thread.CurrentThread.ManagedThreadId + ")";
-                TcpListener localListener = (TcpListener)asyncResult.AsyncState;
+                var localListener = (TcpListener) asyncResult.AsyncState;
 
                 using (var tcpClient = localListener.EndAcceptTcpClient(asyncResult))
                 {
@@ -448,31 +445,30 @@ namespace MotCommonLib
                             localStream.ReadTimeout = 500;
                             localStream.WriteTimeout = 500;
 
-                            remoteEndPoint = tcpClient.Client.RemoteEndPoint;
-                            localEndPoint = tcpClient.Client.LocalEndPoint;
+                            RemoteEndPoint = tcpClient.Client.RemoteEndPoint;
+                            _localEndPoint = tcpClient.Client.LocalEndPoint;
 
-                            int bytesIn = 1;
-                            int totalBytes = 0;
+                            var totalBytes = 0;
 
-                            byte[] bytesRead = new byte[1];
+                            var bytesRead = new byte[1];
 
                             try
                             {
-                                byteIoBuffer = new byte[512];
-                                stringIoBuffer = "";
+                                _byteIoBuffer = new byte[512];
+                                _stringIoBuffer = "";
 
                                 while (localStream.DataAvailable)
-                                {                                 
-                                    bytesIn = localStream.Read(byteIoBuffer, 0, byteIoBuffer.Length);
-                                    
-                                    if (!doBinaryIo)
+                                {
+                                    var bytesIn = localStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
+
+                                    if (!_doBinaryIo)
                                     {
-                                        stringIoBuffer += Encoding.UTF8.GetString(byteIoBuffer, 0, bytesIn);
+                                        _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                                     }
                                     else
                                     {
                                         Array.Resize(ref bytesRead, totalBytes + 512);
-                                        byteIoBuffer.CopyTo(bytesRead, totalBytes);
+                                        _byteIoBuffer.CopyTo(bytesRead, totalBytes);
                                     }
 
                                     totalBytes += bytesIn;
@@ -480,34 +476,32 @@ namespace MotCommonLib
                             }
                             catch (IOException ix)
                             {
-                                eventLogger.Warn($"AsyncRead: {ix.Message}");
+                                _eventLogger.Warn($"AsyncRead: {ix.Message}");
                             }
                             catch (Exception ex)
                             {
                                 var errorMsg = $"AsyncRead failed: {ex.Message}. {totalBytes} bytes read";
-                                eventLogger.Error(errorMsg);
+                                _eventLogger.Error(errorMsg);
                                 throw new Exception(errorMsg);
                             }
 
                             if (totalBytes > 0)
                             {
                                 // Assign the local stream to the global and process
-                                netStream = localStream;
-                                
-                                if (!doBinaryIo)
+                                NetStream = localStream;
+
+                                if (!_doBinaryIo)
                                 {
-                                   var resp = StringArgCallback?.Invoke(stringIoBuffer);
-                                    if(!string.IsNullOrEmpty(resp))
-                                    {
-                                        localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
-                                    }
+                                    var resp = StringArgCallback?.Invoke(_stringIoBuffer);
+                                    if (!string.IsNullOrEmpty(resp)) localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
                                 }
                                 else
                                 {
                                     // Resize the byte array to match the data size
                                     Array.Resize(ref bytesRead, totalBytes);
                                     var resp = ByteArgCallback?.Invoke(bytesRead);
-                                    if(resp.Length > 0)
+
+                                    if (resp != null && resp.Length > 0)
                                     {
                                         localStream.Write(resp, 0, resp.Length);
                                     }
@@ -524,43 +518,43 @@ namespace MotCommonLib
                     }
                 }
             }
-            catch(Exception ex)
-			{
-				eventLogger.Error($"Async I/O handler{ex.Message}");
-				TcpClientConnected.Set();
-			}           
+            catch (Exception ex)
+            {
+                _eventLogger.Error($"Async I/O handler{ex.Message}");
+                TcpClientConnected.Set();
+            }
         }
 
         /// <summary>
-        /// <c>ListenAsync</c>
-        /// Async listener, hands off to AsyncHandler on tap
+        ///     <c>ListenAsync</c>
+        ///     Async listener, hands off to AsyncHandler on tap
         /// </summary>
         public void ListenAsync()
         {
-            while (serviceRunning)
+            while (_serviceRunning)
             {
                 TcpClientConnected.Reset();
-                messageTrigger.BeginAcceptTcpClient(AsyncHandler, messageTrigger);
+                _messageTrigger.BeginAcceptTcpClient(AsyncHandler, _messageTrigger);
                 TcpClientConnected.WaitOne();
             }
         }
 
         /// <summary>
-        /// <c>SecureAsyncHandler</c>
-        ///  Callback to handle TLS/SSL inbound traffic and process it using the registered processing callback
+        ///     <c>SecureAsyncHandler</c>
+        ///     Callback to handle TLS/SSL inbound traffic and process it using the registered processing callback
         /// </summary>
         /// <param name="asyncResult"></param>
         public void SecureAsyncHandler(IAsyncResult asyncResult)
         {
             try
             {
-                var secureListener = (TcpListener)asyncResult.AsyncState;
+                var secureListener = (TcpListener) asyncResult.AsyncState;
 
                 using (var tcpClient = secureListener.EndAcceptTcpClient(asyncResult))
                 {
                     using (var sslStream = new SslStream(tcpClient.GetStream(), false))
                     {
-                        sslStream.AuthenticateAsServer(x509Certificate, false, SslProtocols.Default, false);
+                        sslStream.AuthenticateAsServer(_x509Certificate, false, SslProtocols.Default, false);
 
                         var totalBytes = 0;
 
@@ -568,28 +562,28 @@ namespace MotCommonLib
                         {
                             Thread.Sleep(1);
 
-                            byteIoBuffer = new byte[1024];
-                            stringIoBuffer = "";
+                            _byteIoBuffer = new byte[1024];
+                            _stringIoBuffer = "";
 
                             int bytesIn;
                             do
                             {
-                                bytesIn = sslStream.Read(byteIoBuffer, 0, byteIoBuffer.Length);
-                                ByteArgCallback?.Invoke(byteIoBuffer);
-                                stringIoBuffer += Encoding.UTF8.GetString(byteIoBuffer, 0, bytesIn);
+                                bytesIn = sslStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
+                                ByteArgCallback?.Invoke(_byteIoBuffer);
+                                _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                                 totalBytes += bytesIn;
                             } while (bytesIn > 0);
                         }
                         catch (IOException iox)
                         {
                             var errorMsg = $"SecureAsyncHandler read() failed: {iox.Message}";
-                            eventLogger.Error(errorMsg);
+                            _eventLogger.Error(errorMsg);
                             throw new Exception(errorMsg);
                         }
                         catch (Exception ex)
                         {
                             var errorMsg = $"SecureAsyncHandler read() failed: {ex.Message}";
-                            eventLogger.Error(errorMsg);
+                            _eventLogger.Error(errorMsg);
                             throw new Exception(errorMsg);
                         }
 
@@ -599,13 +593,10 @@ namespace MotCommonLib
                         if (totalBytes > 0)
                         {
                             //__ssl_stream = __lstream;
-                            StringArgCallback?.Invoke(stringIoBuffer);
-                            var resp = StringArgCallback?.Invoke(stringIoBuffer);
+                            StringArgCallback?.Invoke(_stringIoBuffer);
+                            var resp = StringArgCallback?.Invoke(_stringIoBuffer);
 
-                            if (!string.IsNullOrEmpty(resp))
-                            {
-                                sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
-                            }
+                            if (!string.IsNullOrEmpty(resp)) sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
                         }
 
                         //SslStream.Close();
@@ -615,7 +606,7 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                eventLogger.Error("Secure Read: {0}", ex.Message);
+                _eventLogger.Error("Secure Read: {0}", ex.Message);
             }
             finally
             {
@@ -624,155 +615,130 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>SecureListenAsync</c>
-        /// Async listener on a TLS/SSL port, hands off to SecureAsyncHandler on tap
+        ///     <c>SecureListenAsync</c>
+        ///     Async listener on a TLS/SSL port, hands off to SecureAsyncHandler on tap
         /// </summary>
         public void SecureListenAsync()
         {
-            if (x509Certificate == null)
-            {
-                throw new ArgumentNullException($"Missing X509 Certificate");
-            }
+            if (_x509Certificate == null) throw new ArgumentNullException($"Missing X509 Certificate");
 
-            while (serviceRunning)
+            while (_serviceRunning)
             {
                 TcpClientConnected.Reset();
-                messageTrigger.BeginAcceptTcpClient(SecureAsyncHandler, messageTrigger);
+                _messageTrigger.BeginAcceptTcpClient(SecureAsyncHandler, _messageTrigger);
                 TcpClientConnected.WaitOne();
             }
         }
 
         /// <summary>
-        /// <c>SecureListen</c>
-        /// Synchronus listener on a TLS/SSL port, processes everything locally
+        ///     <c>SecureListen</c>
+        ///     Synchronus listener on a TLS/SSL port, processes everything locally
         /// </summary>
         public void SecureListen()
         {
-            if (x509Certificate == null)
-            {
-                throw new ArgumentNullException($"Missing X509 Certificate");
-            }
+            if (_x509Certificate == null) throw new ArgumentNullException($"Missing X509 Certificate");
 
-            serviceRunning = true;
+            _serviceRunning = true;
 
-            while (serviceRunning)
-            {
+            while (_serviceRunning)
                 try
                 {
-                    using (localTcpClient = messageTrigger.AcceptTcpClient())
+                    using (_localTcpClient = _messageTrigger.AcceptTcpClient())
                     {
-                        netSslStream = new SslStream(localTcpClient.GetStream(), false)
-                        {
-                            ReadTimeout = TcpTimeout,
-                            WriteTimeout = TcpTimeout
-                        };
+                        NetSslStream = new SslStream(_localTcpClient.GetStream(), false) {ReadTimeout = TcpTimeout, WriteTimeout = TcpTimeout};
 
-                        remoteEndPoint = localTcpClient.Client.RemoteEndPoint;
-                        localEndPoint = localTcpClient.Client.LocalEndPoint;
+                        RemoteEndPoint = _localTcpClient.Client.RemoteEndPoint;
+                        _localEndPoint = _localTcpClient.Client.LocalEndPoint;
 
-                        netSslStream.AuthenticateAsServer(x509Certificate, false, SslProtocols.Tls, true);
+                        NetSslStream.AuthenticateAsServer(_x509Certificate, false, SslProtocols.Tls, true);
 
-                        eventLogger.Info($"Accepted and Authenticated TLS connection from remote endpoint: {remoteEndPoint}");
+                        _eventLogger.Info($"Accepted and Authenticated TLS connection from remote endpoint: {RemoteEndPoint}");
 
 
-                        if (Read() > 0)
-                        {
-                            StringArgCallback?.Invoke(stringIoBuffer);
-                        }
+                        if (Read() > 0) StringArgCallback?.Invoke(_stringIoBuffer);
 
-                        netSslStream.Close();
-                        localTcpClient.Close();
+                        NetSslStream.Close();
+                        _localTcpClient.Close();
                     }
                 }
                 catch (IOException ex)
                 {
-                    eventLogger.Error($"Create secure stream I/O error: { ex.StackTrace}");
+                    _eventLogger.Error($"Create secure stream I/O error: {ex.StackTrace}");
                 }
                 catch (AuthenticationException ex)
                 {
-                    eventLogger.Error($"Create secure stream Authentication error: {ex.StackTrace}");
+                    _eventLogger.Error($"Create secure stream Authentication error: {ex.StackTrace}");
                 }
                 catch (InvalidOperationException ex)
                 {
                     // probably shutting the thread down
-                    serviceRunning = false;
+                    _serviceRunning = false;
                     Console.WriteLine(ex.Message);
                 }
                 catch (SocketException ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
-            }
         }
 
         /// <summary>
-        /// <c>Listen</c>
-        /// Synchronus listener on a clear text port, processes everything locally
+        ///     <c>Listen</c>
+        ///     Synchronus listener on a clear text port, processes everything locally
         /// </summary>
         public void Listen()
         {
-            serviceRunning = true;
+            _serviceRunning = true;
 
-            while (serviceRunning)
-            {
+            while (_serviceRunning)
                 try
                 {
-                    using (var tcpClient = messageTrigger.AcceptTcpClient())
+                    using (var tcpClient = _messageTrigger.AcceptTcpClient())
                     {
-                        using (netStream = tcpClient.GetStream())
+                        using (NetStream = tcpClient.GetStream())
                         {
-                            netStream.ReadTimeout = TcpTimeout;
-                            netStream.WriteTimeout = TcpTimeout;
+                            NetStream.ReadTimeout = TcpTimeout;
+                            NetStream.WriteTimeout = TcpTimeout;
 
-                            remoteEndPoint = tcpClient.Client.RemoteEndPoint;
-                            localEndPoint = tcpClient.Client.LocalEndPoint;
+                            RemoteEndPoint = tcpClient.Client.RemoteEndPoint;
+                            _localEndPoint = tcpClient.Client.LocalEndPoint;
 
-                            eventLogger.Debug($"Accepted connection from remote endpoint {remoteEndPoint}");
+                            _eventLogger.Debug($"Accepted connection from remote endpoint {RemoteEndPoint}");
 
-                            if (Read() > 0)
-                            {
-                                StringArgCallback?.Invoke(stringIoBuffer);
-                                eventLogger.Debug($"Data from {remoteEndPoint}, {stringIoBuffer}");
-                            }
+                            if (Read() > 0) StringArgCallback?.Invoke(_stringIoBuffer);
                         }
                     }
                 }
                 catch (IOException iox)
                 {
-                    eventLogger.Error($"listen() failed: {iox.Message}");
+                    _eventLogger.Error($"listen() failed: {iox.Message}");
                     throw;
                 }
                 catch (InvalidOperationException ex)
                 {
                     // probably shutting the thread down
-                    serviceRunning = false;
+                    _serviceRunning = false;
                     Console.WriteLine(ex.Message);
                 }
                 catch (SocketException ex)
                 {
                     Console.WriteLine(ex.Message);
-
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
-            }
         }
 
         /// <summary>
-        /// <c>Read</c>
-        /// Managed stream reader for clear and secure cnnections with muutex access management
+        ///     <c>Read</c>
+        ///     Managed stream reader for clear and secure cnnections with muutex access management
         /// </summary>
         /// <returns>The number of bytes read</returns>
         public int Read()
         {
             var totalBytes = 0;
 
-            if (SocketMutex == null)
-            {
-                return 0;
-            }
+            if (SocketMutex == null) return 0;
 
             SocketMutex.WaitOne();
 
@@ -780,34 +746,30 @@ namespace MotCommonLib
             {
                 Thread.Sleep(1);
 
-                byteIoBuffer = new byte[1024];
-                stringIoBuffer = "";
+                _byteIoBuffer = new byte[1024];
+                _stringIoBuffer = "";
 
                 int bytesIn;
                 if (UseSsl)
-                {
                     do
                     {
-                        bytesIn = netSslStream.Read(byteIoBuffer, 0, byteIoBuffer.Length);
+                        bytesIn = NetSslStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
 
-                        ByteArgCallback?.Invoke(byteIoBuffer);
+                        ByteArgCallback?.Invoke(_byteIoBuffer);
 
-                        stringIoBuffer += Encoding.UTF8.GetString(byteIoBuffer, 0, bytesIn);
+                        _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                         totalBytes += bytesIn;
                     } while (bytesIn > 0);
-                }
                 else
-                {
-                    while (netStream.DataAvailable)
+                    while (NetStream.DataAvailable)
                     {
-                        bytesIn = netStream.Read(byteIoBuffer, 0, byteIoBuffer.Length);
+                        bytesIn = NetStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
 
-                        ByteArgCallback?.Invoke(byteIoBuffer);
+                        ByteArgCallback?.Invoke(_byteIoBuffer);
 
-                        stringIoBuffer += Encoding.UTF8.GetString(byteIoBuffer, 0, bytesIn);
+                        _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                         totalBytes += bytesIn;
                     }
-                }
 
                 SocketMutex.ReleaseMutex();
 
@@ -816,31 +778,28 @@ namespace MotCommonLib
             catch (IOException iox)
             {
                 SocketMutex.ReleaseMutex();
-                eventLogger.Error("read() failed: {0}", iox.Message);
+                _eventLogger.Error("read() failed: {0}", iox.Message);
                 throw;
                 // timeout
             }
             catch (Exception ex)
             {
                 SocketMutex.ReleaseMutex();
-                eventLogger.Error("read() failed: {0}", ex.Message);
+                _eventLogger.Error("read() failed: {0}", ex.Message);
                 throw; // new Exception("read() failed: " + ex.Message);
             }
         }
 
         /// <summary>
-        /// <c>Read</c>
-        /// Managed stream reader for clear and secure cnnections with muutex access management
-        /// that takes a byte buffer reference to return read data and specifies starting index
-        /// and number of bytes to read.
+        ///     <c>Read</c>
+        ///     Managed stream reader for clear and secure cnnections with muutex access management
+        ///     that takes a byte buffer reference to return read data and specifies starting index
+        ///     and number of bytes to read.
         /// </summary>
         /// <returns>The number of bytes read</returns>
         public int Read(ref byte[] byteBuffer, int index, int count)
         {
-            if (SocketMutex == null)
-            {
-                return 0;
-            }
+            if (SocketMutex == null) return 0;
 
             SocketMutex.WaitOne();
 
@@ -850,13 +809,13 @@ namespace MotCommonLib
 
                 if (UseSsl)
                 {
-                    readCount = netSslStream.Read(byteBuffer, index, count);
-                    ByteArgCallback?.Invoke(byteIoBuffer);
+                    readCount = NetSslStream.Read(byteBuffer, index, count);
+                    ByteArgCallback?.Invoke(_byteIoBuffer);
                 }
                 else
                 {
-                    readCount = netStream.Read(byteBuffer, index, count);
-                    ByteArgCallback?.Invoke(byteIoBuffer);
+                    readCount = NetStream.Read(byteBuffer, index, count);
+                    ByteArgCallback?.Invoke(_byteIoBuffer);
                 }
 
                 SocketMutex.ReleaseMutex();
@@ -872,8 +831,8 @@ namespace MotCommonLib
 
 
         /// <summary>
-        /// <c>DefaultProtocolProcessor</c>
-        /// Placholder delegate for processing return values from the Remote endpoint
+        ///     <c>DefaultProtocolProcessor</c>
+        ///     Placholder delegate for processing return values from the Remote endpoint
         /// </summary>
         /// <param name="buffer"></param>
         /// <returns></returns>
@@ -883,8 +842,8 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>WriteReturn</c>
-        /// Write method that sends a byte array and does not wait for responses from the Remote endpoint
+        ///     <c>WriteReturn</c>
+        ///     Write method that sends a byte array and does not wait for responses from the Remote endpoint
         /// </summary>
         /// <param name="streamData"></param>
         public void WriteReturn(byte[] streamData)
@@ -894,25 +853,21 @@ namespace MotCommonLib
             try
             {
                 if (UseSsl)
-                {
-                    netSslStream.Write(streamData, 0, streamData.Length);
-                }
+                    NetSslStream.Write(streamData, 0, streamData.Length);
                 else
-                {
-                    netStream.Write(streamData, 0, streamData.Length);
-                }
+                    NetStream.Write(streamData, 0, streamData.Length);
             }
             catch (Exception ex)
             {
-                eventLogger.Error($"Error writing byte return values: {ex.Message}");
+                _eventLogger.Error($"Error writing byte return values: {ex.Message}");
             }
 
             SocketMutex.ReleaseMutex();
         }
 
         /// <summary>
-        /// <c>WriteReturn</c>
-        /// Write method that sends a string and does not wait for responses from the Remote endpoint
+        ///     <c>WriteReturn</c>
+        ///     Write method that sends a string and does not wait for responses from the Remote endpoint
         /// </summary>
         /// <param name="streamData"></param>
         public void WriteReturn(string streamData)
@@ -922,25 +877,21 @@ namespace MotCommonLib
             try
             {
                 if (UseSsl)
-                {
-                    netSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                }
+                    NetSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
                 else
-                {
-                    netStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                }
+                    NetStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
             }
             catch (Exception ex)
             {
-                eventLogger.Error($"Error writing string return values: {ex.Message}");
+                _eventLogger.Error($"Error writing string return values: {ex.Message}");
             }
 
             SocketMutex.ReleaseMutex();
         }
 
         /// <summary>
-        /// <c>Write</c>
-        /// Write method that sends a byte array and waits for responses from the Remote endpoint
+        ///     <c>Write</c>
+        ///     Write method that sends a byte array and waits for responses from the Remote endpoint
         /// </summary>
         /// <param name="streamData"></param>
         /// <returns>A bool indicating if the write succedded</returns>
@@ -950,26 +901,26 @@ namespace MotCommonLib
 
             try
             {
-                byte[] buffer = new byte[256];
+                var buffer = new byte[256];
 
                 if (UseSsl)
                 {
-                    netSslStream.Write(streamData, 0, streamData.Length);
-                    netSslStream.Read(buffer, 0, buffer.Length);
+                    NetSslStream.Write(streamData, 0, streamData.Length);
+                    NetSslStream.Read(buffer, 0, buffer.Length);
                 }
                 else
                 {
-                    netStream.Write(streamData, 0, streamData.Length);
-                    netStream.Read(buffer, 0, buffer.Length);
+                    NetStream.Write(streamData, 0, streamData.Length);
+                    NetStream.Read(buffer, 0, buffer.Length);
                 }
 
                 SocketMutex.ReleaseMutex();
-                return ByteArgProtocolProcessor != null && (bool)ByteArgProtocolProcessor?.Invoke(buffer);
+                return ByteArgProtocolProcessor != null && (bool) ByteArgProtocolProcessor?.Invoke(buffer);
             }
             catch (IOException iox) // timeout
             {
                 SocketMutex.ReleaseMutex();
-                eventLogger.Error($"Error write() failed: {iox.Message}");
+                _eventLogger.Error($"Error write() failed: {iox.Message}");
                 return false;
             }
             catch (Exception ex)
@@ -977,14 +928,14 @@ namespace MotCommonLib
                 var errorMsg = $"Error write() failed: {ex.Message}";
 
                 SocketMutex.ReleaseMutex();
-                eventLogger.Error(errorMsg);
+                _eventLogger.Error(errorMsg);
                 throw new Exception(errorMsg);
             }
         }
 
         /// <summary>
-        /// <c>Write</c>
-        /// Write method that sends a string and waits for responses from the Remote endpoint
+        ///     <c>Write</c>
+        ///     Write method that sends a string and waits for responses from the Remote endpoint
         /// </summary>
         /// <param name="streamData"></param>
         /// <returns>A bool indicating if the write succeded</returns>
@@ -994,20 +945,20 @@ namespace MotCommonLib
 
             try
             {
-                byte[] buffer = new byte[256];
+                var buffer = new byte[256];
 
                 if (UseSsl)
                 {
-                    netSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                    netSslStream.Read(buffer, 0, buffer.Length);
+                    NetSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
+                    NetSslStream.Read(buffer, 0, buffer.Length);
                 }
                 else
                 {
-                    netStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                    netStream.Read(buffer, 0, buffer.Length);
+                    NetStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
+                    NetStream.Read(buffer, 0, buffer.Length);
                 }
 
-                var retVal = ByteArgProtocolProcessor != null && (bool)ByteArgProtocolProcessor?.Invoke(buffer);
+                var retVal = ByteArgProtocolProcessor != null && (bool) ByteArgProtocolProcessor?.Invoke(buffer);
 
                 SocketMutex.ReleaseMutex();
 
@@ -1017,19 +968,16 @@ namespace MotCommonLib
             {
                 SocketMutex.ReleaseMutex();
 
-                if (sx.ErrorCode == 10053)
-                {
-                    eventLogger.Warn($"Write() SocketException. Type = {sx.GetType().Name}, {sx.Message}");
-                }
+                if (sx.ErrorCode == 10053) _eventLogger.Warn($"Write() SocketException. Type = {sx.GetType().Name}, {sx.Message}");
 
-                eventLogger.Error($"Write() Exception. Type = {sx.GetType().Name}, {sx.Message}");
+                _eventLogger.Error($"Write() Exception. Type = {sx.GetType().Name}, {sx.Message}");
                 return false;
             }
             catch (IOException iox)
             {
                 SocketMutex.ReleaseMutex();
 
-                eventLogger.Error($"Write() Exception. Type = {iox.GetType().Name}, {iox.Message}");
+                _eventLogger.Error($"Write() Exception. Type = {iox.GetType().Name}, {iox.Message}");
 
                 return false;
             }
@@ -1038,14 +986,14 @@ namespace MotCommonLib
                 SocketMutex.ReleaseMutex();
 
                 var errorMsg = $"Write() failed: {ex.Message}";
-                eventLogger.Error(errorMsg);
+                _eventLogger.Error(errorMsg);
                 throw new Exception(errorMsg);
             }
         }
 
         /// <summary>
-        /// <c>Send</c>
-        /// Overload of Write sending a byte array
+        ///     <c>Send</c>
+        ///     Overload of Write sending a byte array
         /// </summary>
         /// <param name="streamData"></param>
         /// <returns>A bool indicating if the write succeded</returns>
@@ -1055,21 +1003,17 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Flush</c>
-        /// A simple overload of the underlying streams to flush any data
+        ///     <c>Flush</c>
+        ///     A simple overload of the underlying streams to flush any data
         /// </summary>
         public void Flush()
         {
             try
             {
                 if (UseSsl)
-                {
-                    netSslStream.Flush();
-                }
+                    NetSslStream.Flush();
                 else
-                {
-                    netStream.Flush();
-                }
+                    NetStream.Flush();
             }
             catch (Exception ex)
             {
@@ -1078,179 +1022,160 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// <c>Close</c>
-        /// Closes the socket, haltuing all I/O but doese not destruct and can be reopened
+        ///     <c>Close</c>
+        ///     Closes the socket, haltuing all I/O but doese not destruct and can be reopened
         /// </summary>
         public void Close()
         {
-            if (serviceRunning)
-            {
+            if (_serviceRunning)
                 try
                 {
-                    serviceRunning = false;
+                    _serviceRunning = false;
 
-                    if (openForListening)
-                    {
-                        messageTrigger.Stop();
-                    }
+                    if (_openForListening) _messageTrigger.Stop();
 
-                    localTcpClient?.Close();
-                    netStream?.Close();
+                    _localTcpClient?.Close();
+                    NetStream?.Close();
                 }
                 catch (Exception ex)
                 {
                     throw new Exception($"Socket close failure {ex.Message}");
                 }
-            }
         }
 
         /// <summary>
-        /// <c>OpenAsServer</c>
-        /// Sets up everything needed to be a listener on the local endpoint
+        ///     <c>OpenAsServer</c>
+        ///     Sets up everything needed to be a listener on the local endpoint
         /// </summary>
         public void OpenAsServer()
         {
             try
             {
-                messageTrigger = new TcpListener(IPAddress.Any, Port);
-                messageTrigger.Start();
+                _messageTrigger = new TcpListener(IPAddress.Any, Port);
+                _messageTrigger.Start();
 
-                openForListening = true;
-                serviceRunning = true;
+                _openForListening = true;
+                _serviceRunning = true;
             }
             catch (Exception ex)
             {
-                eventLogger.Error("Failed to start server on: {0} : {1}", Port, ex.Message);
+                _eventLogger.Error("Failed to start server on: {0} : {1}", Port, ex.Message);
                 throw;
             }
         }
 
         /// <summary>
-        /// <c>OpenAsClient</c>
-        /// Sets up everything needed to act as a client to a remote endpoint
+        ///     <c>OpenAsClient</c>
+        ///     Sets up everything needed to act as a client to a remote endpoint
         /// </summary>
         public void OpenAsClient()
         {
-            localTcpClient = new TcpClient(Address, Port);
+            _localTcpClient = new TcpClient(Address, Port);
 
             if (UseSsl)
             {
                 // Resolve the machine name for the certificate
                 var hostName = Dns.GetHostEntry(Address).HostName;
-                if (string.IsNullOrEmpty(hostName))
-                {
-                    hostName = Address;
-                }
+                if (string.IsNullOrEmpty(hostName)) hostName = Address;
 
-                netSslStream = new SslStream(localTcpClient.GetStream(),
-                    false,
-                    ValidateServerCertificate,
-                    null
-                );
+                NetSslStream = new SslStream(_localTcpClient.GetStream(), false, ValidateServerCertificate, null);
 
                 try
                 {
-                    netSslStream.AuthenticateAsClient(hostName);
+                    NetSslStream.AuthenticateAsClient(hostName);
                 }
                 catch (AuthenticationException ax)
                 {
-                    eventLogger.Error($"[Authentication] Failed to connect securely to {Address}:{Port}. Error: {ax.Message}");
-                    localTcpClient.Close();
+                    _eventLogger.Error($"[Authentication] Failed to connect securely to {Address}:{Port}. Error: {ax.Message}");
+                    _localTcpClient.Close();
                     throw;
                 }
                 catch (IOException iox)
                 {
-                    eventLogger.Error($"[SystemIO] Failed to connect securely to {Address}:{Port}. Error: {iox.Message}");
-                    localTcpClient.Close();
+                    _eventLogger.Error($"[SystemIO] Failed to connect securely to {Address}:{Port}. Error: {iox.Message}");
+                    _localTcpClient.Close();
                     throw;
                 }
 
-                netSslStream.ReadTimeout = TcpTimeout;
-                netSslStream.WriteTimeout = TcpTimeout;
+                NetSslStream.ReadTimeout = TcpTimeout;
+                NetSslStream.WriteTimeout = TcpTimeout;
             }
             else
             {
-                netStream = localTcpClient.GetStream();
-                netStream.ReadTimeout = TcpTimeout;
-                netStream.WriteTimeout = TcpTimeout;
+                NetStream = _localTcpClient.GetStream();
+                NetStream.ReadTimeout = TcpTimeout;
+                NetStream.WriteTimeout = TcpTimeout;
             }
 
-            remoteEndPoint = localTcpClient.Client.RemoteEndPoint;
-            localEndPoint = localTcpClient.Client.LocalEndPoint;
+            RemoteEndPoint = _localTcpClient.Client.RemoteEndPoint;
+            _localEndPoint = _localTcpClient.Client.LocalEndPoint;
 
-            openForListening = false;
+            _openForListening = false;
         }
 
         /// <summary>
-        /// <c>Dispose</c>
-        /// Conditional IDisposable destructor
+        ///     <c>Dispose</c>
+        ///     Conditional IDisposable destructor
         /// </summary>
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
-            {
                 try
                 {
-                    if (x509Store != null)
+                    if (_x509Store != null)
                     {
-                        x509Store.Dispose();
-                        x509Store = null;
+                        _x509Store.Dispose();
+                        _x509Store = null;
                     }
+
                     if (TcpClientConnected != null)
                     {
                         TcpClientConnected.Dispose();
                         TcpClientConnected = null;
                     }
-                    if (localTcpClient != null)
+
+                    if (_localTcpClient != null)
                     {
-                        localTcpClient.GetStream().Close();
-                        localTcpClient.Close();
-                        localTcpClient = null;
+                        _localTcpClient.GetStream().Close();
+                        _localTcpClient.Close();
+                        _localTcpClient = null;
                     }
-                    if (openForListening)
+
+                    if (_openForListening)
                     {
-                        if (messageTrigger != null)
+                        if (_messageTrigger != null)
                         {
-                            messageTrigger.Stop();
-                            messageTrigger.Server.Dispose();
+                            _messageTrigger.Stop();
+                            _messageTrigger.Server.Dispose();
                         }
                     }
                     else
                     {
-                        if (netStream != null)
+                        if (NetStream != null)
                         {
-                            netStream.Dispose();
-                            netStream = null;
+                            NetStream.Dispose();
+                            NetStream = null;
                         }
 
                         if (UseSsl)
-                        {
-                            if (netSslStream != null)
+                            if (NetSslStream != null)
                             {
-                                netSslStream.Dispose();
-                                netSslStream = null;
+                                NetSslStream.Dispose();
+                                NetSslStream = null;
                             }
-                        }
                     }
 
                     Disposed = true;
                 }
                 catch (Exception ex)
                 {
-                    eventLogger.Error($"Error disposing socket: {ex.Message}");
+                    _eventLogger.Error($"Error disposing socket: {ex.Message}");
                 }
-            }
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// <c>Dispose</c>
-        /// Direct IDisposable destructor that destroys and nullifies everything 
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+#pragma warning disable 1591
+        public NetworkStream NetStream;
+        public SslStream NetSslStream;
+#pragma warning restore 1591
     }
 }

@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Sockets;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
@@ -68,6 +69,7 @@ namespace MotCommonLib
                 _fieldList.Add(new Field("ConsultMsg", "", 45, false, 'n'));
                 _fieldList.Add(new Field("GenericFor", "", 40, false, 'n'));
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -210,6 +212,7 @@ namespace MotCommonLib
             {
                 SetField(_fieldList, val, fieldName, overrideTruncation);
             }
+            // ReSharper disable once RedundantCatchClause
             catch
             {
                 throw;
@@ -222,6 +225,7 @@ namespace MotCommonLib
         /// <value>The rx sys drug identifier.</value>
         [JsonProperty("RxSys_DrugID")]
         [XmlElement("RxSys_DrugID")]
+        // ReSharper disable once InconsistentNaming
         public string RxSys_DrugID
         {
             get
@@ -306,10 +310,10 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("strength")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToDouble(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToDouble(f.TagData) : 0;
             }
 
-            set => SetField(_fieldList, value.ToString(), "Strength");
+            set => SetField(_fieldList, value.ToString(CultureInfo.InvariantCulture), "Strength");
         }
 
         /// <summary>
@@ -392,7 +396,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("drugschedule")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set
@@ -500,7 +504,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("sizefactor")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, Convert.ToString(value), "SizeFactor");
@@ -535,7 +539,7 @@ namespace MotCommonLib
             get
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("defaultisolate")));
-                return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
+                return !string.IsNullOrEmpty(f?.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
             set => SetField(_fieldList, Convert.ToString(value), "DefaultIsolate");
