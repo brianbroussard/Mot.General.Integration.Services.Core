@@ -4,9 +4,9 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
     <PackageId>Mot.Interface.Gateway.Sdk</PackageId>
-    <PackageVersion>1.01</PackageVersion>
+    <PackageVersion>1.02</PackageVersion>
     <Authors>Pete Jenney</Authors>
-    <Owners>Pete Jenney</Owners>
+    <Owners>Medicine-On-Time, LLC</Owners>
     <PackageProjectUrl>https://github.com/Medicine-On-Time/Mot.Integration.Support.Core</PackageProjectUrl>
     <PackageOutputPath>..\..\packages</PackageOutputPath>
     <Summary>Objects to support Pharmacy Management System Interface Development</Summary>

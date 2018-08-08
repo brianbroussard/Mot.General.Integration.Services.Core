@@ -21,7 +21,10 @@
 // THE SOFTWARE.
 // 
 
+using System;
+using System.ServiceProcess;
 using MotParserLib;
+using NLog;
 using Topshelf;
 
 //using TransformerService.Controllers;
@@ -30,8 +33,12 @@ namespace TransformerService
 {
     internal static class ConfigureService
     {
+        private static readonly ILogger Logger = LogManager.GetLogger(typeof(Program).FullName);
+
         internal static void Configure()
         {
+            Logger.Info("Starting MOT Transformer Service");
+
             HostFactory.Run(x =>
             {
                 x.Service<MotTransformerInterface>(s =>
@@ -50,13 +57,33 @@ namespace TransformerService
                 x.SetServiceName("motNextTransformer");
 
                 x.EnableShutdown();
-                
+                x.BeforeUninstall(() => StopService());
 
                 x.EnableServiceRecovery(r =>
                 {
                     r.RestartService(0);
                 });
+
             });
+        }
+
+        private static void StopService()
+        {
+            var service = new ServiceController("motNextTransformer");
+
+            try
+            {
+                if (service.Status == ServiceControllerStatus.Running)
+                {
+                    service.Stop();
+                    service.WaitForStatus(ServiceControllerStatus.Stopped);
+                    service.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Error during Stop service operation.");
+            }
         }
 
         class Program
