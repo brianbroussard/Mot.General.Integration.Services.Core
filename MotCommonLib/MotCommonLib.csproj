@@ -1,15 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.33.12</AssemblyVersion>
-    <FileVersion>1.0.33.12</FileVersion>
+    <AssemblyVersion>1.0.41.12</AssemblyVersion>
+    <FileVersion>1.0.41.12</FileVersion>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32bit>false</Prefer32bit>
+  </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="8.0.12" />
+    <PackageReference Include="SQLitePCLRaw.bundle_green" Version="1.1.11" />
     <PackageReference Include="System.Data.Odbc" Version="4.5.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.5.1" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
@@ -18,5 +22,4 @@
     <PackageReference Include="Npgsql" Version="4.0.2" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="2.1.0" />
   </ItemGroup>
-
 </Project>

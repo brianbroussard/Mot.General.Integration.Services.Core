@@ -28,10 +28,12 @@ using System.Data;
 using Npgsql;
 using System.Data.Odbc;
 using System.Data.SqlClient;
+using Microsoft.Data.Sqlite;
+using MySql.Data;
 using System.IO;
-//using Microsoft.Data.Sqlite;
 using NLog;
 using System.Threading;
+using MySql.Data.MySqlClient;
 
 namespace MotCommonLib
 {
@@ -52,33 +54,22 @@ namespace MotCommonLib
 #pragma warning restore 1591
     };
 
-    /// <summary>
-    /// <c>Action</c>
-    /// Enumeration for database actions
-    /// </summary>
-    public enum ActionType
-    {
-#pragma warning disable 1591
-        Add,
-        Change,
-        Delete
-#pragma warning restore 1591
-    };
-
     public class MotDbBase : IDisposable
     {
         protected static Mutex dbConMutex;
-        protected string dsn;
         protected DataSet records;
+        protected string dbShortName { get; set; }
+        protected string dsn { get; set; }
 
-        public MotDbBase(string fullPath)
+        protected MotDbBase(string dsn, string dbShortName)
         {
-            if(string.IsNullOrEmpty(fullPath))
+            if (string.IsNullOrEmpty(dsn))
             {
                 throw new ArgumentNullException($"Bad DSN passed to constructor");
             }
 
-            dsn = fullPath;
+            this.dsn = dsn;
+            this.dbShortName = dbShortName;
 
             if (dbConMutex == null)
             {
@@ -86,6 +77,9 @@ namespace MotCommonLib
             }
         }
 
+        /// <summary>
+        /// <c>Dispose</c>
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
@@ -94,6 +88,7 @@ namespace MotCommonLib
 
         /// <summary>
         /// <c>Dispose</c>
+        /// <<param disposing><param>
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
@@ -109,7 +104,70 @@ namespace MotCommonLib
                 return records;
             }
 
-            throw new Exception($"Query did not return any data");
+            throw new Exception($"{dbShortName} query did not return any data");
+        }
+
+        /// <summary>
+        /// <c>ExecuteQuery</c>
+        /// Executes the SQL query and populates the passed DataSet
+        /// </summary>
+        /// <param name="strQuery"></param>
+        /// <param name="parameterList"></param>
+        /// <param name="tableName"></param>
+        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
+        /// <code>
+        ///         try
+        ///         {
+        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
+        ///             {
+        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
+        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
+        ///             };
+        ///
+        ///             var db = new MotPostgreSqlServer("select * from members where firstName = ? and lastName = ?");
+        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
+        ///         }
+        ///         catch(Exception ex)
+        ///         {
+        ///             Console.Write($"{dbname} query did not return any date: {ex.Message}");
+        ///         }
+        /// 
+        ///</code>
+        ///
+        public virtual DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// <c>ExecuteNonQuery</c>
+        /// Executes the SQL query and populates the passed DataSet
+        /// </summary>
+        /// <param name="strQuery"></param>
+        /// <param name="parameterList"></param>
+        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
+        /// <code>
+        ///         try
+        ///         {
+        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
+        ///             {
+        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
+        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
+        ///             };
+        ///
+        ///             var db = new MotSqlServer("select * from members where firstName = ? and lastName = ?");
+        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
+        ///         }
+        ///         catch(Exception ex)
+        ///         {
+        ///             Console.Write($"{dbname} query did not return any date: {ex.Message}");
+        ///         }
+        /// 
+        ///</code>
+        ///
+        public virtual void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -123,19 +181,6 @@ namespace MotCommonLib
         private NpgsqlDataAdapter _adapter;
         private NpgsqlCommand _command;
 
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public new void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        /// <param name="disposing"></param>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -145,12 +190,7 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>executeNonQuery</c>
-        /// Executes SQL commands from the passed string
-        /// </summary>
-        /// <param name="strQuery"></param>
-        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             try
             {
@@ -172,7 +212,7 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                throw new Exception($"PostgreSQL executeNonQuery failed: {ex.Message}");
+                throw new Exception($"{dbShortName} ExecuteNonQuery failed: {ex.Message}");
             }
             finally
             {
@@ -180,34 +220,7 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>executeQuery</c>
-        /// Executes the SQL query and populates the passed DataSet
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        /// <param name="tableName"></param>
-        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-        /// <code>
-        ///         try
-        ///         {
-        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
-        ///             {
-        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
-        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
-        ///             };
-        ///
-        ///             var db = new MotPostgreSqlServer("select * from members where firstName = ? and lastName = ?");
-        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
-        ///         }
-        ///         catch(Exception ex)
-        ///         {
-        ///             Console.Write($"Query did not return any date: {ex.Message}");
-        ///         }
-        /// 
-        ///</code>
-        ///
-        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
@@ -242,7 +255,7 @@ namespace MotCommonLib
             }
             catch (NpgsqlException ex)
             {
-                throw new Exception($"PostgreSQL executeQuery failed: {ex.Message}");
+                throw new Exception($"{dbShortName} executeQuery failed: {ex.Message}");
             }
             finally
             {
@@ -250,24 +263,19 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>motPostgreSQLServer</c>
-        /// Constructor, connects to the database using the passed complete DSN
-        /// </summary>
-        /// <param name="fullPath"></param>
-        public MotPostgreSqlServer(string fullPath) : base(fullPath)
+        public MotPostgreSqlServer(string dsn) : base(dsn, "PostgreSQL")
         {
             dbConMutex.WaitOne();
 
             try
             {
-                _connection = new NpgsqlConnection(fullPath);
+                _connection = new NpgsqlConnection(dsn);
                 _connection.Open();
                 _connection.Close();
             }
             catch (Exception ex)
             {
-                throw new Exception($"PostgreSQL Connection Failed: {ex.Message}");
+                throw new Exception($"{dbShortName} Connection Failed: {ex.Message}");
             }
             finally
             {
@@ -275,10 +283,6 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>~motPostgreSQLServer</c>
-        /// Destructor, disposes local instance
-        /// </summary>
         ~MotPostgreSqlServer()
         {
             Dispose(false);
@@ -295,18 +299,6 @@ namespace MotCommonLib
         private SqlDataAdapter _adapter;
         private SqlCommand _command;
 
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public new void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -316,16 +308,9 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>executeNonQuery</c>
-        /// Executes SQL commands from the passed string
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
-
-#if !PharmaServe
+// #if !PharmaServe
             try
             {
                 dbConMutex.WaitOne();
@@ -352,15 +337,16 @@ namespace MotCommonLib
                     _connection.Close();
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                throw new Exception($"{dbShortName} Execute NonQuery failed: {ex.Message}");
             }
             finally
             {
                 dbConMutex?.ReleaseMutex();
             }
-#else
+
+/*
             // Following is for CPR+ Interface
 
             try
@@ -391,37 +377,10 @@ namespace MotCommonLib
             {
                 Console.WriteLine("Failed to execute nonQuery {0}", e.Message);
             }
-#endif
+*/
         }
 
-        /// <summary>
-        /// <c>executeQuery</c>
-        /// Executes the SQL query and populates the passed DataSet
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        /// <param name="tableName"></param>
-        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-        /// <code>
-        ///         try
-        ///         {
-        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
-        ///             {
-        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
-        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
-        ///             };
-        ///
-        ///             var db = new MotSqlServer("select * from members where firstName = ? and lastName = ?");
-        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
-        ///         }
-        ///         catch(Exception ex)
-        ///         {
-        ///             Console.Write($"Query did not return any date: {ex.Message}");
-        ///         }
-        /// 
-        ///</code>
-        ///
-        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
@@ -456,7 +415,7 @@ namespace MotCommonLib
             }
             catch (SqlException ex)
             {
-                throw new Exception($"SQLServer executeQuery failed: {ex.Errors}");
+                throw new Exception($"{dbShortName} ExecuteQuery failed: {ex.Errors}");
             }
             finally
             {
@@ -464,18 +423,13 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>motSQLServer</c>
-        /// Constructor, connects to the database using the passed complete DSN
-        /// </summary>
-        /// <param name="fullPath"></param>
-        public MotSqlServer(string fullPath) : base(fullPath)
+        public MotSqlServer(string dsn) : base(dsn, "SqlServer")
         {
             dbConMutex.WaitOne();
 
             try
             {
-                _connection = new SqlConnection(fullPath);
+                _connection = new SqlConnection(dsn);
                 _connection.Open();
                 _connection.Close();
             }
@@ -489,10 +443,6 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>~motSQLServer</c>
-        /// Destructor, disposes local instance
-        /// </summary>
         ~MotSqlServer()
         {
             Dispose(false);
@@ -509,18 +459,6 @@ namespace MotCommonLib
         private OdbcDataAdapter _adapter;
         private OdbcCommand _command;
 
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public new void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
         protected override void Dispose(bool disposing)
         {
             if (!disposing)
@@ -532,18 +470,13 @@ namespace MotCommonLib
             _adapter?.Dispose();
         }
 
-        /// <summary>
-        /// <c>motODBCServer</c>
-        /// Constructor, connects to the database using the passed complete DSN
-        /// </summary>
-        /// <param name="fullPath"></param>
-        public MotOdbcServer(string fullPath) : base(fullPath)
+        public MotOdbcServer(string dsn) : base(dsn, "ODBC")
         {
             try
             {
                 dbConMutex.WaitOne();
 
-                using (_connection = new OdbcConnection(fullPath))
+                using (_connection = new OdbcConnection(dsn))
                 {
                     _connection.Open();
                     _connection.Close();
@@ -551,7 +484,7 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                throw new Exception($"ODBC Connection Failed: {ex.Message}");
+                throw new Exception($"{dbShortName} Connection Failed: {ex.Message}");
             }
             finally
             {
@@ -559,14 +492,7 @@ namespace MotCommonLib
             }
         }
 
-
-        /// <summary>
-        /// <c>executeNonQuery</c>
-        /// Executes SQL commands from the passed string
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             try
             {
@@ -595,7 +521,7 @@ namespace MotCommonLib
             }
             catch (Exception ex)
             {
-                throw new Exception($"ODBC executeNonQuery failed: {ex.Message}");
+                throw new Exception($"{dbShortName} ExecuteNonQuery failed: {ex.Message}");
             }
             finally
             {
@@ -603,34 +529,7 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>executeQuery</c>
-        /// Executes the SQL query and populates the passed DataSet
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        /// <param name="tableName"></param>
-        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-        /// <code>
-        ///         try
-        ///         {
-        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
-        ///             {
-        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
-        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
-        ///             };
-        ///
-        ///             var db = new MotOdbcServer("select * from members where firstName = ? and lastName = ?");
-        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
-        ///         }
-        ///         catch(Exception ex)
-        ///         {
-        ///             Console.Write($"Query did not return any date: {ex.Message}");
-        ///         }
-        /// 
-        ///</code>
-        /// 
-        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
             try
             {
@@ -667,7 +566,7 @@ namespace MotCommonLib
             }
             catch (OdbcException ex)
             {
-                throw new Exception($"ODBC executeQuery failed: {ex.Errors}");
+                throw new Exception($"{dbShortName} executeQuery failed: {ex.Errors}");
             }
             finally
             {
@@ -675,10 +574,6 @@ namespace MotCommonLib
             }
         }
 
-        /// <summary>
-        /// <c>~motODBCServer</c>
-        /// Destructor, disposes local instance
-        /// </summary>
         ~MotOdbcServer()
         {
             Dispose(false);
@@ -691,22 +586,9 @@ namespace MotCommonLib
     /// </summary>
     public class MotSqliteServer : MotDbBase
     {
+        private SqliteConnection _connection;
+        private SqliteCommand _command;
 
-        // private SqliteConnection _connection;
-        //private SqliteCommand _command;
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
-        public new void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// <c>Dispose</c>
-        /// </summary>
         protected override void Dispose(bool disposing)
         {
             if (!disposing)
@@ -714,35 +596,29 @@ namespace MotCommonLib
                 return;
             }
 
-            //_connection?.Dispose();
+            _connection?.Dispose();
         }
 
-        /// <summary>
-        /// <c>motODBCServer</c>
-        /// Constructor, connects to the database using the passed complete DSN
-        /// Note that in the case of Sqlite the fullPath needs to be a fully qualified path
-        /// </summary>
-        /// <param name="fullPath"></param>
-        public MotSqliteServer(string fullPath) : base(fullPath)
+        public MotSqliteServer(string dsn) : base(dsn, "Sqlite")
         {
             try
             {
                 dbConMutex.WaitOne();
 
-                if (!Directory.Exists(Path.GetPathRoot(fullPath)))
+                if (!Directory.Exists(Path.GetDirectoryName(dsn)))
                 {
-                    Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+                    Directory.CreateDirectory(Path.GetDirectoryName(dsn));
                 }
 
-                // using (_connection = new SqliteConnection($"Data Source={fullPath};Version=3;"))
-                //{
-                //     _connection.Open();
-                //     _connection.Close();
-                // }
+                using (_connection = new SqliteConnection($"Filename={dsn};Mode=ReadWriteCreate"))
+                {
+                    _connection.Open();
+                    _connection.Close();
+                }
             }
             catch (Exception ex)
             {
-                throw new Exception($"Sqlite Connection Failed: {ex.Message}");
+                throw new Exception($"{{dbname}} Connection Failed: {ex.Message}");
             }
             finally
             {
@@ -750,20 +626,13 @@ namespace MotCommonLib
             }
         }
 
-
-        /// <summary>
-        /// <c>executeNonQuery</c>
-        /// Executes SQL commands from the passed string
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        public void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
             if (strQuery == null)
             {
                 throw new ArgumentNullException($"Null Query String");
             }
-            /*
+
             try
             {
                 dbConMutex.WaitOne();
@@ -791,51 +660,21 @@ namespace MotCommonLib
                         }
 
                         _command.ExecuteNonQuery();
-                    }                   
-                 }
+                    }
+                }
             }
             catch (SqliteException ex)
             {
-                throw new Exception($"Sqlite executeNonQuery failed: {ex.Message}");
+                throw new Exception($"{dbShortName} executeNonQuery failed: {ex.Message}");
             }
             finally
             {
                 dbConMutex?.ReleaseMutex();
             }
-            */
         }
 
-        /// <summary>
-        /// <c>executeQuery</c>
-        /// Executes the SQL query and populates the passed DataSet
-        /// </summary>
-        /// <param name="strQuery"></param>
-        /// <param name="parameterList"></param>
-        /// <param name="tableName"></param>
-        /// <returns>A DataSet resulting from the query.  If there is no valid DataSet it will throw an exception</returns> 
-        /// <code>
-        ///         try
-        ///         {
-        ///             var parameterList1 = new List<KeyValuePair<string, string>>()
-        ///             {
-        ///                 new KeyValuePair<string, string>("firstName", "Fred"),
-        ///                 new KeyValuePair<string, string>( "lastName", "Flintstone")
-        ///             };
-        ///
-        ///             var db = new MotOdbcServer("select * from members where firstName = ? and lastName = ?");
-        ///             Dataset ds = db.executeQuery(query, parametherList, "LoyalOrderOfWaterBuffalos");
-        ///         }
-        ///         catch(Exception ex)
-        ///         {
-        ///             Console.Write($"Query did not return any date: {ex.Message}");
-        ///         }
-        /// 
-        ///</code>
-        /// 
-        public DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
         {
-            return new DataSet("foo");
-            /*
             try
             {
                 dbConMutex.WaitOne();
@@ -878,20 +717,133 @@ namespace MotCommonLib
             }
             catch (SqliteException ex)
             {
-                throw new Exception($"Sqlite executeQuery failed: {ex.Message}");
+                throw new Exception($"{dbShortName} ExecuteQuery failed: {ex.Message}");
             }
             finally
             {
                 dbConMutex?.ReleaseMutex();
             }
-            */
         }
 
-        /// <summary>
-        /// <c>~motODBCServer</c>
-        /// Destructor, disposes local instance
-        /// </summary>
         ~MotSqliteServer()
+        {
+            Dispose(false);
+        }
+    }
+
+    /// <summary>
+    /// <c>MotMySqlServer</c>
+    /// A database instance for manageing Sqlite Databases
+    /// </summary>
+    public class MotMySqlServer : MotDbBase
+    {
+        private MySqlConnection _connection;
+        private MySqlDataAdapter _adapter;
+        private MySqlCommand _command;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _connection?.Dispose();
+                _adapter?.Dispose();
+            }
+        }
+
+        public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
+        {
+            try
+            {
+                dbConMutex.WaitOne();
+
+                using (_connection = new MySqlConnection(dsn))
+                {
+                    _connection.Open();
+
+                    using (var command = new MySqlCommand())
+                    {
+                        command.Connection = _connection;
+                        command.CommandText = strQuery;
+                        command.ExecuteNonQuery();
+                    }
+
+                    _connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"{dbShortName} executeNonQuery failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex?.ReleaseMutex();
+            }
+        }
+
+        public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
+        {
+            try
+            {
+                dbConMutex.WaitOne();
+                records.Clear();
+
+                using (_connection = new MySqlConnection(dsn))
+                {
+                    _connection.Open();
+
+                    using (_command = new MySqlCommand(strQuery, _connection))
+                    {
+                        if (parameterList != null)
+                        {
+                            foreach (var param in parameterList)
+                            {
+                                _command.Parameters.AddWithValue(param.Key, param.Value);
+                            }
+                        }
+
+                        using (_adapter = new MySqlDataAdapter(strQuery, _connection))
+                        {
+                            _adapter.SelectCommand = _command;
+                            _adapter.Fill(records, tableName ?? "strTable");
+                        }
+                    }
+
+                    _connection.Close();
+
+                    return ValidateReturn(tableName ?? "Table");
+                }
+            }
+            catch (NpgsqlException ex)
+            {
+                throw new Exception($"{dbShortName} executeQuery failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex?.ReleaseMutex();
+            }
+        }
+
+        public MotMySqlServer(string dsn) : base(dsn, "MySql")
+        {
+            dbConMutex.WaitOne();
+
+            try
+            {
+                _connection = new MySqlConnection(dsn);
+                _connection.Open();
+                _connection.Close();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"PostgreSQL Connection Failed: {ex.Message}");
+            }
+            finally
+            {
+                dbConMutex.ReleaseMutex();
+            }
+        }
+
+        ~MotMySqlServer()
         {
             Dispose(false);
         }
@@ -915,6 +867,7 @@ namespace MotCommonLib
         private readonly MotPostgreSqlServer _npgServer;
         private readonly MotOdbcServer _odbcServer;
         private readonly MotSqliteServer _sqliteServer;
+        private readonly MotMySqlServer _mySqlServer;
 
         private readonly Logger _eventLogger;
         private Type _typeParameterType;
@@ -949,6 +902,9 @@ namespace MotCommonLib
                         return _sqlServer.ExecuteQuery(strQuery, parameterList, tableName);
 
                     case DbType.SqlightServer:
+                        return _sqliteServer.ExecuteQuery(strQuery, parameterList, tableName);
+
+                    case DbType.MySqlServer:
                         return _sqliteServer.ExecuteQuery(strQuery, parameterList, tableName);
 
                     default:
@@ -992,6 +948,10 @@ namespace MotCommonLib
                         _sqliteServer.ExecuteNonQuery(strQuery, parameterList);
                         break;
 
+                    case DbType.MySqlServer:
+                        _sqliteServer.ExecuteNonQuery(strQuery, parameterList);
+                        break;
+
                     default:
                         break;
                 }
@@ -1029,6 +989,9 @@ namespace MotCommonLib
                     case DbType.SqlightServer:
                         return _sqliteServer.ExecuteQuery(View);
 
+                    case DbType.MySqlServer:
+                        return _sqliteServer.ExecuteQuery(View);
+
                     default:
                         break;
                 }
@@ -1041,6 +1004,7 @@ namespace MotCommonLib
 
             return null;
         }
+
         /// <summary>
         /// <c>Dispose</c>
         /// </summary>
@@ -1058,7 +1022,7 @@ namespace MotCommonLib
         {
             if (disposing)
             {
-                ((IDisposable)_recordSet).Dispose();
+                ((IDisposable) _recordSet).Dispose();
 
                 switch (_thisDbType)
                 {
@@ -1075,6 +1039,10 @@ namespace MotCommonLib
                         break;
 
                     case DbType.SqlightServer:
+                        _sqliteServer?.Dispose();
+                        break;
+
+                    case DbType.MySqlServer:
                         _sqliteServer?.Dispose();
                         break;
 
@@ -1121,13 +1089,20 @@ namespace MotCommonLib
                         _thisDbType = DbType.SqlightServer;
                         _eventLogger.Info("Setting up as Sqlite Server");
                         break;
+                    
+                    case "MotMySqlServer":
+                        _sqliteServer = new MotSqliteServer(connectString);
+                        _thisDbType = DbType.SqlightServer;
+                        _eventLogger.Info("Setting up as Sqlite Server");
+                        break;
 
                     default:
                         break;
                 }
             }
-            catch
+            catch(Exception ex)
             {
+                _eventLogger.Error($"MotDatabaseServer failure: {ex.Message}");
                 throw;
             }
         }

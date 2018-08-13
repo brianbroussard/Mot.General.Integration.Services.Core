@@ -1,19 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.45.13</AssemblyVersion>
-    <FileVersion>1.0.45.13</FileVersion>
+    <AssemblyVersion>1.0.51.13</AssemblyVersion>
+    <FileVersion>1.0.51.13</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
-
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <Prefer32bit>false</Prefer32bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Prefer32bit>false</Prefer32bit>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
     <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
   </ItemGroup>
