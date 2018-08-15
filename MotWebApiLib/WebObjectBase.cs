@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
@@ -12,8 +15,8 @@ using Newtonsoft.Json;
 
 namespace MotWebApiLib
 {
-    public class WebObjectBase
-    {
+    //public class WebObjectBase
+    //{
         [Serializable]
         internal class Token : IDisposable
         {
@@ -265,11 +268,14 @@ namespace MotWebApiLib
             //private HttpClient client;
             private static string _baseUri;
             private static string _apiRoot;
-
-            protected new virtual void Dispose(bool disposing)
+            private Type _typeParameterType;
+            
+            protected override void Dispose(bool disposing)
             {
                 if (disposing)
                 {
+                    _context.Dispose();
+                    base.Dispose();
                 }
             }
 
@@ -428,6 +434,8 @@ namespace MotWebApiLib
                     throw new ArgumentNullException($@"get: route is null");
                 }
 
+                _typeParameterType = typeof(T);
+                
                 try
                 {
                     using (var client = new HttpClient())
@@ -436,13 +444,21 @@ namespace MotWebApiLib
                         {
                             request.Headers.Add("Authorization", $"{_context.TokenType} {_context.AccessToken}");
                             request.Headers.Add("Accept", "application/json");
-
+                   
                             using (var response = client.SendAsync(request).Result)
                             {
                                 response.EnsureSuccessStatusCode();
                                 var content = response.Content.ReadAsStringAsync().Result;
-                                var list = FromJson<T>(content);
-                                return list;
+                                
+                               // Debug 
+                               if (_typeParameterType.Name == "String")
+                               {
+                                    var conv = TypeDescriptor.GetConverter(typeof(T));
+                                    return (T) conv.ConvertFromString(content);
+                               }
+                                
+                                var returnValue = FromJson<T>(content);
+                                return returnValue;
                             }
                         }
                     }
@@ -503,26 +519,17 @@ namespace MotWebApiLib
                 {
                     MetadataPropertyHandling = MetadataPropertyHandling.Ignore,
                     DateParseHandling = DateParseHandling.DateTime,
+                    MissingMemberHandling = MissingMemberHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore
                 };
             }
 
-            public T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json, Converter.Settings);
+            private static T FromJson<T>(string json) => JsonConvert.DeserializeObject<T>(json, Converter.Settings);
 
-            /// <summary>
-            /// <c>Serialize</c>
-            /// A class to contain message serialization methods
-            /// </summary>
             public static class Serialize
             {
                 public static string ToJson<T>(T self) => JsonConvert.SerializeObject(self, Converter.Settings);
             }
-
-            /*
-            public async <IEnumerable<T>> GetList<T>(string query)
-            {
-                return (T)
-            }
-            */
         }
-    }
+    //}
 }

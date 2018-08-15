@@ -8,8 +8,6 @@ using MotCommonLib;
 
 namespace CommonTests
 {
-  
-
     [TestClass]
     public class DatabaseTest
     {

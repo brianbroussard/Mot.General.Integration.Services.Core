@@ -21,4 +21,7 @@
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
     <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="WebTests.cs" />
+  </ItemGroup>
 </Project>

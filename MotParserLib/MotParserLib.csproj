@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackOnBuild>true</PackOnBuild>
-    <PackageId>Mot.Interface.Gateway.Sdk</PackageId>
+    <PackageId>Mot.Integration.Core.Sdk</PackageId>
     <PackageVersion>1.02</PackageVersion>
     <Authors>Pete Jenney</Authors>
     <Owners>Medicine-On-Time, LLC</Owners>
