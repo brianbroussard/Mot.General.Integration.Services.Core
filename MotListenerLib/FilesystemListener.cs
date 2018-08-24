@@ -234,11 +234,18 @@ namespace MotListenerLib
                 StringProcessor = stringProcessor;
             }
 
+            
             if (RunAsTask)
             {
                 if (StringProcessor != null)
                 {
-                    WaitForWork();
+                    var workerThread = new Thread(WaitForWork)
+                    {
+                        Name = "Filesystem Listener"
+                    };
+                    workerThread.Start();
+
+                    //WaitForWork();
                 }
                 else
                 {
@@ -247,7 +254,13 @@ namespace MotListenerLib
             }
             else
             {
-                WatchDirectory();
+                var workerThread = new Thread(WatchDirectory)
+                {
+                    Name = "Filesystem Listener"
+                };
+                workerThread.Start();
+
+               // WatchDirectory();
             }
 
         }

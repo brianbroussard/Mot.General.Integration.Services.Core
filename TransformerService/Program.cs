@@ -74,8 +74,17 @@ namespace TransformerService
 
         private static string GetStatus()
         {
-            var service = new ServiceController("motNextTransformer");
-            return service.Status.ToString();
+            try
+            {
+                var service = new ServiceController("motNextTransformer");
+                return service.Status.ToString();
+            }
+            catch (Exception ex)
+            {
+                Logger.Info($"Caught while waiting for service status: {ex.Message}");
+            }
+
+            return "No Status";
         }
 
         private static void StopService()

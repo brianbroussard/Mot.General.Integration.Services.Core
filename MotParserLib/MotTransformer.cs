@@ -22,6 +22,7 @@
 // 
 
 using System;
+using System.ServiceProcess;
 using System.Collections.Generic;
 using System.Configuration;
 using MotCommonLib;
@@ -99,7 +100,7 @@ namespace MotParserLib
         public List<string> GetConfigList()
         {
             var appSettings = ConfigurationManager.AppSettings;
-            var response = new List<string> {$"ListenerPort: {appSettings["ListenerPort"] ?? "24025"}", $"GatewayPort: {appSettings["GatewayPort"] ?? "24042"}", $"Gateway Address: {appSettings["GatewayAddress"] ?? "127.0.0.1"}", $"WinMonitorDirectory: {appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io"}", $"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}", $"WatchFileSystem: {appSettings["WatchFileSystem"]}", $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}", $"Debug: {appSettings["Debug"] ?? "false"}", $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}", $"DefaultStoreLoc: {appSettings["DefaultStoreLoc"]}"};
+            var response = new List<string> { $"ListenerPort: {appSettings["ListenerPort"] ?? "24025"}", $"GatewayPort: {appSettings["GatewayPort"] ?? "24042"}", $"Gateway Address: {appSettings["GatewayAddress"] ?? "127.0.0.1"}", $"WinMonitorDirectory: {appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io"}", $"NixMonitorDirectory: {appSettings["NixMonitorDirectory"] ?? @"~/motnext/io"}", $"WatchFileSystem: {appSettings["WatchFileSystem"]}", $"WatchSocket: {appSettings["WatchSocket"] ?? "false"}", $"Debug: {appSettings["Debug"] ?? "false"}", $"AllowZeroTQ: {appSettings["AllowZeroTQ"] ?? "false"}", $"DefaultStoreLoc: {appSettings["DefaultStoreLoc"]}" };
 
             return response;
         }
@@ -172,22 +173,31 @@ namespace MotParserLib
         /// </summary>
         public void Start()
         {
-            LoadConfiguration();
-            Responses = new List<string>();
-
-            if (WatchSocket)
+            try
             {
-                SocketListener = new Hl7SocketListener(ListenerPort, Parse) {RunAsService = true, AllowZeroTQ = AllowZeroTQ, DebugMode = DebugMode};
-                SocketListener.Go();
-            }
+                LoadConfiguration();
+                Responses = new List<string>();
 
-            if (WatchFileSystem)
+                if (WatchSocket)
+                {
+                    SocketListener = new Hl7SocketListener(ListenerPort, Parse) { RunAsService = true, AllowZeroTQ = AllowZeroTQ, DebugMode = DebugMode };
+                    SocketListener.Go();
+                }
+
+                if (WatchFileSystem)
+                {
+                    FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse) { RunAsService = true, Listening = true, DebugMode = DebugMode };
+                    FilesystemListener.Go();
+                }
+
+                EventLogger.Info("Service started");
+            }
+            catch (Exception ex)
             {
-                FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse) {RunAsService = true, Listening = true, DebugMode = DebugMode};
-                FilesystemListener.Go();
+                Console.WriteLine(ex);
+                EventLogger.Error($"Failed to start service: {ex.Message}");
+                throw;
             }
-
-            EventLogger.Info("Service started");
         }
 
         /// <summary>
@@ -199,11 +209,13 @@ namespace MotParserLib
             if (WatchSocket)
             {
                 SocketListener.ShutDown();
+                SocketListener.Dispose();
             }
 
             if (WatchFileSystem)
             {
                 FilesystemListener.ShutDown();
+                FilesystemListener.Dispose();
             }
 
             EventLogger.Info("sevice stopped");
