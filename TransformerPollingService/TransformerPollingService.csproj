@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Topshelf.NLog" Version="4.0.4"/>
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0"/>
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj"/>
+    </ItemGroup>
+</Project>

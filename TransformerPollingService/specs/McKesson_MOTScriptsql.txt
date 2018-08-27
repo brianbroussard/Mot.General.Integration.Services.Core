@@ -1,0 +1,1643 @@
+-------------------------------------------------------------------------------
+---
+--- Name:		MOTScript.sql
+--- Purpose:		Add MOTUser and related information to database
+---
+---------------------------------------------------------------------------------
+--- History
+---
+--- Name		Date		Description of Change
+--- -----------		------------	-----------------------------------------
+--- Mark Morton		???????????	Initial Version
+--- Bruce A. Schwartz	01/17/2005	1. Updated to latest DB Standards
+--- 					2. Added code so it can be run multiple 
+---					   times.
+--- Mark Morton		02/11/2005	Do not switch DBs.
+----------------------------------------------------------------------------------
+SET NOCOUNT ON
+DECLARE @Cmd 			VARCHAR(255)
+DECLARE	@PValue			VARCHAR(255)
+DECLARE	@LoginName		VARCHAR(50)
+DECLARE	@DefaultDB		VARCHAR(50)
+
+PRINT 'Begin Adding MOT User'
+PRINT ' '
+-------------------------------
+--Create the MOT logon and user
+-------------------------------
+IF NOT EXISTS (SELECT * FROM master..syslogins WHERE name = 'MOTUser')
+BEGIN
+	PRINT '=====>> Adding MOT User Logon ID'
+	IF (CONVERT(VARCHAR(1),SERVERPROPERTY('ProductVersion'))) = '8'
+	BEGIN
+		EXEC sp_addlogin 'MOTUser', 'MOTPFW', 'dbrel02t'
+	END
+	ELSE
+	BEGIN
+		SELECT @LoginName 	= 'MOTUser'
+		SELECT @PValue 		= 'MOTPFW'
+		SELECT @DefaultDB 	= 'dbrel02t'
+		
+		SELECT @Cmd = 'CREATE LOGIN ' + @LoginName + ' WITH PASSWORD = ''' + @PValue + ''', DEFAULT_DATABASE = dbrel02t, CHECK_POLICY = OFF'
+		EXEC(@Cmd)
+	END
+END
+ELSE
+	PRINT '=====>> MOT User Logon ID Already Exist'
+
+
+IF NOT EXISTS (SELECT * FROM sysusers WHERE name = 'MOTUser')
+BEGIN
+	PRINT '=====>> Adding MOT User '
+	IF (CONVERT(VARCHAR(1),SERVERPROPERTY('ProductVersion'))) = '8'
+	BEGIN
+		EXEC sp_adduser 'MOTUser', 'MOTUser'
+	END
+	ELSE
+	BEGIN
+		SELECT @LoginName 	= 'MOTUser'
+		SELECT @Cmd = 'CREATE USER ' + @LoginName + ' WITH DEFAULT_SCHEMA = dbo'
+		EXEC(@Cmd)
+	END
+END
+ELSE
+	PRINT '=====>> MOT User already Exist'
+
+PRINT ' '
+PRINT 'End Adding MOT User'
+PRINT ' '
+
+PRINT 'Begin Adding new columns for MOT User'
+PRINT ' '
+--Add column TimeStamp to the Rx table.
+IF NOT EXISTS (	SELECT 	* 
+		FROM 	syscolumns
+		WHERE 	id = object_id('dbo.RX') 
+		AND	name = 'TimeStamp')
+BEGIN
+	PRINT '=====>> Adding TimeStamp Column to RX Table'
+	EXECUTE('ALTER TABLE dbo.RX ADD TimeStamp TimeStamp NULL')
+END
+ELSE
+	PRINT '=====>> TimeStamp Column already exist in RX Table'
+
+
+--Create the index on the TimeStamp.
+IF EXISTS (SELECT name FROM sysindexes WHERE id = object_id('RX') AND name = 'idx_Rx_TimeStamp_n1')
+BEGIN
+	PRINT '=====>> Dropping Index on TimeStamp Column in RX Table'
+	DROP INDEX Rx.idx_Rx_TimeStamp_n1
+END
+
+PRINT '=====>> Adding Index on TimeStamp Column in RX Table'
+CREATE NONCLUSTERED INDEX idx_Rx_TimeStamp_n1 ON dbo.Rx (TimeStamp)
+
+
+
+--Create the index on the Discontinue_Date.
+IF EXISTS (SELECT name FROM sysindexes WHERE id = object_id('RX') AND name = 'idx_Rx_Discontinue_Date_n1')
+BEGIN
+	PRINT '=====>> Dropping Index on Discontinue_Date Column in RX Table'	
+	DROP INDEX Rx.idx_Rx_Discontinue_Date_n1
+END
+
+PRINT '=====>> Adding Index on Discontinue_Date Column in RX Table'	
+CREATE NONCLUSTERED INDEX idx_Rx_Discontinue_Date_n1 ON dbo.Rx (Discontinue_Date)
+
+--Add column TimeStamp to the Patient table.
+IF NOT EXISTS (	SELECT 	* 
+		FROM 	syscolumns
+		WHERE 	id = object_id('dbo.PATIENT') 
+		AND	name = 'TimeStamp')
+BEGIN
+	PRINT '=====>> Adding TimeStamp Column to Patient Table'	
+	EXECUTE('ALTER TABLE dbo.PATIENT ADD TimeStamp TimeStamp NULL')
+END
+ELSE
+	PRINT '=====>> TimeStamp Column already exist in Patient Table'
+
+
+--Create the index on the TimeStamp.
+IF EXISTS (SELECT name FROM sysindexes WHERE id = object_id('PATIENT') AND name = 'idx_Patient_TimeStamp_n1')
+BEGIN
+	PRINT '=====>> Dropping Index on TimeStamp Column in Patient Table'	
+	DROP INDEX Patient.idx_Patient_TimeStamp_n1
+END
+
+
+PRINT '=====>> Adding Index on TimeStamp Column in Patient Table'	
+CREATE NONCLUSTERED INDEX idx_Patient_TimeStamp_n1 ON dbo.Patient (TimeStamp)
+
+PRINT ' '
+PRINT 'End Adding new columns for MOT User'
+PRINT ' '
+
+GO
+
+/************************************************************/
+/************************************************************/
+PRINT 'Begin Creating Views for MOT User'
+PRINT ' '
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vItem') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vItem'
+	DROP VIEW dbo.vItem
+END
+
+PRINT '=====>> Creating View vItem'
+GO
+CREATE VIEW dbo.vItem
+AS
+
+SELECT	
+	iv.ITEM_ID,
+	iv.ITEM_VERSION,
+	iv.NDC_CODE,
+	iv.PACKAGE_CODE,
+	iv.PACKAGE_SIZE,
+	i.CURRENT_ITEM_VERSION,
+	i.ITEM_TYPE,
+	i.ITEM_NAME,
+	i.KDC_NUMBER,
+	i.GPI_GROUP_CODE,
+	i.GPI_CLASS_CODE,
+	i.GPI_SUBCLASS_CODE,
+	i.GPI_NAME_CODE,
+	i.GPI_NAME_EXTENSION_CODE,
+	i.GPI_DOSAGE_FORM_CODE,
+	i.GPI_STRENGTH_CODE,
+	i.HRI_NUMBER,
+	i.DOSAGE_SIGNA_CODE,
+	i.INSTRUCTION_SIGNA_STRING,
+	i.FORM_TYPE,
+	i.ROUTE_OF_ADMINISTRATION,
+	i.ALTERNATE_MANUFACTURER_ID,
+	i.UPC,
+	i.STRENGTH,
+	i.COLOR_CODE,
+	i.FLAVOR_CODE,
+	i.SHAPE_CODE,
+	i.PRODUCT_MARKING,
+	i.NARCOTIC_CODE,
+	i.UNIT_SIZE,
+	i.UNIT_OF_MEASURE,
+	m.NDC_Manufacturer_Number,
+	m.Manufacturer_Abbreviation
+	
+FROM	Item_Version iv (NOLOCK),
+	Item i (NOLOCK) LEFT JOIN Manufacturer m (NOLOCK) ON
+	Manufacturer_ID = i.Alternate_Manufacturer_ID --SQL2K: Replace with LEFT JOIN
+WHERE	iv.Item_ID = i.Item_ID
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vItem', 'MOTUser'
+ELSE
+	GRANT SELECT ON vItem TO MOTUser
+GO
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vItemCaution') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vItemCaution'
+	DROP VIEW dbo.vItemCaution
+END
+
+PRINT '=====>> Creating View vItemCaution'
+GO
+CREATE VIEW dbo.vItemCaution
+AS
+
+SELECT	
+	ic.Item_ID,
+	ic.Caution_Code,
+	cm.Caution_Message
+	
+FROM	Item_Cautions ic (NOLOCK),
+	Caution_Message cm (NOLOCK)
+WHERE	cm.Caution_Code = ic.Caution_Code AND
+	cm.Language_Code = 'E'
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vItemCaution', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vItemCaution  TO MOTUser
+GO
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPatient') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPatient'
+	DROP VIEW dbo.vPatient
+END
+
+PRINT '=====>> Creating View vPatient'
+GO
+CREATE VIEW dbo.vPatient
+AS
+
+SELECT	p.Patient_ID,
+	p.Last_Name,
+	p.First_Name,
+	p.Middle_Initial,
+	a.Address_Line_1,
+	a.Address_Line_2,
+	a.City,
+	a.State_Code,
+	a.Zip_Code,
+	a.Zip_Plus_4,
+	p.Patient_Location_Code,
+	p.Primary_Prescriber_ID,
+	p.SSN,
+	p.BirthDate,
+	p.Deceased_Date,
+	p.Sex,
+	p.Timestamp as 'MSSQLTS',
+	t.Area_Code,
+	t.Telephone_Number,
+	t.Extension
+FROM	Patient p (NOLOCK),
+	Patient_Address pa (NOLOCK),
+	Address a (NOLOCK),
+	Patient_Telephone pt (NOLOCK),
+	Telephone t (NOLOCK)
+WHERE	pa.Patient_ID = p.Patient_ID AND
+	pa.Primary_Flag = 'Y' AND
+	a.Address_ID = pa.Address_ID AND
+	pt.Patient_ID = p.Patient_ID AND
+	pt.Primary_Flag = 'Y' AND
+	t.TelePhone_ID = pt.Telephone_ID
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPatient', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPatient TO MOTUser
+GO
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPatientAllergy') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPatientAllergy'
+	DROP VIEW dbo.vPatientAllergy
+END
+
+PRINT '=====>> Creating View vPatientAllergy'
+GO
+CREATE VIEW dbo.vPatientAllergy
+AS
+
+SELECT	pa.Patient_ID,
+	pa.Patient_Allergy_ID,
+	pa.Allergy_Class_Code,
+	c.Description,
+	pa.Allergy_Free_Text,
+	pa.Item_ID,
+	pa.Onset_Date
+FROM	Patient_Allergy pa (NOLOCK) LEFT JOIN Code c (NOLOCK) ON
+	c.Code_Value = pa.Allergy_Class_Code AND --SQL2K: Replace with LEFT JOIN
+	c.Code_Group = 'ALL_CLASS'
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPatientAllergy', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPatientAllergy TO MOTUser
+GO
+
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPatientDiagnosis') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPatientDiagnosis'
+	DROP VIEW dbo.vPatientDiagnosis
+END
+
+PRINT '=====>> Creating View vPatientDiagnosis'
+GO
+CREATE VIEW dbo.vPatientDiagnosis
+AS
+
+SELECT	mc.Patient_ID,
+	mc.condition_description,
+	c.description as Severity,
+	mc.onset_date,
+	mc.cessation_date
+FROM	medical_condition mc (NOLOCK) LEFT JOIN Code c  (NOLOCK) ON
+		c.Code_Value = mc.chronic_condition_indicator AND --SQL2K: Replace with LEFT JOIN
+		c.Code_Group = 'CHRONIC'
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPatientDiagnosis', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPatientDiagnosis TO MOTUser
+GO
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPatientNote') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPatientNote'
+	DROP VIEW dbo.vPatientNote
+END
+
+PRINT '=====>> Creating View vPatientNote'
+GO
+CREATE VIEW dbo.vPatientNote
+AS
+
+SELECT	p.Patient_ID,
+	n.Note_ID,
+	n.Note_Type_Code,
+	n.Create_User,
+	n.Create_Date,
+	n.Note_Text
+FROM	Patient p (NOLOCK) ,
+	Note n (NOLOCK) 
+WHERE	N.Row_ID = p.Patient_ID AND
+	n.Table_Name = 'PATIENT'
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPatientNote', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPatientNote TO MOTUser
+GO
+
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPrescriber') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPrescriber'
+	DROP VIEW dbo.vPrescriber
+END
+
+PRINT '=====>> Creating View vPrescriber'
+GO
+CREATE VIEW dbo.vPrescriber
+AS
+
+SELECT	p.Prescriber_ID,	--unique ID
+	p.Last_Name,		--2 
+	p.First_Name,		--3
+	p.Middle_Initial,	--4
+	a.Address_Line_1,	--5
+	a.Address_Line_2,	--6
+	a.City,			--7
+	a.State_Code,		--8
+	a.Zip_Code,		--9
+	a.Zip_Plus_4,		--9
+	t.Area_Code,		--10
+	t.Telephone_Number,	--10
+	t.Extension,		--10
+				--field 11, Comments, is stored in vPrescriberNote 
+	p.DEA_Number,		--12
+	p.DEA_Suffix,		--12
+				--field 13, TPID, is not supported
+	p.Prescriber_Type,	--field 14, Specialty
+				--field 15, Fax, is stored in vPrescriberTelephone
+				--field 16, PagerInfo is not supported
+				--field
+	p.Active_Flag		--whether the prescriber is active in PfW, {'Y', 'N', NULL}
+FROM	Prescriber p (NOLOCK) ,
+	Prescriber_Address pa (NOLOCK) ,
+	Address a (NOLOCK) ,
+	Prescriber_Telephone pt (NOLOCK) ,
+	Telephone t (NOLOCK) 
+WHERE	pa.Prescriber_ID = p.Prescriber_ID AND
+	pa.Primary_Flag = 'Y' AND
+	a.Address_ID = pa.Address_ID AND
+	pt.Prescriber_ID = p.Prescriber_ID AND
+	pt.Primary_Flag = 'Y' AND
+	t.Telephone_ID = pt.Telephone_ID
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPrescriber', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPrescriber TO MOTUser
+GO
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPrescriberNote') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPrescriberNote'
+	DROP VIEW dbo.vPrescriberNote
+END
+
+PRINT '=====>> Creating View vPrescriberNote'
+GO
+CREATE VIEW dbo.vPrescriberNote
+AS
+
+SELECT	p.Prescriber_ID,
+	n.Note_ID,
+	n.Note_Type_Code,
+	n.Create_User,
+	n.Create_Date,
+	n.Note_Text
+FROM	Prescriber p (NOLOCK) ,
+	Note n (NOLOCK) 
+WHERE	N.Row_ID = p.Prescriber_ID AND
+	n.Table_Name = 'PRESCRIBER'
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPrescriberNote', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPrescriberNote TO MOTUser
+GO
+
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vPrescriberTelephone') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vPrescriberTelephone'
+	DROP VIEW dbo.vPrescriberTelephone
+END
+
+PRINT '=====>> Creating View vPrescriberTelephone'
+GO
+CREATE VIEW dbo.vPrescriberTelephone
+AS
+SELECT	pt.Prescriber_ID,
+	pt.Primary_Flag,
+	t.Telephone_ID,
+	t.Telephone_Type,
+	t.Area_Code,
+	t.Telephone_Number,
+	t.Extension
+FROM	Prescriber p (NOLOCK) ,
+	Prescriber_Telephone pt (NOLOCK) ,
+	Telephone t (NOLOCK) 
+WHERE	pt.Prescriber_ID = p.Prescriber_ID AND
+	t.TelePhone_ID = pt.Telephone_ID
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vPrescriberTelephone', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vPrescriberTelephone TO MOTUser
+GO
+
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vRx') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vRx'
+	DROP VIEW dbo.vRx
+END
+
+PRINT '=====>> Creating View vRx'
+GO
+CREATE VIEW dbo.vRx
+AS
+
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 3/2/06	Sudha V		MOTLTC-SV	Added last_dispense_number and
+--						dispense_id 
+--------------------------------------------------------------------------------------
+
+SELECT	rx.Patient_ID,				--unique patient ID
+	rx.Rx_ID,				--internal Rx ID
+	rx.External_Rx_ID,			--Rx #
+	rx.Prescriber_ID,			--internal prescriber ID
+
+	d.Dosage_Signa_Code,				--5 Sig
+	sds.Signa_Message AS 'Decoded_Dosage_Signa', 	--5 Sig
+	d.Signa_String,					--5 Sig
+	d.Instruction_Signa_Text,			--5 Sig
+
+	rx.Date_Written,			--*6, rx start date
+	d.Dispense_Date,			--*6, rx start date
+	rx.Last_Dispense_Stop_Date,		--7, rx stop date = stop date of last dispense
+						--8, dose_schedule, note supported
+						--*9, comments, stored in vRxNote
+	rx.Total_Refills_Authorized,		--10, refills
+	rx.Total_Refills_Used,			--10, refills
+						--*11, newrx, ????????????????
+						--*12, isolate, not supported
+						--*13, mdomstart, not supported
+						--*14, mdomend, not supported
+	d.Dispensed_Item_ID,			--internal dispense (fill) ID
+	d.Item_Version AS 'Dispensed_Item_Version',	--item version for dispensed item
+	iv.NDC_Code,				--15 cur_ndcnum, 
+						--*16, ok, not supported
+						--*17, qty_per_dose, not supported
+	d.Quantity_Dispensed,			--18, qty_dispensed
+						--*19, rx type, not supported
+						--*20, status, not supported
+						--*21, dow, not supported
+						--*22,special_doses, not supported
+						--*23, dose_times, not supported
+	rx.Written_For_Item_ID,
+	rx.Written_For_Item_Version,
+	rx.Script_Status,
+	rx.Prescription_Expiration_Date,
+	rx.Responsible_Prescriber_ID,
+	rx.Discontinue_Date,
+	rx.Quantity_Written,
+	rx.Total_Qty_Used,
+	rx.Total_Qty_Authorized,
+	rx.Days_Supply_Written,
+	rx.Days_Supply_Remaining,
+	rx.Script_Origin_Indicator,
+	rx.last_dispense_number,			--MOTLTC-SV
+	d.Dispense_id,					--MOTLTC-SV
+	rx.Timestamp AS 'MSSQLTS' 
+FROM	Rx (NOLOCK) ,
+	Item_Version iv (NOLOCK) ,
+	Dispense d  (NOLOCK) LEFT JOIN Signa_Description_Strings sds  (NOLOCK) ON 
+		d.Dosage_Signa_Code = sds.Signa_Code AND --SQL2K: Replace with LEFT JOIN
+		sds.Language_Code = 'E'
+WHERE	d.Rx_ID = rx.Rx_id AND
+	d.Dispense_Number = rx.Last_Dispense_Number AND
+	d.Dispensing_Status_Indicator NOT IN ('C', 'I', 'X') AND
+	iv.Item_Id = d.Dispensed_Item_ID AND
+	iv.Item_Version = d.Item_Version 
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vRx', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vRx TO MOTUser
+GO
+
+
+/************************************************************/
+/************************************************************/
+
+IF EXISTS (SELECT * FROM sysobjects WHERE id = object_id('dbo.vRxNote') AND sysstat & 0xf = 2)
+BEGIN
+	PRINT '=====>> Dropping View vRxNote'
+	DROP VIEW dbo.vRxNote
+END
+
+PRINT '=====>> Creating View vRxNote'
+GO
+CREATE VIEW dbo.vRxNote
+AS
+
+SELECT	rx.Rx_ID,
+	n.Note_ID,
+	n.Note_Type_Code,
+	n.Create_User,
+	n.Create_Date,
+	n.Note_Text
+FROM	Rx (NOLOCK) ,
+	Note n (NOLOCK) 
+WHERE	N.Row_ID = rx.Rx_ID AND
+	n.Table_Name = 'RX'
+
+GO
+
+IF EXISTS (SELECT * FROM sysobjects WHERE name = 'sp_mck_GrantPermissions')
+	EXEC sp_mck_GrantPermissions 'vRxNote', 'MOTUser'
+ELSE
+	GRANT  SELECT  ON dbo.vRxNote TO MOTUser
+GO
+
+
+PRINT ' '
+PRINT 'End Creating Views for MOT User'
+
+
+PRINT ' '
+PRINT 'Begin Creating Stored Procedures for MOT User'
+PRINT ' '
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelAllFacility') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelAllFacility
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelAllFacility'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelAllFacility (@Token VARCHAR(100) = NULL OUTPUT)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelAllFacility
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve all LTC facilities along with primary address and 
+--		primary phone
+--
+-- Input:	
+--         	@Token          -	token
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get all LTC facilities along with its primay address and
+--primary telephone
+SELECT L.LTCFacilityID
+	, B.Business_Name
+	, L.FacilityCode
+	, A.Address_id
+	, A.Address_line_1
+	, A.Address_line_2
+	, A.Address_line_3
+	, A.City
+	, A.State_Code
+	, A.Zip_Code
+	, T.Telephone_id
+	, T.Telephone_Type
+	, T.Area_Code
+	, T.Telephone_Number
+	, T.Extension
+FROM LTCfacility L
+	, Business B
+	, Business_Address BA
+	, Address A
+	, Business_telephone BT
+	, Telephone T
+WHERE B.Business_id = L.LTCFacilityID AND B.Business_id = BA.Business_id AND BA.Address_id = A.Address_id AND B.Business_id = BT.Business_id AND BT.Telephone_id = T.Telephone_id AND BA.Primary_Flag = 'Y' 
+	AND BT.Primary_Flag = 'Y'
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelAllFacility
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelContactPhone') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelContactPhone
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelContactPhone'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelContactPhone (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @ContactID INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelContactPhone
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve all phone numbers for a given contactID
+--
+-- Input:	
+--         	@Token          -	token,
+--		@ContactID	-	ContactID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get all the telephone numbers for the contact
+SELECT C.ContactID
+	, T.Telephone_id
+	, T.Telephone_Type
+	, T.Area_Code
+	, T.Telephone_Number
+	, T.Extension
+FROM ContactTelephone CT
+	, Telephone T
+	, Contact C
+WHERE CT.ContactID = C.ContactID AND CT.Telephoneid = T.Telephone_id AND C.ContactID = @ContactID
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelContactPhone
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelFacility') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelFacility
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelFacility'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelFacility (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @LTCFacilityID INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelFacility
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve the facility info with primary address and 
+--		primary phone for a given LTC facility
+--
+-- Input:	
+--         	@Token          -	token,
+--		@LTCfacilityID	-	FacilityID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get the name, primary address and telephone for a LTC facility
+SELECT L.LTCFacilityID
+	, B.Business_Name
+	, L.FacilityCode
+	, A.Address_id
+	, A.Address_line_1
+	, A.Address_line_2
+	, A.Address_line_3
+	, A.City
+	, A.State_Code
+	, A.Zip_Code
+	, T.Telephone_id
+	, T.Telephone_Type
+	, T.Area_Code
+	, T.Telephone_Number
+	, T.Extension
+FROM LTCfacility L
+	, Business B
+	, Business_Address BA
+	, Address A
+	, Business_telephone BT
+	, Telephone T
+WHERE B.Business_id = L.LTCFacilityID AND B.Business_id = BA.Business_id AND BA.Address_id = A.Address_id AND B.Business_id = BT.Business_id AND BT.Telephone_id = T.Telephone_id AND BA.Primary_Flag = 'Y' 
+	AND BT.Primary_Flag = 'Y' AND L.LTCFacilityID = @LTCFacilityID
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelFacility
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelFacilityContact') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelFacilityContact
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelFacilityContact'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelFacilityContact (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @LTCFacilityID INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelFacilityContact
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve all the contacts with the primary phone number 
+--		for a given LTC facility
+--
+-- Input:	
+--         	@Token          -	token,
+--		@LTCfacilityID	-	FacilityID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get all the contacts along with the primary telephone for
+-- the LTC facility
+SELECT L.LTCFacilityID
+	, C.ContactID
+	, C.ContactName
+	, T.Telephone_id
+	, T.Telephone_Type
+	, T.Area_Code
+	, T.Telephone_Number
+	, T.Extension
+FROM LTCfacility L
+	, Business B
+	, BusinessContact BC
+	, Telephone T
+	, Contact C
+	, ContactTelephone CT
+WHERE B.Business_id = L.LTCFacilityID AND B.Business_id = BC.Businessid AND BC.ContactID = C.ContactID AND CT.ContactID = C.ContactID AND CT.Telephoneid = T.Telephone_id AND CT.PrimaryFLag = 'Y' AND L.
+	LTCFacilityID = @LTCFacilityID
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelFacilityContact
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelFacilityPhone') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelFacilityPhone
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelFacilityPhone'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelFacilityPhone (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @LTCFacilityID INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelFacilityPhone
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve all the phone numbers for a given LTC facility
+--
+-- Input:	
+--         	@Token          -	token,
+--		@LTCfacilityID	-	FacilityID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get all the telephone numbers for the LTC facility
+SELECT L.LTCFacilityID
+	, T.Telephone_id
+	, T.Telephone_Type
+	, T.Area_Code
+	, T.Telephone_Number
+	, T.Extension
+FROM LTCfacility L
+	, Business B
+	, Business_telephone BT
+	, Telephone T
+WHERE B.Business_id = L.LTCFacilityID AND B.Business_id = BT.Business_id AND BT.Telephone_id = T.Telephone_id AND L.LTCFacilityID = @LTCFacilityID
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelFacilityPhone
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelFullLocationName') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelFullLocationName
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelFullLocationName'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelFullLocationName (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @FullLocationName VARCHAR(100)
+	, @FullHierarchyName VARCHAR(80)
+	, @ExpandedLocationName VARCHAR(255) OUTPUT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelFullLocationName
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Given the fulllocationname and fullhierarchyname, return
+--		the combined expanded location name
+--
+-- Input:	
+--         	@Token          	-	token
+--		@FullLocationName	-	Full Location Name
+--		@FullHierarchyName	-	Full Hierarchy Name
+--		@ExpandedLocationName	-	Expanded Location Name that
+--						combines Hierarchy and location Names
+--
+-- Output:	@ExpandedLocationName	- output variable
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+DECLARE @LocationLevel1 VARCHAR(10)
+	, @LocationLevel2 VARCHAR(10)
+	, @LocationLevel3 VARCHAR(10)
+	, @LocationLevel4 VARCHAR(10)
+	, @LocationLevel5 VARCHAR(10)
+	, @LocationLevel6 VARCHAR(10)
+	, @LocationLevel7 VARCHAR(10)
+	, @HierarchyLevel1 VARCHAR(10)
+	, @HierarchyLevel2 VARCHAR(10)
+	, @HierarchyLevel3 VARCHAR(10)
+	, @HierarchyLevel4 VARCHAR(10)
+	, @HierarchyLevel5 VARCHAR(10)
+	, @HierarchyLevel6 VARCHAR(10)
+	, @HierarchyLevel7 VARCHAR(10)
+	, @PatientLocation VARCHAR(100)
+	, @LocationHierarchy VARCHAR(100)
+
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+SELECT @PatientLocation = @FullLocationName
+
+SELECT @LocationHierarchy = @FullHierarchyName
+
+SELECT @ExpandedLocationName = ''
+
+SELECT @LocationLevel1 = ''
+	, @LocationLevel2 = ''
+	, @LocationLevel3 = ''
+	, @LocationLevel4 = ''
+	, @LocationLevel5 = ''
+	, @LocationLevel6 = ''
+	, @LocationLevel7 = ''
+	, @HierarchyLevel1 = ''
+	, @HierarchyLevel2 = ''
+	, @HierarchyLevel3 = ''
+	, @HierarchyLevel4 = ''
+	, @HierarchyLevel5 = ''
+	, @HierarchyLevel6 = ''
+	, @HierarchyLevel7 = ''
+
+--Get the 7 levels of location by parsing through fulllocationname
+SELECT @LocationLevel1 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel2 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel3 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel4 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel5 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel6 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+SELECT @PatientLocation = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, charindex(';', @patientlocation) + 1, len(@patientlocation))
+		ELSE ''
+		END
+
+SELECT @LocationLevel7 = CASE 
+		WHEN charindex(';', @patientlocation) - 1 > 0
+			THEN substring(@patientlocation, 1, charindex(';', @patientlocation) - 1)
+		ELSE @patientlocation
+		END
+
+--Get the 7 levels of location hierarchy by parsing through fullhierarchyname
+SELECT @HierarchyLevel1 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel2 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel3 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel4 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel5 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel6 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+SELECT @LocationHierarchy = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, charindex(';', @locationhierarchy) + 1, len(@locationhierarchy))
+		ELSE ''
+		END
+
+SELECT @HierarchyLevel7 = CASE 
+		WHEN charindex(';', @locationhierarchy) - 1 > 0
+			THEN substring(@locationhierarchy, 1, charindex(';', @locationhierarchy) - 1)
+		ELSE @locationhierarchy
+		END
+
+--Construct the expanded location name
+SELECT @ExpandedLocationName = @HierarchyLevel1 + ' ' + @LocationLevel1
+
+IF @HierarchyLevel2 IS NOT NULL AND @HierarchyLevel2 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel2
+END
+
+IF @LocationLevel2 IS NOT NULL AND @LocationLevel2 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel2
+END
+
+IF @HierarchyLevel3 IS NOT NULL AND @HierarchyLevel3 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel3
+END
+
+IF @LocationLevel3 IS NOT NULL AND @LocationLevel3 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel3
+END
+
+IF @HierarchyLevel4 IS NOT NULL AND @HierarchyLevel4 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel4
+END
+
+IF @LocationLevel4 IS NOT NULL AND @LocationLevel4 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel4
+END
+
+IF @HierarchyLevel5 IS NOT NULL AND @HierarchyLevel5 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel5
+END
+
+IF @LocationLevel5 IS NOT NULL AND @LocationLevel5 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel5
+END
+
+IF @HierarchyLevel6 IS NOT NULL AND @HierarchyLevel6 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel6
+END
+
+IF @LocationLevel6 IS NOT NULL AND @LocationLevel6 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel6
+END
+
+IF @HierarchyLevel7 IS NOT NULL AND @HierarchyLevel7 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ';' + @HierarchyLevel7
+END
+
+IF @LocationLevel7 IS NOT NULL AND @LocationLevel7 <> ''
+BEGIN
+	SELECT @ExpandedLocationName = @ExpandedLocationName + ' ' + @LocationLevel7
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelFullLocationName
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelHOATimes') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelHOATimes
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelHOATimes'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelHOATimes (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @DispenseId INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelHOATimes
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	3/1/06
+--
+-- Purpose: 	Retrieve the HOA Times and Qty for a given dispense
+--
+-- Input:	
+--         	@Token          -	token
+--		@DispenseId	-	Dispense ID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 3/1/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+DECLARE @HOACode VARCHAR(10)
+	, @Dispense_Override CHAR(1)
+	, @LocationID INT
+	, @OverrideDispenseTime CHAR(1)
+	, @RowCnt INT
+
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get the HOA Code and override flag for the dispense
+SELECT @HOACode = HOA_Code
+	, @Dispense_Override = Override_dispense_time
+FROM Dispense
+WHERE Dispense_id = @DispenseId
+
+--Get the locationid for the patient
+SELECT @LocationID = LP.LocationID
+FROM RX R
+	, Dispense D
+	, LTCPatientParameter LP
+WHERE D.Rx_ID = R.Rx_ID AND R.LTC_Patient_Parameter_ID = LP.LTCPatientParameterID AND D.Dispense_ID = @DispenseID
+
+--If there is a HOACode for the dispense
+IF @HOACode IS NOT NULL
+BEGIN
+	--If the times are overridden at the dispense level,
+	--Get the overridden times
+	IF @Dispense_Override = 'Y'
+	BEGIN
+		SELECT @DispenseID AS DispenseID
+			, @HOACode AS HOACode
+			, Sequence AS Sequence
+			, DispenseTime AS DispenseTime
+			, CONVERT(FLOAT, 0.0) AS Quantity
+		FROM LTCDispenseHOADispenseTime
+		WHERE DispenseID = @DispenseID
+	END
+			--If the times are not overridden at the dispense
+	ELSE
+	BEGIN
+		--If LocationID is not null
+		IF @LocationID IS NOT NULL
+		BEGIN
+			WHILE (@LocationID IS NOT NULL)
+			BEGIN
+				SELECT @RowCnt = Count(*)
+				FROM LTCLocationHOACode
+				WHERE LocationID = @LocationID AND HOACode = @HOACode
+
+				--If Row exists in LTCLocationHOACode
+				--for the LocationID and HOACode
+				IF (@RowCnt > 0)
+				BEGIN
+					--Get the override flag
+					SELECT @OverrideDispenseTime = OverrideDispenseTime
+					FROM LTCLocationHOACode
+					WHERE LocationID = @LocationID AND HOACode = @HOACode
+
+					--If times are overridden, get the
+					--overridden times
+					IF (@OverrideDispenseTime = 'Y')
+					BEGIN
+						SELECT @DispenseID AS DispenseID
+							, @HOACode AS HOACode
+							, Sequence AS Sequence
+							, DispenseTime AS DispenseTime
+							, convert(FLOAT, 0) AS Quantity
+						FROM LTCLocationHOADispenseTime
+						WHERE LocationID = @LocationID AND HOACode = @HOACode
+					END
+							--If times are not overridden,
+							--get the default times for the HOA
+					ELSE
+					BEGIN
+						SELECT @DispenseID AS DispenseID
+							, @HOACode AS HOACode
+							, Sequence AS Sequence
+							, DispenseTime AS DispenseTime
+							, convert(FLOAT, 0) AS Quantity
+						FROM LTCHOADefaultDispenseTime
+						WHERE HOACode = @HOACode
+					END
+
+					BREAK
+				END
+				ELSE
+					/* row does not exist in LTCLocationHOACode, 
+				go for the parent location */
+				BEGIN
+					SELECT @LocationID = ParentLocationID
+					FROM LTCFacilityLocation
+					WHERE LocationID = @LocationID
+				END
+			END --	End - While
+		END --	End - LocationID is not null
+				--If Location ID is null or there is a location id but no
+				--records in LTCLocationHOACode for any location level, 
+				--get the default times for the HOA Code
+
+		IF @LocationID IS NULL
+		BEGIN
+			SELECT @DispenseID AS DispenseID
+				, @HOACode AS HOACode
+				, Sequence AS Sequence
+				, DispenseTime AS DispenseTime
+				, convert(FLOAT, 0) AS Quantity
+			FROM LTCHOADefaultDispenseTime
+			WHERE HOACode = @HOACode
+		END
+	END --End - Override dispense time = N
+END --End - HOA code is not null
+
+RETURN
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelHOATimes
+		, 'MOTUser'
+END
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM sysobjects
+		WHERE id = object_id('dbo.sp_MOT_SelPatientLocation') AND sysstat & 0xF = 4
+		)
+	DROP PROCEDURE dbo.sp_MOT_SelPatientLocation
+GO
+
+PRINT '=====>> Creating Stored Procedure sp_MOT_SelPatientLocation'
+GO
+CREATE PROCEDURE dbo.sp_MOT_SelPatientLocation (
+	@Token VARCHAR(100) = NULL OUTPUT
+	, @PatientID INT
+	)
+AS
+-------------------------------------------------------------------------------------
+-- Proc Name:	sp_MOT_SelPatientLocation
+--
+-- Author:	Sudha Vaithilingam
+--
+-- Created:	2/24/06
+--
+-- Purpose: 	Retrieve the Location info for the current stay for the given
+--		patientid
+--
+-- Input:	
+--         	@Token          -	token,
+--		@PatientID	-	PatientID
+--
+-- Output:	Result set
+--					
+--
+-- Return Val:	None
+--
+-- Change Log:
+-- ----------	-------	--------------------------------------------------------------
+-- DATE		DEVELOPER	AUDIT		DESCRIPTION
+-- ----------	-------	--------------------------------------------------------------
+-- 2/24/06	Sudha V		MOTLTC-SV	initial revision
+--------------------------------------------------------------------------------------
+DECLARE @LTCFacilityID INT
+	, @LocationID INT
+	, @FullLocationName VARCHAR(100)
+	, @FullHierarchyName VARCHAR(80)
+	, @ExpandedLocationName VARCHAR(255)
+
+---------------------------------------
+-- Call Authenticate User if Token is 
+-- valid
+---------------------------------------
+IF @Token IS NOT NULL
+BEGIN
+	EXECUTE sp_Sec_AuthenUser @Token = @Token OUTPUT
+
+	IF @Token IS NULL
+		RETURN
+END
+
+--Get the locationID for the patient's current stay
+SELECT @LTCFacilityID = F.LTCfacilityID
+	, @LocationID = FL.LocationID
+	, @FullLocationName = FL.FullLocationName
+	, @FullHierarchyName = FL.FullHierarchyName
+FROM LTCPatientParameter LP
+	, Patient P
+	, LTCFacilityLocation FL
+	, LTCFacility F
+WHERE F.LTCFacilityID = LP.LTCFacilityID AND LP.PatientID = P.Patient_ID AND LP.LocationID = FL.LocationID AND LP.DischargeDate IS NULL AND P.Patient_ID = @PatientID
+
+--Get the expanded location name for the patient
+EXEC Sp_MOT_SelFullLocationName @token
+	, @FullLocationName
+	, @FullHierarchyName
+	, @ExpandedLocationName OUTPUT
+
+--Return the resultset
+SELECT @PatientID AS PatientID
+	, @LTCFacilityID AS LTCFacilityID
+	, @LocationID AS LocationID
+	, @ExpandedLocationName AS FullLocationName
+GO
+
+IF EXISTS (
+		SELECT *
+		FROM master..syslogins
+		WHERE NAME = 'MOTUser'
+		)
+BEGIN
+	EXEC sp_mck_GrantPermissions sp_MOT_SelPatientLocation
+		, 'MOTUser'
+END
+GO
+
+PRINT ' '
+PRINT 'End Creating Stored Procedures for MOT User'
