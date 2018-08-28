@@ -14,9 +14,13 @@ namespace TransformerPollingService
             _tq = new MotTimesQtysRecord("Add");
         }
 
+        //
+        // McKesson doesn't have a notion of TQ in their SQL interface, so this is a placeholder
+        //
         public void ReadTQRecords()
         {
             _tq.Clear();
+            return;
         }
     }
 }

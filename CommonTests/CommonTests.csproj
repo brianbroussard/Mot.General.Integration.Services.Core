@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
     <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
+    <ProjectReference Include="..\TransformerPollingService\TransformerPollingService.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="WebTests.cs" />

@@ -11,7 +11,7 @@ using MotCommonLib;
 
 namespace TransformerPollingService
 {
-    public class MotSqlServerPollerBase<T>
+    public class MotSqlServerPollerBase<T> : IDisposable
     {
         protected SqlDateTime LastTouchTime { get; set; }
         protected string SqlView { get; set; }
@@ -22,10 +22,11 @@ namespace TransformerPollingService
         protected readonly Logger EventLogger;
         protected string GatewayIp { get; set; }
         protected int GatewayPort { get; set; }
+        private Type type { get; set; }
 
         protected MotSqlServerPollerBase(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort)
         {
-            Type type = typeof(T);
+            type = typeof(T);
 
             if (db == null || mutex == null)
             {
@@ -37,8 +38,6 @@ namespace TransformerPollingService
 
             TranslationTable = new Dictionary<string, string>();
             Lookup = new Dictionary<string, string>();
-
-
             EventLogger = LogManager.GetLogger(type.Name);
 
             try
@@ -71,5 +70,22 @@ namespace TransformerPollingService
 
             return false;
         }
+        
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                var appSettings = ConfigurationManager.AppSettings;
+                appSettings[type.Name] = LastTouchTime.ToString();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
     }
 }

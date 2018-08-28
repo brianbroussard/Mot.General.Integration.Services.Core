@@ -78,6 +78,8 @@ namespace TransformerPollingService
 
                 if (ValidTable(recordSet))
                 {
+                    LastTouchTime = DateTime.Now;
+                    
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
                         LastTouchTime = (SqlDateTime)record["MSSQLTS"];
@@ -143,9 +145,7 @@ namespace TransformerPollingService
                                 }
                             }
                                 
-                            Mutex.ReleaseMutex();                           
-
-                            counter++;
+                            Mutex.ReleaseMutex();                                                      
                         }
                         catch (Exception ex)
                         {
@@ -156,8 +156,9 @@ namespace TransformerPollingService
                         {
                             Mutex.ReleaseMutex();
                         }
+                        
+                        _prescriber.Clear();
                     }
-
                 }
 
                 return counter;

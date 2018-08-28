@@ -227,7 +227,7 @@ namespace TransformerPollingService
             }
         }
 
-        public int ReadPatientRecords()
+        public void ReadPatientRecords()
         {
             try
             {
@@ -264,14 +264,14 @@ namespace TransformerPollingService
 
                 var tmpPhone = string.Empty;
                 var tmpZip = string.Empty;
-                var tag = string.Empty;
-                var val = string.Empty;
-
+                
                 var patientId = string.Empty;
 
                 var recordSet = Db.ExecuteQuery($"SELECT * FROM vPatient WHERE MSSQLTS > '{LastTouchTime.ToString()}';");
                 if (ValidTable(recordSet))
                 {
+                    LastTouchTime = DateTime.Now;
+                    
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
                         // Print the DataType of each column in the table. 
@@ -279,8 +279,8 @@ namespace TransformerPollingService
                         {
                             if (TranslationTable.TryGetValue(column.ColumnName, out var tmp))
                             {
-                                tag = tmp;
-                                val = record[column.ColumnName].ToString();
+                                var tag = tmp;
+                                var val = record[column.ColumnName].ToString();
 
                                 switch (column.ColumnName)
                                 {
@@ -315,8 +315,7 @@ namespace TransformerPollingService
                                     default:
                                         break;
                                 }
-
-                                // Update the local drug record
+                              
                                 _patient.SetField(tag, val, true);
                             }
 
@@ -325,9 +324,7 @@ namespace TransformerPollingService
                             GetAllergies(patientId);
                             GetDiagnosis(patientId);
                             GetNotes(patientId);
-
-                            _counter++;
-
+                  
                             // Finally,  write the recort to the Gateway
                             try
                             {
@@ -352,11 +349,11 @@ namespace TransformerPollingService
                             {
                                 Mutex.ReleaseMutex();
                             }
+                            
+                            _patient.Clear();
                         }
                     }
                 }
-
-                return _counter;
             }
             catch (Exception ex)
             {
