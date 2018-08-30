@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using MotCommonLib;
 using System.Net.Sockets;
+using Mot.Common.Interface.Lib;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     /*
     Field name	        Start	End	Length	Notes	 	Justified

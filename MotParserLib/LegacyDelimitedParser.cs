@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Globalization;
 
-
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     /// <summary>
     /// <c>TableConverter</c>

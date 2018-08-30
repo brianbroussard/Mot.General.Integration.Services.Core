@@ -25,17 +25,16 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using Npgsql;
 using System.Data.Odbc;
 using System.Data.SqlClient;
-using Microsoft.Data.Sqlite;
-using MySql.Data;
 using System.IO;
-using NLog;
 using System.Threading;
+using Microsoft.Data.Sqlite;
 using MySql.Data.MySqlClient;
+using NLog;
+using Npgsql;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /// <summary>
     /// <c>dbType</c>
@@ -99,7 +98,7 @@ namespace MotCommonLib
 
         protected DataSet ValidateReturn(string tableName)
         {
-            if (records.Tables.Count > 1 && records.Tables[tableName].Rows.Count > 0)
+            if (records.Tables.Count > 0 && records.Tables[tableName].Rows.Count > 0)
             {
                 return records;
             }
@@ -225,7 +224,6 @@ namespace MotCommonLib
             try
             {
                 dbConMutex.WaitOne();
-                records.Clear();
 
                 using (_connection = new NpgsqlConnection(dsn))
                 {
@@ -240,6 +238,8 @@ namespace MotCommonLib
                                 _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
+
+                        records = new DataSet(tableName ?? "Table");
 
                         using (_adapter = new NpgsqlDataAdapter(strQuery, _connection))
                         {
@@ -310,7 +310,7 @@ namespace MotCommonLib
 
         public override void ExecuteNonQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null)
         {
-// #if !PharmaServe
+            // #if !PharmaServe
             try
             {
                 dbConMutex.WaitOne();
@@ -346,38 +346,38 @@ namespace MotCommonLib
                 dbConMutex?.ReleaseMutex();
             }
 
-/*
-            // Following is for CPR+ Interface
+            /*
+                        // Following is for CPR+ Interface
 
-            try
-            {
-                using (connection = new SqlConnection(DSN))
-                {
-                    connection.Open();
-
-                    using (SqlCommand command = new SqlCommand())
-                    {
-                        command.Connection = connection;
-
-                        string[] scripts = Regex.Split(strQuery, @"^\w+GO$", RegexOptions.Multiline);
-
-                        //string[] scripts = strQuery.Split("GO");
-
-                        foreach (string splitScript in scripts)
+                        try
                         {
-                            command.CommandText = splitScript.Substring(0, splitScript.ToLower().IndexOf("go");
-                            command.ExecuteNonQuery();
-                        }
-                    }
+                            using (connection = new SqlConnection(DSN))
+                            {
+                                connection.Open();
 
-                    connection.Close();
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Failed to execute nonQuery {0}", e.Message);
-            }
-*/
+                                using (SqlCommand command = new SqlCommand())
+                                {
+                                    command.Connection = connection;
+
+                                    string[] scripts = Regex.Split(strQuery, @"^\w+GO$", RegexOptions.Multiline);
+
+                                    //string[] scripts = strQuery.Split("GO");
+
+                                    foreach (string splitScript in scripts)
+                                    {
+                                        command.CommandText = splitScript.Substring(0, splitScript.ToLower().IndexOf("go");
+                                        command.ExecuteNonQuery();
+                                    }
+                                }
+
+                                connection.Close();
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("Failed to execute nonQuery {0}", e.Message);
+                        }
+            */
         }
 
         public override DataSet ExecuteQuery(string strQuery, List<KeyValuePair<string, string>> parameterList = null, string tableName = null)
@@ -385,7 +385,6 @@ namespace MotCommonLib
             try
             {
                 dbConMutex.WaitOne();
-                records.Clear();
 
                 using (_connection = new SqlConnection(dsn))
                 {
@@ -401,6 +400,8 @@ namespace MotCommonLib
                             }
                         }
 
+                        records = new DataSet(tableName ?? "Table");
+
                         using (_adapter = new SqlDataAdapter(strQuery, _connection))
                         {
                             _adapter.SelectCommand = _command;
@@ -415,7 +416,18 @@ namespace MotCommonLib
             }
             catch (SqlException ex)
             {
-                throw new Exception($"{dbShortName} ExecuteQuery failed: {ex.Errors}");
+                throw new Exception($"Sql Exception: {dbShortName} ExecuteQuery failed: {ex.Errors}");
+            }
+            catch (Exception ex)
+            {
+                if (!ex.Message.Contains("query did not return any data"))
+                {
+                    throw new Exception($"General Exception: {dbShortName} ExecuteQuery failed: {ex.Message}");
+                }
+                else
+                {
+                    throw new DataException("Empty Set");
+                }
             }
             finally
             {
@@ -534,7 +546,6 @@ namespace MotCommonLib
             try
             {
                 dbConMutex.WaitOne();
-                records.Clear();
 
                 using (_connection = new OdbcConnection(dsn))
                 {
@@ -641,7 +652,6 @@ namespace MotCommonLib
                 {
                     _connection.Open();
 
-
                     using (_command = new SqliteCommand(strQuery, _connection))
                     {
                         if (parameterList != null)
@@ -678,7 +688,6 @@ namespace MotCommonLib
             try
             {
                 dbConMutex.WaitOne();
-                records.Clear();
 
                 using (_connection = new SqliteConnection($"Data Source={dsn};Version=3;"))
                 {
@@ -785,7 +794,6 @@ namespace MotCommonLib
             try
             {
                 dbConMutex.WaitOne();
-                records.Clear();
 
                 using (_connection = new MySqlConnection(dsn))
                 {
@@ -800,6 +808,8 @@ namespace MotCommonLib
                                 _command.Parameters.AddWithValue(param.Key, param.Value);
                             }
                         }
+
+                        records = new DataSet(tableName ?? "Table");
 
                         using (_adapter = new MySqlDataAdapter(strQuery, _connection))
                         {
@@ -1022,7 +1032,7 @@ namespace MotCommonLib
         {
             if (disposing)
             {
-                ((IDisposable) _recordSet).Dispose();
+                ((IDisposable)_recordSet).Dispose();
 
                 switch (_thisDbType)
                 {
@@ -1089,7 +1099,7 @@ namespace MotCommonLib
                         _thisDbType = DbType.SqlightServer;
                         _eventLogger.Info("Setting up as Sqlite Server");
                         break;
-                    
+
                     case "MotMySqlServer":
                         _sqliteServer = new MotSqliteServer(connectString);
                         _thisDbType = DbType.SqlightServer;
@@ -1100,7 +1110,7 @@ namespace MotCommonLib
                         break;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _eventLogger.Error($"MotDatabaseServer failure: {ex.Message}");
                 throw;

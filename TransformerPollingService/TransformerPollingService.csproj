@@ -6,11 +6,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Topshelf.NLog" Version="4.0.4"/>
-        <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0"/>
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0"/>
+        <PackageReference Include="NLog" Version="4.5.9" />
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.5.0" />
+        <PackageReference Include="Topshelf" Version="4.0.4" />
+        <PackageReference Include="Topshelf.NLog" Version="4.0.4" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj"/>
+        <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
     </ItemGroup>
 </Project>

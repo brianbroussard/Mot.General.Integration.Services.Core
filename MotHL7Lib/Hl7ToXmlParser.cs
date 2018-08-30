@@ -4,7 +4,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     public class XmlToHL7Parser
     {

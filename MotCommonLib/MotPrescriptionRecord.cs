@@ -25,11 +25,11 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Xml.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Xml.Serialization;
 using Newtonsoft.Json;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /// <summary>
     /// Prescription Record  (Key == G)
@@ -99,14 +99,14 @@ namespace MotCommonLib
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:MotCommonLib.MotPrescriptionRecord"/> class.
+        /// Initializes a new instance of the <see cref="T:Mot.Common.Interface.Lib.MotPrescriptionRecord"/> class.
         /// </summary>
         public MotPrescriptionRecord()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:MotCommonLib.MotPrescriptionRecord"/> class.
+        /// Initializes a new instance of the <see cref="T:Mot.Common.Interface.Lib.MotPrescriptionRecord"/> class.
         /// </summary>
         /// <param name="action">Action.</param>
         /// <param name="autoTruncate">If set to <c>true</c> auto truncate.</param>

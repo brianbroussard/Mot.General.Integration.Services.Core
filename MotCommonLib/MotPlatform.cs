@@ -24,8 +24,7 @@
 
 using System.Runtime.InteropServices;
 
-
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     public enum PlatformOs
     {

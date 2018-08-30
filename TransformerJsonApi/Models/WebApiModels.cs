@@ -1,5 +1,5 @@
 ﻿using System;
-using MotParserLib;
+using Mot.Parser.InterfaceLib;
 
 namespace TransformerJsonApi.Models
 {

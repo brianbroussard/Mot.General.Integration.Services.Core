@@ -74,15 +74,16 @@ namespace TransformerPollingService
                 var val = string.Empty;
                 var tmp = string.Empty;
 
-                DataSet recordSet = Db.ExecuteQuery($"SELECT * FROM vPrescriber WHERE MSSQLTS > '{LastTouchTime.ToString()}';");
+                DataSet recordSet = Db.ExecuteQuery($"SELECT * FROM vPrescriber WHERE MSSQLTS > '{LastTouch.ToString()}';");
 
                 if (ValidTable(recordSet))
-                {
-                    LastTouchTime = DateTime.Now;
-                    
+                {                              
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
-                        LastTouchTime = (SqlDateTime)record["MSSQLTS"];
+                        if ((long)record["MSSQLTS"] > LastTouch)
+                        {
+                            LastTouch = (long)record["MSSQLTS"];
+                        }
 
                         foreach (DataColumn column in record.Table.Columns)
                         {

@@ -8,8 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Mot.Parser.InterfaceLib;
 using TransformerJsonApi.Models;
-using MotParserLib;
 
 namespace TransformerJsonApi.Controllers
 {

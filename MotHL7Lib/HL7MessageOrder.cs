@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     /// <summary>
     /// Order

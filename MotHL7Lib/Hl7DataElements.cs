@@ -26,8 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
 
     public enum HL7SendingApplication

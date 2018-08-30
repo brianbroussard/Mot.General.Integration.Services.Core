@@ -40,7 +40,7 @@ using System.Net.Sockets;
 using System.Text;
 using NLog;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /*
      * MotRecord Usage Example:
@@ -178,38 +178,38 @@ namespace MotCommonLib
         public string GatewayPort { get; set; }
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> is empty.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> is empty.
         /// </summary>
         /// <value><c>true</c> if is empty; otherwise, <c>false</c>.</value>
         public bool IsEmpty { get; set; } = true;
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> log records.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> log records.
         /// </summary>
         /// <value><c>true</c> if log records; otherwise, <c>false</c>.</value>
         public bool LogRecords { get; set; } = false;
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> auto truncate.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> auto truncate.
         /// </summary>
         /// <value><c>true</c> if auto truncate; otherwise, <c>false</c>.</value>
         public bool AutoTruncate { get; set; } = false;
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> use strong validation.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> use strong validation.
         /// </summary>
         /// <value><c>true</c> if use strong validation; otherwise, <c>false</c>.</value>
         public bool UseStrongValidation { get; set; } = true;
 
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> send EOF.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> send EOF.
         /// </summary>
         /// <value><c>true</c> if send EOF; otherwise, <c>false</c>.</value>
         public bool SendEof { get; set; } = false;
 
         // External Ordered Queue
         /// <summary>
-        ///     Gets or sets a value indicating whether this <see cref="T:MotCommonLib.MotRecordBase" /> queue writes.
+        ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> queue writes.
         /// </summary>
         /// <value><c>true</c> if queue writes; otherwise, <c>false</c>.</value>
         public bool QueueWrites { get; set; } = false;

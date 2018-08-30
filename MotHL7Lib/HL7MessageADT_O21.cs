@@ -26,7 +26,7 @@ using System;
 // ReSharper disable InconsistentNaming
 
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     public class ADT_A21 : Hl7ElementBase   // Delete a Patient
     {

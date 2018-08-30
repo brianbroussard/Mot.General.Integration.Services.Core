@@ -26,11 +26,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Xml.Linq;
-using MotCommonLib;
-using MotListenerLib;
+using Mot.Common.Interface.Lib;
+using Mot.Listener.Interface.Lib;
 using NLog;
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     public delegate void MotHl7OutputChangeEventHandler(object sender, HL7Event7MessageArgs e);
 

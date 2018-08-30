@@ -22,17 +22,16 @@
 // 
 
 using System;
-using System.ServiceProcess;
 using System.Collections.Generic;
 using System.Configuration;
-using MotCommonLib;
-using MotListenerLib;
+using Mot.Common.Interface.Lib;
+using Mot.Listener.Interface.Lib;
 using NLog;
 
 
 //using TransformerService.Controllers;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     public class MotTransformerBase : IDisposable
     {

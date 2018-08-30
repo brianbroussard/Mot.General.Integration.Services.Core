@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using NLog;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /// <summary>
     ///     <c>RecordBundle</c>

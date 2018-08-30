@@ -29,6 +29,7 @@ namespace TransformerPollingService
                 {                    
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
                         {
@@ -108,13 +109,16 @@ namespace TransformerPollingService
                 TranslationTable.Add("QtyPerDose", "QtyPerDose");
                 TranslationTable.Add("Quantity_Dispensed", "QtyDispensed");
 
-                var recordSet = Db.ExecuteQuery($"SELECT * FROM Rx WHERE MSSQLTS > '{LastTouchTime.ToString()}'; ");
+                var recordSet = Db.ExecuteQuery($"SELECT * FROM Rx WHERE MSSQLTS > '{LastTouch.ToString()}'; ");
                 if (ValidTable(recordSet))
-                {
-                    LastTouchTime = DateTime.Now;
-                    
+                {                
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+                        if ((long)record["MSSQLTS"] > LastTouch)
+                        {
+                            LastTouch = (long)record["MSSQLTS"];
+                        }
+
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
                         {

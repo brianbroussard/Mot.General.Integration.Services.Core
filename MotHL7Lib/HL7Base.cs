@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     /// <summary>
     /// <c>HL7Exception</c>

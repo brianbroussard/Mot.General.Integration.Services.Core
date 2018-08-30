@@ -3,25 +3,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotCommonLib", "MotCommonLib\MotCommonLib.csproj", "{BA7221DA-DC07-4908-91B7-BB01A3956BCD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mot.Common.Interface.Lib", "MotCommonLib\Mot.Common.Interface.Lib.csproj", "{BA7221DA-DC07-4908-91B7-BB01A3956BCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotParserLib", "MotParserLib\MotParserLib.csproj", "{3F52A3E2-7435-41CC-B8AB-A43B20655214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mot.Parser.InterfaceLib", "MotParserLib\Mot.Parser.InterfaceLib.csproj", "{3F52A3E2-7435-41CC-B8AB-A43B20655214}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotHL7Lib", "MotHL7Lib\MotHL7Lib.csproj", "{DBEE6F58-9609-4076-AC16-21FFB9BA9082}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mot.HL7.Interface.Lib", "MotHL7Lib\Mot.HL7.Interface.Lib.csproj", "{DBEE6F58-9609-4076-AC16-21FFB9BA9082}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MotListenerLib", "MotListenerLib\MotListenerLib.csproj", "{5E544BA6-2B0F-4AAA-9331-434A82518A16}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mot.Listener.Interface.Lib", "MotListenerLib\Mot.Listener.Interface.Lib.csproj", "{5E544BA6-2B0F-4AAA-9331-434A82518A16}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformerService", "TransformerService\TransformerService.csproj", "{1DE6C337-CABC-4237-B3CA-0BB4A8C00A50}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mot.General.Interfrace.Service", "TransformerService\Mot.General.Interfrace.Service.csproj", "{1DE6C337-CABC-4237-B3CA-0BB4A8C00A50}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformerJsonApi", "TransformerJsonApi\TransformerJsonApi.csproj", "{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TransformerJsonApi", "TransformerJsonApi\TransformerJsonApi.csproj", "{E6B7D9FA-22DA-4D46-AAD3-1EEAEBD6A9E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTests", "CommonTests\CommonTests.csproj", "{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommonTests", "CommonTests\CommonTests.csproj", "{3A3825C8-9529-44B5-A1EB-D0FB297E9FCC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ListenerTests", "ListenerTests\ListenerTests.csproj", "{3D6B6733-A91C-4E7E-B742-6BE257CA071B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ListenerTests", "ListenerTests\ListenerTests.csproj", "{3D6B6733-A91C-4E7E-B742-6BE257CA071B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParserTests", "ParserTests\ParserTests.csproj", "{621FDD57-EE80-47A8-A8C6-0CA39D940495}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParserTests", "ParserTests\ParserTests.csproj", "{621FDD57-EE80-47A8-A8C6-0CA39D940495}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TransformerPollingService", "TransformerPollingService\TransformerPollingService.csproj", "{C2063C2D-4185-4E85-A9AB-5368CE94E450}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mot.Polling.Service", "Mot.Polling.Interface\Mot.Polling.Service.csproj", "{28328B65-96F5-4FA7-87C7-EB84C49ABDEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mot.Polling.Interface.Lib", "MotPollingLib\Mot.Polling.Interface.Lib.csproj", "{71B71544-90CB-4C25-99E8-39C4B894D418}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,10 +67,14 @@ Global
 		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{621FDD57-EE80-47A8-A8C6-0CA39D940495}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C2063C2D-4185-4E85-A9AB-5368CE94E450}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C2063C2D-4185-4E85-A9AB-5368CE94E450}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C2063C2D-4185-4E85-A9AB-5368CE94E450}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C2063C2D-4185-4E85-A9AB-5368CE94E450}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28328B65-96F5-4FA7-87C7-EB84C49ABDEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28328B65-96F5-4FA7-87C7-EB84C49ABDEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28328B65-96F5-4FA7-87C7-EB84C49ABDEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28328B65-96F5-4FA7-87C7-EB84C49ABDEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71B71544-90CB-4C25-99E8-39C4B894D418}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71B71544-90CB-4C25-99E8-39C4B894D418}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71B71544-90CB-4C25-99E8-39C4B894D418}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71B71544-90CB-4C25-99E8-39C4B894D418}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

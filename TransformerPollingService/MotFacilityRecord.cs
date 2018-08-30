@@ -36,14 +36,18 @@ namespace TransformerPollingService
                 TranslationTable.Add("PHONE", "Phone");
 
 
-                var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vMOTLocation WHERE Touchdate > '{LastTouchTime.ToString()}'; ");
+                var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vMOTLocation WHERE Touchdate > '{LastTouch.ToString()}'; ");
 
                 if (ValidTable(recordSet))
-                {
-                    LastTouchTime = DateTime.Now;
+                {               
 
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+                        if ((long)record["Touchdate"] > LastTouch)
+                        {
+                            LastTouch = (long)record["Touchdate"];
+                        }
+
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
                         {

@@ -23,18 +23,16 @@
 // 
 
 
-
-
 using System;
 using System.Linq;
-using System.Xml;
 using System.Text.RegularExpressions;
-using NLog;
+using System.Xml;
+using Mot.Common.Interface.Lib;
+using Mot.HL7.Interface.Lib;
 using Newtonsoft.Json;
-using MotCommonLib;
-using MotHL7Lib;
+using NLog;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     public class ParserEventMessageArgs : EventArgs
     {

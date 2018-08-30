@@ -24,9 +24,9 @@
 //
 
 using System;
-using MotCommonLib;
+using Mot.Common.Interface.Lib;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     class DispillParser : ParserBase, IDisposable
     {

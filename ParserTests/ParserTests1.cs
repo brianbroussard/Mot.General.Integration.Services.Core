@@ -2,9 +2,8 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MotCommonLib;
-using MotHL7Lib;
-using MotParserLib;
+using Mot.Common.Interface.Lib;
+using Mot.Parser.InterfaceLib;
 
 namespace ParserTests
 {

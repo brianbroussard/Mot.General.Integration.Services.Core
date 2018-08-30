@@ -37,7 +37,7 @@ using NLog;
 //
 // var portValue = System.Configuration.ConfigurationManager.AppSettings["Port"];
 //
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
 #pragma warning disable 1591
     public delegate string StringStringDelegate(string data);

@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>false</IsPackable>
-    <AssemblyVersion>1.0.20.5</AssemblyVersion>
-    <FileVersion>1.0.20.5</FileVersion>
+    <AssemblyVersion>1.0.28.5</AssemblyVersion>
+    <FileVersion>1.0.28.5</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <Prefer32bit>true</Prefer32bit>
@@ -17,6 +17,6 @@
     <PackageReference Include="MSTest.TestFramework" Version="1.3.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
+    <ProjectReference Include="..\MotListenerLib\Mot.Listener.Interface.Lib.csproj" />
   </ItemGroup>
 </Project>

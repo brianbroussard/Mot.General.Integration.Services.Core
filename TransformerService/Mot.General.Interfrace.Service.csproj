@@ -57,6 +57,9 @@
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.5.9\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.ConfigurationManager, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -93,9 +96,6 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="NLog">
-      <HintPath>..\packages\NLog.4.5.8\lib\net45\NLog.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -110,17 +110,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj">
+    <ProjectReference Include="..\MotCommonLib\Mot.Common.Interface.Lib.csproj">
       <Project>{ba7221da-dc07-4908-91b7-bb01a3956bcd}</Project>
-      <Name>MotCommonLib</Name>
+      <Name>Mot.Common.Interface.Lib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj">
+    <ProjectReference Include="..\MotListenerLib\Mot.Listener.Interface.Lib.csproj">
       <Project>{5e544ba6-2b0f-4aaa-9331-434a82518a16}</Project>
-      <Name>MotListenerLib</Name>
+      <Name>Mot.Listener.Interface.Lib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MotParserLib\MotParserLib.csproj">
+    <ProjectReference Include="..\MotParserLib\Mot.Parser.InterfaceLib.csproj">
       <Project>{3f52a3e2-7435-41cc-b8ab-a43b20655214}</Project>
-      <Name>MotParserLib</Name>
+      <Name>Mot.Parser.InterfaceLib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

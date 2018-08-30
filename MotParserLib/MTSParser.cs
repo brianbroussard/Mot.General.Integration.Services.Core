@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using MotCommonLib;
+using Mot.Common.Interface.Lib;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     /*
     TABLE.CODE	5

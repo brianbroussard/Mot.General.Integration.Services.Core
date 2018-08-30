@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
+using Mot.Common.Interface.Lib;
 using NLog;
 
-using MotCommonLib;
-
-namespace TransformerPollingService
+namespace Mot.Polling.Interface.Lib
 {
     public class MotTransformerPollingInterfaceBase
     {
@@ -17,6 +15,8 @@ namespace TransformerPollingService
         protected string DbServerIp { get; set; }
         protected string DbServerPort { get; set; }
         protected int RefreshRate { get; set; }
+        protected string GatewayIp { get; set; }
+        protected int GatewayPort { get; set; }
 
         //public PlatformOs Platform { get; }
         protected Logger EventLogger;
@@ -39,6 +39,9 @@ namespace TransformerPollingService
             DbServerIp = appSettings["DbServerIp"];
             DbServerPort = appSettings["DbServerPort"];
             RefreshRate = Convert.ToInt32(appSettings["RefreshRate"] ?? "60");
+
+            GatewayIp = appSettings["GatewayIp"];
+            GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
         }
 
         protected void SaveConfiguration()
@@ -51,6 +54,9 @@ namespace TransformerPollingService
             appSettings["DbName"] = DbName;
             appSettings["DbServerIp"] = DbServerIp;
             appSettings["DbServerPort"] = DbServerPort;
+
+            appSettings["GatewayIp"] = GatewayIp;
+            appSettings["GatewayPort"] = GatewayPort.ToString();
         }
     }
 
@@ -63,10 +69,12 @@ namespace TransformerPollingService
         {
             try
             {
-                _connectString = $"Data Source={DbServerIp},{DbServerPort};Network Library = DBMSSOCN;Initial Catalog={DbName};User Id={DbUser};Password={DbPassword};";
-                _motDatabaseServer = new MotSqlServer(_connectString);
-
                 LoadConfiguration();
+                // "Data Source=PROXYPLAYGROUND;Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"
+
+                _connectString = $"Data Source={DbServer};Initial Catalog={DbName};User ID={DbUser};Password={DbPassword};";
+                _motDatabaseServer = new MotSqlServer(_connectString);
+                
                 EventLogger.Info("Service started");
             }
             catch (Exception ex)

@@ -24,11 +24,11 @@
 using System;
 using System.IO;
 using System.Threading;
-using NLog;
-using MotCommonLib;
 using System.Threading.Tasks;
+using Mot.Common.Interface.Lib;
+using NLog;
 
-namespace MotListenerLib
+namespace Mot.Listener.Interface.Lib
 {
     public class FilesystemListener : IDisposable
     {

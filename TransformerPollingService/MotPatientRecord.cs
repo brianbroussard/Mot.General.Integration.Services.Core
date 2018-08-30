@@ -267,13 +267,16 @@ namespace TransformerPollingService
                 
                 var patientId = string.Empty;
 
-                var recordSet = Db.ExecuteQuery($"SELECT * FROM vPatient WHERE MSSQLTS > '{LastTouchTime.ToString()}';");
+                var recordSet = Db.ExecuteQuery($"SELECT * FROM vPatient WHERE MSSQLTS > '{LastTouch}';");
                 if (ValidTable(recordSet))
-                {
-                    LastTouchTime = DateTime.Now;
-                    
+                {                               
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+                        if ((long)record["MSSQLTS"] > LastTouch)
+                        {
+                            LastTouch = (long) record["MSSQLTS"];
+                        }
+
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
                         {

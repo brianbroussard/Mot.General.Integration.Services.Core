@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.52.13</AssemblyVersion>
-    <FileVersion>1.0.52.13</FileVersion>
+    <AssemblyVersion>1.0.53.13</AssemblyVersion>
+    <FileVersion>1.0.53.13</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -14,10 +14,9 @@
     <Prefer32bit>false</Prefer32bit>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MotCommonLib\MotCommonLib.csproj" />
-    <ProjectReference Include="..\MotListenerLib\MotListenerLib.csproj" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
+    <ProjectReference Include="..\MotCommonLib\Mot.Common.Interface.Lib.csproj" />
   </ItemGroup>
 </Project>

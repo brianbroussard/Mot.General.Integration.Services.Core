@@ -27,10 +27,10 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using MotCommonLib;
+using Mot.Common.Interface.Lib;
 using NLog;
 
-namespace MotListenerLib
+namespace Mot.Listener.Interface.Lib
 {
     public class Hl7SocketListener : IDisposable
     {

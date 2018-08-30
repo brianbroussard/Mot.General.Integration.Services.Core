@@ -39,14 +39,17 @@ namespace TransformerPollingService
                 TranslationTable.Add("FAX", "Fax");
                 TranslationTable.Add("DEANum", "DEANum");
 
-                var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vMOTStore WHERE MSSQLTS > '{LastTouchTime.ToString()}'; ");
+                var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vMOTStore WHERE MSSQLTS > '{LastTouch.ToString()}'; ");
 
                 if (ValidTable(recordSet))
                 {
-                    LastTouchTime = DateTime.Now;
-
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+                        if ((long)record["MSSQLTS"] > LastTouch)
+                        {
+                            LastTouch = (long)record["MSSQLTS"];
+                        }
+
                         foreach (DataColumn column in record.Table.Columns)
                         {
                             if (TranslationTable.TryGetValue(column.ColumnName, out var tmp))

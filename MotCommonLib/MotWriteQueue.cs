@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using NLog;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /// <summary>
     /// <c>WriteQueue</c>

@@ -20,11 +20,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 // 
+
 using System;
 using System.Collections.Generic;
-using MotCommonLib;
+using Mot.Common.Interface.Lib;
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 {
     class MotHl7DosePatternProcessor
     {

@@ -28,7 +28,7 @@ using System.Net.Sockets;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
 
-namespace MotCommonLib
+namespace Mot.Common.Interface.Lib
 {
     /// <summary>
     /// Location/Facility Record (Key == B)

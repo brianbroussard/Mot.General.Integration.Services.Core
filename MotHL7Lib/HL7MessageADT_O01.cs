@@ -28,7 +28,7 @@ using System.Xml.Linq;
 // ReSharper disable InconsistentNaming
 
 
-namespace MotHL7Lib
+namespace Mot.HL7.Interface.Lib
 
 {
     //

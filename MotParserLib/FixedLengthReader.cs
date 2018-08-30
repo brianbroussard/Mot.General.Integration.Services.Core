@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 
-namespace MotParserLib
+namespace Mot.Parser.InterfaceLib
 {
     [AttributeUsage(AttributeTargets.Field)]
     class LayoutAttribute : Attribute

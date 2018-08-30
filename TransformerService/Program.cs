@@ -23,7 +23,7 @@
 
 using System;
 using System.ServiceProcess;
-using MotParserLib;
+using Mot.Parser.InterfaceLib;
 using NLog;
 using Topshelf;
 

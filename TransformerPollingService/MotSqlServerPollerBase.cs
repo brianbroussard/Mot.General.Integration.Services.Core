@@ -13,7 +13,7 @@ namespace TransformerPollingService
 {
     public class MotSqlServerPollerBase<T> : IDisposable
     {
-        protected SqlDateTime LastTouchTime { get; set; }
+        protected long LastTouch { get; set; }
         protected string SqlView { get; set; }
         protected Dictionary<string, string> TranslationTable { get; set; }
         protected Dictionary<string, string> Lookup { get; set; }
@@ -43,12 +43,12 @@ namespace TransformerPollingService
             try
             {
                 var appSettings = ConfigurationManager.AppSettings;
-                LastTouchTime = Convert.ToDateTime(appSettings[type.Name]);
+                LastTouch = Convert.ToInt64(appSettings[type.Name]);
             }
             catch
             {
                 EventLogger.Warn("Failed to get Last Touch Time, defaulting to .Now");
-                LastTouchTime = DateTime.Now;
+                LastTouch = 0L;
             }
         }
 
@@ -77,7 +77,7 @@ namespace TransformerPollingService
             if (disposing)
             {
                 var appSettings = ConfigurationManager.AppSettings;
-                appSettings[type.Name] = LastTouchTime.ToString();
+                appSettings[type.Name] = LastTouch.ToString();
             }
         }
 

@@ -4,7 +4,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using MotCommonLib;
+using Mot.Common.Interface.Lib;
 
 namespace CommonTests
 {
