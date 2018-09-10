@@ -10,4 +10,7 @@
     <ProjectReference Include="..\MotCommonLib\Mot.Common.Interface.Lib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Pharmaserve.cs.bogus.cs" />
+  </ItemGroup>
 </Project>

@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Mot.Common.Interface.Lib;
-using Mot.Polling.Interface;
 using Mot.Polling.Interface.Lib;
 
 namespace CommonTests
@@ -23,8 +22,14 @@ namespace CommonTests
                 var _mutex = new Mutex();
                 var GatewayIp = "192.168.1.160";
                 var GatewayPort = 24045;
+                var DataSource = "PROXYPLAYGROUND";
 
-                using (var MotSqlServer = new MotSqlServer("Data Source=PROXYPLAYGROUND;Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
+                if(GetPlatformOs.Go() != PlatformOs.Windows)
+                {
+                    DataSource = GatewayIp;
+                }
+
+                using (var MotSqlServer = new MotSqlServer($"Data Source={DataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
                     var patient = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort);
                     var prescriber = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
@@ -48,8 +53,14 @@ namespace CommonTests
                 var _mutex = new Mutex();
                 var GatewayIp = "192.168.1.160";
                 var GatewayPort = 24045;
+                var DataSource = "PROXYPLAYGROUND";
 
-                using (var MotSqlServer = new MotSqlServer("Data Source=PROXYPLAYGROUND;Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
+                if(GetPlatformOs.Go() != PlatformOs.Windows)
+                {
+                    DataSource = GatewayIp;
+                }
+
+                using (var MotSqlServer = new MotSqlServer($"Data Source={DataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
                     using (var patient = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort))
                     {
@@ -68,6 +79,28 @@ namespace CommonTests
             catch (Exception ex)
             {
                Assert.Fail(ex.Message);
+            }
+        }
+
+        [TestMethod]
+        public void StartPharmaserve()
+        {
+            var _mutex = new Mutex();
+            var GatewayIp = "192.168.1.160";
+            var GatewayPort = 24045;
+            var DataSource = "PROXYPLAYGROUND";
+
+            if (GetPlatformOs.Go() != PlatformOs.Windows)
+            {
+                DataSource = GatewayIp;
+            }
+
+            using (var MotSqlServer = new MotSqlServer($"Data Source={DataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
+            {
+                using (var ps = new Pharmaserve(MotSqlServer, GatewayIp, GatewayPort))
+                {
+                    Thread.Sleep(500000);
+                }
             }
         }
     }

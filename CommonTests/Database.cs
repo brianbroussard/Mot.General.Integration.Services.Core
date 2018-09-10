@@ -29,32 +29,32 @@ namespace CommonTests
         }
 
         [TestMethod]
-      public async Task<bool> SupervisorLogin()
-      {
-          var retval = true;
+        public async Task<bool> SupervisorLogin()
+        {
+            var retval = true;
 
-          await Task.Run(() =>
-          {
-              try
-              {
-                  var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
-                  using (var test = new DataSet())
-                  {
-                      var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
-                      if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
-                      {
-                          var _supportsSynMed = true;
-                      }
-                  }
-              }
-              catch (Exception ex)
-              {
-                 Assert.Fail($"Faild at SupervisorLogin with {ex.Message}");
-              }
-          });
+            await Task.Run(() =>
+            {
+                try
+                {
+                    var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
+                    using (var test = new DataSet())
+                    {
+                        var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
+                        if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
+                        {
+                            var _supportsSynMed = true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail($"Faild at SupervisorLogin with {ex.Message}");
+                }
+            });
 
-          return retval;
-      }
+            return retval;
+        }
         [TestMethod]
         public void NullConstructor()
         {
@@ -90,10 +90,10 @@ namespace CommonTests
             {
                 var sqlite = new MotDatabaseServer<MotSqliteServer>(path);
 
-                if(GetPlatformOs.Go() == PlatformOs.Windows)
-                { 
+                if (GetPlatformOs.Go() == PlatformOs.Windows)
+                {
                     // This fails because MOT only has 32 bit drivers and the unit test doesn't seem to want to enable "prefer 32 bit"
-                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}"); 
+                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
                 }
 
                 // CleanUp

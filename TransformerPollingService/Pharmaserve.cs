@@ -33,11 +33,14 @@ namespace TransformerPollingService
             {
                 this.MotSqlServer = motSqlServer;
                 _mutex = new Mutex();
-                EventLogger = LogManager.GetLogger("WaitForPrescriber");
+                EventLogger = LogManager.GetLogger("PharmaserveSql");
                 GatewayIp = gatewayIp;
                 GatewayPort = gatewayPort;
 
-                _waitForPrescriber = new Thread(WaitForPrescriberRecord);
+               
+                _waitForPrescriber = new Thread(Start => WaitForPrescriberRecord);
+
+
                 _waitForPrescription = new Thread(WaitForPrescriptionRecord);
                 _waitForPatient = new Thread(WaitForPatientRecord);
                 _waitForFacility = new Thread(WaitForFacilityRecord);
@@ -176,6 +179,21 @@ namespace TransformerPollingService
             {
                 EventLogger.Error($"Failed in Prescriber {ex.Message}");
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Shutdown all running threads
+                KeepRunning = false;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

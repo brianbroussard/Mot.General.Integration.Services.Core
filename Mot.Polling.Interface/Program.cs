@@ -2,7 +2,7 @@
 using System.ServiceProcess;
 using NLog;
 using Topshelf;
-using Mot.Polling.Interface;
+using Mot.Polling.Interface.Lib;
 
 namespace Mot.Polling.Service
 {
