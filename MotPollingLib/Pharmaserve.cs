@@ -7,269 +7,309 @@ using System.Data;
 
 namespace Mot.Polling.Interface.Lib
 {
-    public class Pharmaserve : IDisposable
-    {
-        public int RefreshRate { get; set; }
+	public class Pharmaserve : IDisposable
+	{
+		public int RefreshRate { get; set; }
 
-        private MotSqlServer MotSqlServer { get; set; }
-        private readonly Mutex _mutex;
+		private MotSqlServer MotSqlServer { get; set; }
+		private readonly Mutex _mutex;
 
-        private string GatewayIp { get; set; }
-        private int GatewayPort { get; set; }
+		private string GatewayIp { get; set; }
+		private int GatewayPort { get; set; }
 
-        private Logger EventLogger { get; set; }
+		private Logger EventLogger { get; set; }
 
-        private volatile bool KeepRunning = true;
+		private volatile bool KeepRunning = true;
+		Thread _waitForPrescriber;
+		Thread _waitForPrescription;
+		Thread _waitForPatient;
+		Thread _waitForFacility;
+		Thread _waitForStore;
+		Thread _waitForTq;
+		Thread _waitForDrug;
 
-        public Pharmaserve(MotSqlServer motSqlServer, string gatewayIp, int gatewayPort)
-        {
-            try
-            {
-                MotSqlServer = motSqlServer;
-                _mutex = new Mutex();
-                EventLogger = LogManager.GetLogger("PharmaserveSql");
-                GatewayIp = gatewayIp;
-                GatewayPort = gatewayPort;
+		public void Go()
+		{
+			try
+			{
+				KeepRunning = true;
 
-                var _waitForPrescriber = new Thread(() => WaitForPrescriberRecord());
-                var _waitForPrescription = new Thread(() => WaitForPrescriptionRecord());
-                var _waitForPatient = new Thread(() => WaitForPatientRecord());
-                var _waitForFacility = new Thread(() => WaitForFacilityRecord());
-                var _waitForStore = new Thread(() => WaitForStoreRecord());
-                var _waitForTq = new Thread(() => WaitForTqRecord());
-                var _waitForDrug = new Thread(() => WaitForDrugRecord());
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed to construct Pharmaserve object: {ex.Message}");
-                throw;
-            }
-        }
+				_waitForPrescriber = new Thread(WaitForPrescriberRecord);
+				_waitForPrescriber.Start();
 
-        private void WaitForPrescriberRecord()
-        {
-            Thread.CurrentThread.Name = "Prescriber";
+				_waitForPrescription = new Thread(WaitForPrescriptionRecord);
+				_waitForPrescription.Start();
 
-            try
-            {
-                var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+				_waitForPatient = new Thread(WaitForPatientRecord);
+				_waitForPatient.Start();
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadPrescriberRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				_waitForFacility = new Thread(WaitForFacilityRecord);
+				_waitForFacility.Start();
 
-                    Thread.Sleep(RefreshRate);
-                }
+				_waitForStore = new Thread(WaitForStoreRecord);
+				_waitForStore.Start();
 
-                EventLogger.Info("Prescriber monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+				_waitForTq = new Thread(WaitForTqRecord);
+				_waitForTq.Start();
 
-        private void WaitForPrescriptionRecord()
-        {
-            Thread.CurrentThread.Name = "Prescription";
+				_waitForDrug = new Thread(WaitForDrugRecord);
+				_waitForDrug.Start();
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed starting monitor threads: {ex.Message}");
+				throw;
+			}
+		}
 
-            try
-            {
-                var p = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+		public void Stop()
+		{
+			KeepRunning = false;
+		}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadPatientRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+		public Pharmaserve(MotSqlServer motSqlServer, string gatewayIp, int gatewayPort)
+		{
+			try
+			{
+				MotSqlServer = motSqlServer;
+				_mutex = new Mutex();
+				EventLogger = LogManager.GetLogger("PharmaserveSql");
+				GatewayIp = gatewayIp;
+				GatewayPort = gatewayPort;
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed to construct Pharmaserve object: {ex.Message}");
+				throw;
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForPrescriberRecord()
+		{
+			Thread.CurrentThread.Name = "Prescriber";
 
-                EventLogger.Info("Prescription monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        private void WaitForPatientRecord()
-        {
-            Thread.CurrentThread.Name = "Patient";
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadPrescriberRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-            try
-            {
-                var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+					Thread.Sleep(RefreshRate);
+				}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadPrescriberRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				Console.WriteLine("Prescriber thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForPrescriptionRecord()
+		{
+			Thread.CurrentThread.Name = "Prescription";
 
-                EventLogger.Info("Prescriber monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        private void WaitForFacilityRecord()
-        {
-            Thread.CurrentThread.Name = "Facility";
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadPatientRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-            try
-            {
-                var p = new PollFacility(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+					Thread.Sleep(RefreshRate);
+				}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadFacilityRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				Console.WriteLine("Prescription thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForPatientRecord()
+		{
+			Thread.CurrentThread.Name = "Patient";
 
-                EventLogger.Info("Facility monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        private void WaitForStoreRecord()
-        {
-            Thread.CurrentThread.Name = "Store";
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadPrescriberRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-            try
-            {
-                var p = new PollStore(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+					Thread.Sleep(RefreshRate);
+				}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadStoreRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				Console.WriteLine("Prescriber thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForFacilityRecord()
+		{
+			Thread.CurrentThread.Name = "Facility";
 
-                EventLogger.Info("Store monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollFacility(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        private void WaitForTqRecord()
-        {
-            Thread.CurrentThread.Name = "TQ";
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadFacilityRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-            try
-            {
-                var p = new PollTQ(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+					Thread.Sleep(RefreshRate);
+				}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadTQRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				Console.WriteLine("Facility thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForStoreRecord()
+		{
+			Thread.CurrentThread.Name = "Store";
 
-                EventLogger.Info("TQ monitor exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollStore(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        public void WaitForDrugRecord()
-        {
-            Thread.CurrentThread.Name = "Drugs";
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadStoreRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-            try
-            {
-                var p = new PollDrug(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+					Thread.Sleep(RefreshRate);
+				}
 
-                while (KeepRunning)
-                {
-                    try
-                    {
-                        p.ReadDrugRecords();
-                    }
-                    catch (RowNotInTableException)
-                    {
-                        ;
-                    }
+				Console.WriteLine("Store thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
 
-                    Thread.Sleep(RefreshRate);
-                }
+		private void WaitForTqRecord()
+		{
+			Thread.CurrentThread.Name = "TQ";
 
-                Console.WriteLine("Drug exiting");
-            }
-            catch (Exception ex)
-            {
-                EventLogger.Error($"Failed in Prescriber {ex.Message}");
-            }
-        }
+			try
+			{
+				var p = new PollTQ(MotSqlServer, _mutex, GatewayIp, GatewayPort);
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // Shutdown all running threads
-                KeepRunning = false;
-                Thread.Sleep(RefreshRate * 2);
-            }
-        }
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadTQRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-    }
+
+					Thread.Sleep(RefreshRate);
+				}
+
+				Console.WriteLine("TQ thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
+
+		public void WaitForDrugRecord()
+		{
+			Thread.CurrentThread.Name = "Drugs";
+
+			try
+			{
+				var p = new PollDrug(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+
+				while (KeepRunning)
+				{
+					try
+					{
+						p.ReadDrugRecords();
+					}
+					catch (RowNotInTableException)
+					{
+						;
+					}
+
+
+					Thread.Sleep(RefreshRate);
+				}
+
+				Console.WriteLine("Drug thread exiting");
+			}
+			catch (Exception ex)
+			{
+				EventLogger.Error($"Failed in Prescriber {ex.Message}");
+			}
+		}
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				// Shutdown all running threads
+				KeepRunning = false;
+				Thread.Sleep(RefreshRate * 2);
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+	}
 }

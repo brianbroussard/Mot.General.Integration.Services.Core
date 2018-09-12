@@ -247,7 +247,10 @@ namespace CommonTests
             {
                 using (var ps = new Pharmaserve(motSqlServer, gatewayIp, gatewayPort))
                 {
-                    Thread.Sleep(5000);
+					ps.RefreshRate = 1000;
+					ps.Go();
+                    Thread.Sleep(10000);
+					ps.Stop();                  
                 }
             }
         }

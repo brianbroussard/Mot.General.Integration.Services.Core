@@ -64,6 +64,7 @@ namespace Mot.Polling.Interface.Lib
     public class MotTransformerPollingInterface : MotTransformerPollingInterfaceBase
     {
         private  MotSqlServer _motDatabaseServer;
+		private Pharmaserve _pharmaserve;
         private string _connectString;
 
         public void Start()
@@ -75,6 +76,10 @@ namespace Mot.Polling.Interface.Lib
 
                 _connectString = $"Data Source={DbServer};Initial Catalog={DbName};User ID={DbUser};Password={DbPassword};";
                 _motDatabaseServer = new MotSqlServer(_connectString);
+
+				_pharmaserve = new Pharmaserve(_motDatabaseServer, GatewayIp, GatewayPort);
+				_pharmaserve.RefreshRate = RefreshRate;
+				_pharmaserve.Go();
                 
                 EventLogger.Info("Service started");
             }
@@ -92,6 +97,7 @@ namespace Mot.Polling.Interface.Lib
         /// </summary>
         public void Stop()
         {
+			_pharmaserve.Stop();
             EventLogger.Info("Sevice stopped");
         }
 
@@ -110,6 +116,10 @@ namespace Mot.Polling.Interface.Lib
         /// </summary>
         public void Restart()
         {
+			_pharmaserve.Dispose();
+			_pharmaserve = new Pharmaserve(_motDatabaseServer, GatewayIp, GatewayPort);
+			_pharmaserve.Go();
+
             EventLogger.Info("Service restarted");
         }
     }
