@@ -4,8 +4,8 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.52.12</AssemblyVersion>
-    <FileVersion>1.0.52.12</FileVersion>
+    <AssemblyVersion>1.0.62.12</AssemblyVersion>
+    <FileVersion>1.0.62.12</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -19,7 +19,7 @@
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="NLog" Version="4.5.9" />
-    <PackageReference Include="Npgsql" Version="4.0.2" />
+    <PackageReference Include="Npgsql" Version="4.0.3" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>

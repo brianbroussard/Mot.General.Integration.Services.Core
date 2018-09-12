@@ -158,7 +158,8 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to add PharmaServe Prescriber Record {ex.Message}");
+                throw new RowNotInTableException($"Prescriber Record Not Found");
+                //throw new Exception($"Failed to add PharmaServe Prescriber Record {ex.Message}");
             }
         }
     }

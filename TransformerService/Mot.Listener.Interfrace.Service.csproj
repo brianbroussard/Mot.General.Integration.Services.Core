@@ -118,9 +118,9 @@
       <Project>{5e544ba6-2b0f-4aaa-9331-434a82518a16}</Project>
       <Name>Mot.Listener.Interface.Lib</Name>
     </ProjectReference>
-    <ProjectReference Include="..\MotParserLib\Mot.Parser.InterfaceLib.csproj">
+    <ProjectReference Include="..\MotParserLib\Mot.Parser.Interface.Lib.csproj">
       <Project>{3f52a3e2-7435-41cc-b8ab-a43b20655214}</Project>
-      <Name>Mot.Parser.InterfaceLib</Name>
+      <Name>Mot.Parser.Interface.Lib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

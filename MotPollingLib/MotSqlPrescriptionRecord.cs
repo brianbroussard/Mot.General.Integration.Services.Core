@@ -175,7 +175,8 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception e)
             {
-                throw new Exception("Failed to get Scrip Record " + e.Message);
+                throw new RowNotInTableException($"Prescription Record Not Found");
+                //throw new Exception("Failed to get Scrip Record " + e.Message);
             }
         }
     }

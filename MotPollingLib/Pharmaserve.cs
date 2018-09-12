@@ -3,6 +3,7 @@ using System.Threading;
 using NLog;
 
 using Mot.Common.Interface.Lib;
+using System.Data;
 
 namespace Mot.Polling.Interface.Lib
 {
@@ -29,7 +30,7 @@ namespace Mot.Polling.Interface.Lib
                 EventLogger = LogManager.GetLogger("PharmaserveSql");
                 GatewayIp = gatewayIp;
                 GatewayPort = gatewayPort;
-                               
+
                 var _waitForPrescriber = new Thread(() => WaitForPrescriberRecord());
                 var _waitForPrescription = new Thread(() => WaitForPrescriptionRecord());
                 var _waitForPatient = new Thread(() => WaitForPatientRecord());
@@ -55,12 +56,19 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadPrescriberRecords();
+                    try
+                    {
+                        p.ReadPrescriberRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
                 EventLogger.Info("Prescriber monitor exiting");
-
             }
             catch (Exception ex)
             {
@@ -78,7 +86,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadPatientRecords();
+                    try
+                    {
+                        p.ReadPatientRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
@@ -100,7 +116,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadPrescriberRecords();
+                    try
+                    {
+                        p.ReadPrescriberRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
@@ -122,7 +146,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadFacilityRecords();
+                    try
+                    {
+                        p.ReadFacilityRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
@@ -136,7 +168,7 @@ namespace Mot.Polling.Interface.Lib
 
         private void WaitForStoreRecord()
         {
-            Thread.CurrentThread.Name = "Store"; 
+            Thread.CurrentThread.Name = "Store";
 
             try
             {
@@ -144,7 +176,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadStoreRecords();
+                    try
+                    {
+                        p.ReadStoreRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
@@ -166,7 +206,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadTQRecords();
+                    try
+                    {
+                        p.ReadTQRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 
@@ -188,7 +236,15 @@ namespace Mot.Polling.Interface.Lib
 
                 while (KeepRunning)
                 {
-                    p.ReadDrugRecords();
+                    try
+                    {
+                        p.ReadDrugRecords();
+                    }
+                    catch (RowNotInTableException)
+                    {
+                        ;
+                    }
+
                     Thread.Sleep(RefreshRate);
                 }
 

@@ -334,7 +334,8 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception ex)
             {
-                throw new Exception($"Failed to get Patient Record {ex.Message}");
+                throw new RowNotInTableException($"Patient Record Not Found");
+                // throw new Exception($"Failed to get Patient Record {ex.Message}");
             }
         }
     }

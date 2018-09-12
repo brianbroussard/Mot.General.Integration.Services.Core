@@ -93,7 +93,8 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (System.Exception e)
             {
-                throw new Exception("Failed to get Store Record " + e.Message);
+                throw new RowNotInTableException($"Store Record Not Found");
+                //throw new Exception("Failed to get Store Record " + e.Message);
             }
         }
     }

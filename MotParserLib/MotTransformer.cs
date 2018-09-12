@@ -179,13 +179,21 @@ namespace Mot.Parser.InterfaceLib
 
                 if (WatchSocket)
                 {
-                    SocketListener = new Hl7SocketListener(ListenerPort, Parse) { RunAsService = true, AllowZeroTQ = AllowZeroTQ, DebugMode = DebugMode };
+                    SocketListener = new Hl7SocketListener(ListenerPort, Parse)
+                    {
+                        RunAsService = true, AllowZeroTQ = AllowZeroTQ, DebugMode = DebugMode
+                    };
                     SocketListener.Go();
                 }
 
                 if (WatchFileSystem)
                 {
-                    FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse) { RunAsService = true, Listening = true, DebugMode = DebugMode };
+                    FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse)
+                    {
+                        RunAsService = true,
+                        Listening = true,
+                        DebugMode = DebugMode
+                    };
                     FilesystemListener.Go();
                 }
 
