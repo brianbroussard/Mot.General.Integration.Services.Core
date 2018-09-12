@@ -10,16 +10,6 @@ namespace Mot.Polling.Interface.Lib
     {
         public int RefreshRate { get; set; }
 
-        /*
-        private Thread _waitForDrug;
-        private Thread _waitForFacility;
-        private Thread _waitForPatient;
-        private Thread _waitForPrescriber;
-        private Thread _waitForPrescription;
-        private Thread _waitForStore;
-        private Thread _waitForTq;
-        */
-
         private MotSqlServer MotSqlServer { get; set; }
         private readonly Mutex _mutex;
 
@@ -34,7 +24,7 @@ namespace Mot.Polling.Interface.Lib
         {
             try
             {
-                this.MotSqlServer = motSqlServer;
+                MotSqlServer = motSqlServer;
                 _mutex = new Mutex();
                 EventLogger = LogManager.GetLogger("PharmaserveSql");
                 GatewayIp = gatewayIp;
@@ -50,7 +40,7 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to construct Pharmaserve object: {ex.Message}");
+                EventLogger.Error($"Failed to construct Pharmaserve object: {ex.Message}");
                 throw;
             }
         }
@@ -69,7 +59,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("Prescriber exiting");
+                EventLogger.Info("Prescriber monitor exiting");
 
             }
             catch (Exception ex)
@@ -92,7 +82,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("Prescription exiting");
+                EventLogger.Info("Prescription monitor exiting");
             }
             catch (Exception ex)
             {
@@ -114,7 +104,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("Prescriber exiting");
+                EventLogger.Info("Prescriber monitor exiting");
             }
             catch (Exception ex)
             {
@@ -136,7 +126,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("Facility exiting");
+                EventLogger.Info("Facility monitor exiting");
             }
             catch (Exception ex)
             {
@@ -158,7 +148,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("Store exiting");
+                EventLogger.Info("Store monitor exiting");
             }
             catch (Exception ex)
             {
@@ -180,7 +170,7 @@ namespace Mot.Polling.Interface.Lib
                     Thread.Sleep(RefreshRate);
                 }
 
-                Console.WriteLine("TQ exiting");
+                EventLogger.Info("TQ monitor exiting");
             }
             catch (Exception ex)
             {

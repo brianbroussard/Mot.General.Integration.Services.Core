@@ -24,6 +24,7 @@ namespace Mot.Polling.Interface.Lib
         public MotTransformerPollingInterfaceBase()
         {
             LoadConfiguration();
+            EventLogger = LogManager.GetLogger("MotPoller");
             //Platform = GetPlatformOs.Go();
         }
 
