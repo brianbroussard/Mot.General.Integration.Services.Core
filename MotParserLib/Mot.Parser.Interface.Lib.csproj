@@ -44,4 +44,7 @@
     <ProjectReference Include="..\MotHL7Lib\Mot.HL7.Interface.Lib.csproj" />
     <ProjectReference Include="..\MotListenerLib\Mot.Listener.Interface.Lib.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="StyleCop.Cache" />
+  </ItemGroup>
 </Project>

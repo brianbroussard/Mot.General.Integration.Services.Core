@@ -19,4 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MotCommonLib\Mot.Common.Interface.Lib.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="StyleCop.Cache" />
+  </ItemGroup>
 </Project>

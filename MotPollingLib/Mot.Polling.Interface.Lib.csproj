@@ -13,4 +13,7 @@
   <ItemGroup>
     <Compile Remove="Pharmaserve.cs.bogus.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="StyleCop.Cache" />
+  </ItemGroup>
 </Project>

@@ -24,5 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="EmptyJSONFile.json" />
+    <None Remove="StyleCop.Cache" />
   </ItemGroup>
 </Project>
