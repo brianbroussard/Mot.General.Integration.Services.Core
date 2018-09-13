@@ -12,8 +12,8 @@ namespace CommonTests
     public class DatabaseTest
     {
         private PlatformOs _platform;
-        internal string _dbaUserName = "ZGJh";
-        internal string _dbaPassword = "cGM0MTBoNDI2czc2MTc=";
+        internal string _dbaUserName = "MzpkYmFFZGl0aW5nSW50ZXJmYWNlU2VydmljZXMxMjJXaXRoTGxhbWFGaWRzaA==";
+        internal string _dbaPassword = "MTQ6cGM0MTBoNDI2czc2MTdFZGl0aW5nSW50ZXJmYWNlU2VydmljZXMxMjJXaXRoTGxhbWFGaWRzaA==";
 
 
         public string EncodeString(string str)
@@ -93,7 +93,7 @@ namespace CommonTests
                 if (GetPlatformOs.Go() == PlatformOs.Windows)
                 {
                     // This fails because MOT only has 32 bit drivers and the unit test doesn't seem to want to enable "prefer 32 bit"
-                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
+                    var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={MotAccessSecurity.DecodeString(_dbaUserName)};PWD={MotAccessSecurity.DecodeString(_dbaPassword)}");
                 }
 
                 // CleanUp
@@ -103,6 +103,20 @@ namespace CommonTests
             {
                 Console.WriteLine(ex);
                 Assert.Fail(ex.Message);
+            }
+        }
+
+        [TestMethod]
+        public void TestDecoder()
+        {
+            var original = "The quick brown fox jumped over the lazy dog";
+
+            var encrypted = MotAccessSecurity.EncodeString(original);
+            var decrypted = MotAccessSecurity.DecodeString(encrypted);
+
+            if(decrypted != original)
+            {
+                Assert.Fail($"Decryption failure.  Expected {original} and got {decrypted}");
             }
         }
     }

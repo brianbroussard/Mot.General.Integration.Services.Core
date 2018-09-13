@@ -57,6 +57,11 @@ namespace Mot.Parser.InterfaceLib
         protected bool DebugMode { get; set; }
         protected bool AllowZeroTQ { get; set; }
 
+        private bool IsNewUserName { get; set; }
+        private bool IsNewPassword { get; set; }
+        protected string UserName { get; set; }
+        protected string Password { get; set; }
+
         // If a patient doesn't have a location, it gets put in the default store
         // most of the time that's niot what we want
         protected string DefaultStoreLoc { get; set; }
@@ -69,31 +74,83 @@ namespace Mot.Parser.InterfaceLib
 
         protected void LoadConfiguration()
         {
-            var appSettings = ConfigurationManager.AppSettings;
-            ListenerPort = Convert.ToInt32(appSettings["ListenerPort"] ?? "24025");
-            GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
-            GatewayAddress = appSettings["GatewayAddress"] ?? "127.0.0.1";
-            WinMonitorDirectory = appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io";
-            NixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
-            WatchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
-            WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
-            DebugMode = (appSettings["Debug"] ?? "false") == "true";
-            AllowZeroTQ = (appSettings["AllowZeroTQ"] ?? "false") == "true";
-            DefaultStoreLoc = appSettings["DefaultStoreLoc"] ?? "000000";
+            try
+            {
+                var appSettings = ConfigurationManager.AppSettings;
+                ListenerPort = Convert.ToInt32(appSettings["ListenerPort"] ?? "24025");
+                GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
+                GatewayAddress = appSettings["GatewayAddress"] ?? "127.0.0.1";
+                WinMonitorDirectory = appSettings["WinMonitorDirectory"] ?? @"c:\motnext\io";
+                NixMonitorDirectory = appSettings["NixMonitorDirectory"] ?? @"~/motnext/io";
+                WatchFileSystem = (appSettings["WatchFileSystem"] ?? "false") == "true";
+                WatchSocket = (appSettings["WatchSocket"] ?? "false") == "true";
+                DebugMode = (appSettings["Debug"] ?? "false") == "true";
+                AllowZeroTQ = (appSettings["AllowZeroTQ"] ?? "false") == "true";
+                DefaultStoreLoc = appSettings["DefaultStoreLoc"] ?? "000000";
+                UserName = appSettings["UserName"] ?? "None";
+                Password = appSettings["Password"] ?? "None";
+
+                //
+                // If there is a username & password and its the first use, encode them and put
+                // them back into the config file.
+                //
+                if (UserName != "None" && Password != "None")
+                {
+                    IsNewUserName = true;
+                    if (!MotAccessSecurity.IsEncoded(UserName))
+                    {
+                        IsNewUserName = true;
+                    }
+
+                    if (!MotAccessSecurity.IsEncoded(Password))
+                    {
+                        IsNewPassword = true;
+                    }
+                }
+                else
+                {
+                    UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
+                    Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+                }
+            }
+            catch(Exception ex)
+            {
+                EventLogger.Error($"Failed to load configuration: {ex.Message}");
+                throw;
+            }
         }
 
         protected void SaveConfiguration()
         {
-            var appSettings = ConfigurationManager.AppSettings;
-            appSettings["ListenerPort"] = ListenerPort.ToString();
-            appSettings["GatewayPort"] = GatewayPort.ToString();
-            appSettings["GatewayAddress"] = GatewayAddress;
-            appSettings["WinMonitorDirectory"] = WinMonitorDirectory;
-            appSettings["NixMonitorDirectory"] = NixMonitorDirectory;
-            appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
-            appSettings["WatchSocket"] = WatchSocket.ToString();
-            appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
-            appSettings["DefaultStoreLoc"] = DefaultStoreLoc;
+            try
+            {
+                var appSettings = ConfigurationManager.AppSettings;
+                appSettings["ListenerPort"] = ListenerPort.ToString();
+                appSettings["GatewayPort"] = GatewayPort.ToString();
+                appSettings["GatewayAddress"] = GatewayAddress;
+                appSettings["WinMonitorDirectory"] = WinMonitorDirectory;
+                appSettings["NixMonitorDirectory"] = NixMonitorDirectory;
+                appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
+                appSettings["WatchSocket"] = WatchSocket.ToString();
+                appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
+                appSettings["DefaultStoreLoc"] = DefaultStoreLoc;
+
+                if(IsNewUserName)
+                {
+                    appSettings["UserName"] = MotAccessSecurity.EncodeString(UserName);
+                }
+
+                if(IsNewPassword)
+                {
+                    appSettings["Password"] = MotAccessSecurity.EncodeString(Password);
+                }
+
+            }
+            catch(Exception ex)
+            {
+                EventLogger.Error($"Failed to save configuration: {ex.Message}");
+                throw;
+            }
         }
 
         public List<string> GetConfigList()

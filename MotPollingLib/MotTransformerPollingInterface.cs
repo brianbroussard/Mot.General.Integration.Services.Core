@@ -17,6 +17,10 @@ namespace Mot.Polling.Interface.Lib
         protected int RefreshRate { get; set; }
         protected string GatewayIp { get; set; }
         protected int GatewayPort { get; set; }
+        protected string UserName { get; set; }
+        protected string Password { get; set; }
+        private bool IsNewUserName { get;set; }
+        private bool IsNewPassword { get; set; }
 
         //public PlatformOs Platform { get; }
         protected Logger EventLogger;
@@ -43,6 +47,29 @@ namespace Mot.Polling.Interface.Lib
 
             GatewayIp = appSettings["GatewayIp"];
             GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
+
+            //
+            // If there is a username & password and its the first use, encode them and put
+            // them back into the config file.
+            //
+            if (UserName != "None" && Password != "None")
+            {
+                IsNewUserName = true;
+                if (!MotAccessSecurity.IsEncoded(UserName))
+                {
+                    IsNewUserName = true;
+                }
+
+                if (!MotAccessSecurity.IsEncoded(Password))
+                {
+                    IsNewPassword = true;
+                }
+            }
+            else
+            {
+                UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
+                Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+            }
         }
 
         protected void SaveConfiguration()
@@ -58,6 +85,16 @@ namespace Mot.Polling.Interface.Lib
 
             appSettings["GatewayIp"] = GatewayIp;
             appSettings["GatewayPort"] = GatewayPort.ToString();
+
+            if (IsNewUserName)
+            {
+                appSettings["UserName"] = MotAccessSecurity.EncodeString(UserName);
+            }
+
+            if (IsNewPassword)
+            {
+                appSettings["Password"] = MotAccessSecurity.EncodeString(Password);
+            }
         }
     }
 
