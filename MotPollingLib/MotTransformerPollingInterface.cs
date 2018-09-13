@@ -34,66 +34,87 @@ namespace Mot.Polling.Interface.Lib
 
         protected void LoadConfiguration()
         {
-            var appSettings = ConfigurationManager.AppSettings;
-
-            DbUser = appSettings["DbUser"];
-            DbPassword = appSettings["DbPassword"];
-            DbServer = appSettings["DbServer"];
-            DbServerType = appSettings["DbServerType"];
-            DbName = appSettings["DbName"];
-            DbServerIp = appSettings["DbServerIp"];
-            DbServerPort = appSettings["DbServerPort"];
-            RefreshRate = Convert.ToInt32(appSettings["RefreshRate"] ?? "60");
-
-            GatewayIp = appSettings["GatewayIp"];
-            GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
-
-            //
-            // If there is a username & password and its the first use, encode them and put
-            // them back into the config file.
-            //
-            if (UserName != "None" && Password != "None")
+            try
             {
-                IsNewUserName = true;
-                if (!MotAccessSecurity.IsEncoded(UserName))
-                {
-                    IsNewUserName = true;
-                }
+                var appSettings = ConfigurationManager.AppSettings;
 
-                if (!MotAccessSecurity.IsEncoded(Password))
+                DbUser = appSettings["DbUser"];
+                DbPassword = appSettings["DbPassword"];
+                DbServer = appSettings["DbServer"];
+                DbServerType = appSettings["DbServerType"];
+                DbName = appSettings["DbName"];
+                DbServerIp = appSettings["DbServerIp"];
+                DbServerPort = appSettings["DbServerPort"];
+                RefreshRate = Convert.ToInt32(appSettings["RefreshRate"] ?? "60");
+
+                GatewayIp = appSettings["GatewayIp"];
+                GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
+
+                //
+                // If there is a username & password and its the first use, encode them and put
+                // them back into the config file.
+                //
+                if (UserName != "None" && Password != "None")
                 {
-                    IsNewPassword = true;
+                    if (!MotAccessSecurity.IsEncoded(UserName))
+                    {
+                        IsNewUserName = true;
+                    }
+                    else
+                    {
+                        UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
+                    }
+
+                    if (!MotAccessSecurity.IsEncoded(Password))
+                    {
+                        IsNewPassword = true;
+                    }
+                    else
+                    {
+                        Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+                    }
                 }
             }
-            else
+            catch (Exception ex)
             {
-                UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
-                Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+                EventLogger.Error($"Error saving configuration file: {ex.Message}");
             }
         }
 
         protected void SaveConfiguration()
         {
-            var appSettings = ConfigurationManager.AppSettings;
-            appSettings["DbUser"] = DbUser;
-            appSettings["DbPassword"] = DbPassword;
-            appSettings["DbServer"] = DbServer;
-            appSettings["DbServerType"] = DbServerType;
-            appSettings["DbName"] = DbName;
-            appSettings["DbServerIp"] = DbServerIp;
-            appSettings["DbServerPort"] = DbServerPort;
-
-            appSettings["GatewayIp"] = GatewayIp;
-            appSettings["GatewayPort"] = GatewayPort.ToString();
-
-            if (IsNewUserName)
+            try
             {
-                appSettings["UserName"] = MotAccessSecurity.EncodeString(UserName);
+                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                var settings = configFile.AppSettings.Settings;
+
+                settings["DbUser"].Value = DbUser;
+                settings["DbPassword"].Value = DbPassword;
+                settings["DbServer"].Value = DbServer;
+                settings["DbServerType"].Value = DbServerType;
+                settings["DbName"].Value = DbName;
+                settings["DbServerIp"].Value = DbServerIp;
+                settings["DbServerPort"].Value = DbServerPort;
+
+                settings["GatewayIp"].Value = GatewayIp;
+                settings["GatewayPort"].Value = GatewayPort.ToString();
+
+                if (IsNewUserName)
+                {
+                    settings["UserName"].Value = MotAccessSecurity.EncodeString(UserName);
+                }
+
+                if (IsNewPassword)
+                {
+                    settings["Password"].Value = MotAccessSecurity.EncodeString(Password);
+                }
+
+                configFile.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
             }
-
-            if (IsNewPassword)
+            catch(Exception ex)
             {
-                appSettings["Password"] = MotAccessSecurity.EncodeString(Password);
+                EventLogger.Error($"Error saving configuration file: {ex.Message}");
             }
         }
     }

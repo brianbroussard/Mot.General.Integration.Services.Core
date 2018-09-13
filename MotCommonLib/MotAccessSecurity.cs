@@ -14,7 +14,7 @@ namespace Mot.Common.Interface.Lib
                 throw new ArgumentNullException();
             }
 
-            if(DecodeString(str).Contains(_salt))
+            if(DecodeString(str, true).Contains(_salt))
             {
                 return true;
             }
@@ -33,7 +33,7 @@ namespace Mot.Common.Interface.Lib
             return Convert.ToBase64String(b);
         }
 
-        public static string DecodeString(string str)
+        public static string DecodeString(string str, bool returnRaw = false)
         {
             if (string.IsNullOrEmpty(str))
             {
@@ -44,6 +44,11 @@ namespace Mot.Common.Interface.Lib
             var o = Encoding.UTF8.GetString(b);
             if (o.Contains(":"))
             {
+                if(returnRaw)
+                {
+                    return o;
+                }
+
                 var n = Convert.ToInt32(o.Substring(0, o.IndexOf(':')));
                 return o.Substring(o.IndexOf(':') + 1, n);
             }

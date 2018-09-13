@@ -41,8 +41,17 @@ namespace Mot.Parser.InterfaceLib
 
         public MotTransformerBase()
         {
-            LoadConfiguration();
-            Platform = GetPlatformOs.Go();
+            try
+            {
+                EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
+                LoadConfiguration();
+                Platform = GetPlatformOs.Go();
+            }
+            catch (Exception ex)
+            {
+                EventLogger?.Fatal($"Failed to start construct MotTransformerInterface: {ex.Message}");
+                throw new Exception("Constructor Failure");
+            }
         }
 
         protected Hl7SocketListener SocketListener { get; set; }
@@ -96,21 +105,23 @@ namespace Mot.Parser.InterfaceLib
                 //
                 if (UserName != "None" && Password != "None")
                 {
-                    IsNewUserName = true;
                     if (!MotAccessSecurity.IsEncoded(UserName))
                     {
                         IsNewUserName = true;
+                    }
+                    else
+                    {
+                        UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
                     }
 
                     if (!MotAccessSecurity.IsEncoded(Password))
                     {
                         IsNewPassword = true;
                     }
-                }
-                else
-                {
-                    UserName = MotAccessSecurity.DecodeString(appSettings["UserName"]);
-                    Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+                    else
+                    {
+                        Password = MotAccessSecurity.DecodeString(appSettings["Password"]);
+                    }
                 }
             }
             catch(Exception ex)
@@ -124,26 +135,31 @@ namespace Mot.Parser.InterfaceLib
         {
             try
             {
-                var appSettings = ConfigurationManager.AppSettings;
-                appSettings["ListenerPort"] = ListenerPort.ToString();
-                appSettings["GatewayPort"] = GatewayPort.ToString();
-                appSettings["GatewayAddress"] = GatewayAddress;
-                appSettings["WinMonitorDirectory"] = WinMonitorDirectory;
-                appSettings["NixMonitorDirectory"] = NixMonitorDirectory;
-                appSettings["WatchFileSystem"] = WatchFileSystem.ToString();
-                appSettings["WatchSocket"] = WatchSocket.ToString();
-                appSettings["AllowZeroTQ"] = AllowZeroTQ.ToString();
-                appSettings["DefaultStoreLoc"] = DefaultStoreLoc;
+                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                var settings = configFile.AppSettings.Settings;
+
+                settings["ListenerPort"].Value = ListenerPort.ToString();
+                settings["GatewayPort"].Value = GatewayPort.ToString();
+                settings["GatewayAddress"].Value = GatewayAddress;
+                settings["WinMonitorDirectory"].Value = WinMonitorDirectory;
+                settings["NixMonitorDirectory"].Value = NixMonitorDirectory;
+                settings["WatchFileSystem"].Value = WatchFileSystem.ToString();
+                settings["WatchSocket"].Value = WatchSocket.ToString();
+                settings["AllowZeroTQ"].Value = AllowZeroTQ.ToString();
+                settings["DefaultStoreLoc"].Value = DefaultStoreLoc;
 
                 if(IsNewUserName)
                 {
-                    appSettings["UserName"] = MotAccessSecurity.EncodeString(UserName);
+                    settings["UserName"].Value = MotAccessSecurity.EncodeString(UserName);
                 }
 
                 if(IsNewPassword)
                 {
-                    appSettings["Password"] = MotAccessSecurity.EncodeString(Password);
+                    settings["Password"].Value = MotAccessSecurity.EncodeString(Password);
                 }
+
+                configFile.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
 
             }
             catch(Exception ex)
@@ -184,15 +200,7 @@ namespace Mot.Parser.InterfaceLib
         /// </summary>
         public MotTransformerInterface()
         {
-            try
-            {
-                EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
-            }
-            catch (Exception ex)
-            {
-                EventLogger?.Fatal($"Failed to start construct MotTransformerInterface: {ex.Message}");
-                throw new Exception("Constructor Failure");
-            }
+           
         }
 
         public string Parse(string data, InputDataFormat inputDataFormat)
@@ -231,7 +239,6 @@ namespace Mot.Parser.InterfaceLib
         {
             try
             {
-                LoadConfiguration();
                 Responses = new List<string>();
 
                 if (WatchSocket)
@@ -281,6 +288,8 @@ namespace Mot.Parser.InterfaceLib
                 FilesystemListener.ShutDown();
                 FilesystemListener.Dispose();
             }
+
+            SaveConfiguration();
 
             EventLogger.Info("sevice stopped");
         }
