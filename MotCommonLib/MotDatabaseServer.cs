@@ -103,7 +103,7 @@ namespace Mot.Common.Interface.Lib
                 return records;
             }
 
-            throw new Exception($"{dbShortName} query did not return any data");
+            throw new RowNotInTableException($"{dbShortName} query did not return any data");
         }
 
         /// <summary>
