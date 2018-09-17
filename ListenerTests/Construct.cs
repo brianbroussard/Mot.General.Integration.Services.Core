@@ -69,7 +69,7 @@ namespace ListenerTests
 
             try
             {
-                using (var hl7Listener = new Hl7SocketListener(24054, null))
+                using (var hl7Listener = new Hl7SocketListener(24045, null))
                 {
                     hl7Listener.Go();
                 }

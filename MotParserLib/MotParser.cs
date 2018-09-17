@@ -584,11 +584,11 @@ namespace Mot.Parser.InterfaceLib
                     return;
                 }
 
-                if (inputStream.Substring(0, 1) == "P")
-                {
-                    ParseDispill(inputStream);
-                    return;
-                }
+                //if (inputStream.Substring(0, 1) == "P")
+                //{
+                //    ParseDispill(inputStream);
+                //    return;
+                //}
 
                 if (inputStream.Contains("~\r"))
                 {
@@ -597,6 +597,20 @@ namespace Mot.Parser.InterfaceLib
                 }
 
                 if (inputStream.Contains('\xEE') && inputStream.Contains('\xE2'))   // MOT Delimited                   
+                {
+                    ParseDelimited(inputStream);
+                    return;
+                }
+
+                // Plain Text Delimited string
+                if(inputStream.Contains("~") && inputStream.Last() == '^')
+                {
+                    ParseDelimited(inputStream);
+                    return;
+                }
+
+                // Delimited byte stream
+                if (inputStream.Contains("EEEE") && (inputStream.Substring(inputStream.Length - 2) == "E2"))
                 {
                     ParseDelimited(inputStream);
                     return;
