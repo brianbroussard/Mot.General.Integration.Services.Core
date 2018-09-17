@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>false</IsPackable>
-    <AssemblyVersion>1.0.54.11</AssemblyVersion>
-    <FileVersion>1.0.54.11</FileVersion>
+    <AssemblyVersion>1.0.61.11</AssemblyVersion>
+    <FileVersion>1.0.61.11</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <Prefer32bit>true</Prefer32bit>

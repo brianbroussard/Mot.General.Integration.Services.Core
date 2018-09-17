@@ -138,15 +138,17 @@ namespace Mot.Parser.InterfaceLib
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                 var settings = configFile.AppSettings.Settings;
 
+                /*
                 settings["ListenerPort"].Value = ListenerPort.ToString();
                 settings["GatewayPort"].Value = GatewayPort.ToString();
                 settings["GatewayAddress"].Value = GatewayAddress;
                 settings["WinMonitorDirectory"].Value = WinMonitorDirectory;
                 settings["NixMonitorDirectory"].Value = NixMonitorDirectory;
-                settings["WatchFileSystem"].Value = WatchFileSystem.ToString();
-                settings["WatchSocket"].Value = WatchSocket.ToString();
-                settings["AllowZeroTQ"].Value = AllowZeroTQ.ToString();
+                settings["WatchFileSystem"].Value = WatchFileSystem.ToString().ToLower();
+                settings["WatchSocket"].Value = WatchSocket.ToString().ToLower();
+                settings["AllowZeroTQ"].Value = AllowZeroTQ.ToString().ToLower();
                 settings["DefaultStoreLoc"].Value = DefaultStoreLoc;
+                */
 
                 if(IsNewUserName)
                 {
@@ -218,14 +220,22 @@ namespace Mot.Parser.InterfaceLib
 
             string responseMessage;
 
-            using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
+            try
             {
-                using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
+                using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
                 {
-                    EventLogger.Info(p.ResponseMessage);
-                    responseMessage = p.ResponseMessage;
-                    Responses.Add(responseMessage);
+                    using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
+                    {
+                        EventLogger.Info(p.ResponseMessage);
+                        responseMessage = p.ResponseMessage;
+                        Responses.Add(responseMessage);
+                    }
                 }
+            }
+            catch(Exception ex)
+            {
+                responseMessage = $"Failed processing, Message: {ex.Message}\nData: {data}";
+                EventLogger.Error(responseMessage);
             }
 
             return responseMessage;
@@ -280,7 +290,7 @@ namespace Mot.Parser.InterfaceLib
             if (WatchSocket)
             {
                 SocketListener.ShutDown();
-                SocketListener.Dispose();
+                //SocketListener.Dispose();
             }
 
             if (WatchFileSystem)

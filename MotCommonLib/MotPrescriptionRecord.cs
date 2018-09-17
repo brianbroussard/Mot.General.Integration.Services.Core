@@ -46,10 +46,10 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "Rx", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_RxNum", "", 12, true, 'k'));
-                _fieldList.Add(new Field("RxSys_PatID", "", 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_DocID", "", 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_DrugID", "", 11, true, 'a'));
+                _fieldList.Add(new Field("RxSys_RxNum", "", 36, true, 'k'));
+                _fieldList.Add(new Field("RxSys_PatID", "", 36, true, 'a'));
+                _fieldList.Add(new Field("RxSys_DocID", "", 36, true, 'a'));
+                _fieldList.Add(new Field("RxSys_DrugID", "", 36, true, 'a'));
                 _fieldList.Add(new Field("Sig", "", 32767, true, 'a'));
                 _fieldList.Add(new Field("RxStartDate", "", 10, true, 'w'));
                 _fieldList.Add(new Field("RxStopDate", "", 10, true, 'w'));
@@ -57,7 +57,7 @@ namespace Mot.Common.Interface.Lib
                 _fieldList.Add(new Field("DoseScheduleName", "", 10, false, 'n'));
                 _fieldList.Add(new Field("Comments", "", 32767, false, 'n'));
                 _fieldList.Add(new Field("Refills", "", 4, true, 'a'));
-                _fieldList.Add(new Field("RxSys_NewRxNum", "", 10, false, 'w'));
+                _fieldList.Add(new Field("RxSys_NewRxNum", "", 36, false, 'w'));
                 _fieldList.Add(new Field("Isolate", "", 2, false, 'n'));
                 _fieldList.Add(new Field("RxType", "", 2, true, 'w'));
                 _fieldList.Add(new Field("MDOMStart", "", 2, false, 'n'));

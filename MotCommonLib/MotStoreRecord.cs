@@ -45,7 +45,7 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "Store", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_StoreID", "", 10, true, 'k'));
+                _fieldList.Add(new Field("RxSys_StoreID", "", 36, true, 'k'));
                 _fieldList.Add(new Field("StoreName", "", 60, true, 'a'));
                 _fieldList.Add(new Field("Address1", "", 40, false, 'n'));
                 _fieldList.Add(new Field("Address2", "", 40, false, 'n'));

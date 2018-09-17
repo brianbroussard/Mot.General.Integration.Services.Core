@@ -49,7 +49,7 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "Drug", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_DrugID", "", 11, true, 'k'));
+                _fieldList.Add(new Field("RxSys_DrugID", "", 36, true, 'k'));
                 _fieldList.Add(new Field("LblCode", "", 6, false, 'n', true));
                 _fieldList.Add(new Field("ProdCode", "", 4, false, 'n'));
                 _fieldList.Add(new Field("TradeName", "", 100, false, 'n'));

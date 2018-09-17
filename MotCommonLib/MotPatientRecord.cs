@@ -45,7 +45,7 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "Patient", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_PatID", "", 10, true, 'k'));
+                _fieldList.Add(new Field("RxSys_PatID", "", 36, true, 'k'));
                 _fieldList.Add(new Field("LastName", "", 30, true, 'a'));
                 _fieldList.Add(new Field("FirstName", "", 20, true, 'a'));
                 _fieldList.Add(new Field("MiddleInitial", "", 2, false, 'n'));
@@ -64,9 +64,9 @@ namespace Mot.Common.Interface.Lib
                 _fieldList.Add(new Field("CycleDays", "", 2, false, 'n'));
                 _fieldList.Add(new Field("CycleType", "", 2, false, 'n'));
                 _fieldList.Add(new Field("Status", "", 2, false, 'n'));
-                _fieldList.Add(new Field("RxSys_LastDoc", "", 10, false, 'n'));
-                _fieldList.Add(new Field("RxSys_PrimaryDoc", "", 10, false, 'n'));
-                _fieldList.Add(new Field("RxSys_AltDoc", "", 10, false, 'n'));
+                _fieldList.Add(new Field("RxSys_LastDoc", "", 36, false, 'n'));
+                _fieldList.Add(new Field("RxSys_PrimaryDoc", "", 36, false, 'n'));
+                _fieldList.Add(new Field("RxSys_AltDoc", "", 36, false, 'n'));
                 _fieldList.Add(new Field("SSN", "", 9, true, 'w'));
                 _fieldList.Add(new Field("Allergies", "", 32767, true, 'w'));
                 _fieldList.Add(new Field("Diet", "", 32767, true, 'w'));

@@ -49,7 +49,7 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "TimesQtys", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_LocID", "", 10, true, 'k'));
+                _fieldList.Add(new Field("RxSys_LocID", "", 36, true, 'k'));
                 _fieldList.Add(new Field("DoseScheduleName", "", 10, true, 'k'));
                 _fieldList.Add(new Field("DoseTimesQtys", "", 256, true, 'a'));
             }

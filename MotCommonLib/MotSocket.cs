@@ -520,7 +520,7 @@ namespace Mot.Common.Interface.Lib
             }
             catch (Exception ex)
             {
-                _eventLogger.Error($"Async I/O handler{ex.Message}");
+                _eventLogger.Error($"Async I/O handler: {ex.Message}");
                 TcpClientConnected.Set();
             }
         }
