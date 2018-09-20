@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+	<Bundle Name="Mot.Installer.Bootstrap.Actions" Version="1.0.0.0" Manufacturer="Medicine-On-Time" UpgradeCode="56B85FD2-3DD1-4133-8E3F-DF077DC07822">
+
+
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense" >
+      <bal:WixStandardBootstrapperApplication LogoFile="mot_Logo_64x64.png" LicenseFile="license.rtf" SuppressRepair="yes" ThemeFile="CustomRtfTheme.xml"/>
+    </BootstrapperApplicationRef>
+    
+    <bal:Condition Message="You are attempting to run the 64-bit installer on a 32-bit version of Windows.">
+      VersionNT64
+    </bal:Condition>
+
+    <Variable Name="AutoStartGatewayServiceCheckBox" Type="numeric" Value="0" bal:Overridable="yes" />
+    <Variable Name="CreateDatabaseBackupCheckBox" Type="numeric" Value="0" bal:Overridable="yes"/>
+
+    <Chain>
+      <PackageGroupRef Id="NetFx47Redist"/>
+
+      <MsiPackage Id="MotPackage" SourceFile="MotPackage.msi" Vital="yes" ForcePerMachine="yes">
+        <MsiProperty Name="AUTOSTARTGATEWAYSERVICE" Value="[AutoStartGatewayServiceCheckBox]" />
+        <MsiProperty Name="CREATEDATABASEBACKUP" Value="[CreateDatabaseBackupCheckBox]"/>
+      </MsiPackage>
+      
+    </Chain>
+    
+    <Log PathVariable="c:\motNEXT\Logs\Installer\NewMot.txt"/>
+    </Bundle>
+</Wix>

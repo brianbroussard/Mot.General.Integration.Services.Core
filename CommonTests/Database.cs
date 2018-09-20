@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Mot.Common.Interface.Lib;
+using System.Collections.Generic;
 
 namespace CommonTests
 {
@@ -26,6 +27,59 @@ namespace CommonTests
         {
             byte[] b = Convert.FromBase64String(str);
             return Encoding.UTF8.GetString(b);
+        }
+
+        [TestMethod]
+        public void GuidMatches()
+        {
+            try
+            {
+                var log = new List<KeyValuePair<string, Guid>>();
+
+                using (var db = new MotGuidMapper())
+                {
+                    for(var i = 0; i< 1024; i++)
+                    {
+                        var guid = Guid.NewGuid();
+                        var id = db.GetNext(guid);
+
+                        log.Add(new KeyValuePair<string, Guid>(id, guid));
+                    }
+                }
+
+                using (var db = new MotGuidMapper())
+                {
+                    foreach(var pair in log)
+                    {
+                        var id = db.GetId(pair.Value);
+                        var guid = db.GetGuid(pair.Key);
+
+                        if(id != pair.Key)
+                        {
+                            Assert.Fail($"id match failure {id}:{pair.Key}");
+                        }
+
+                        if(guid != pair.Value)
+                        {
+                            Assert.Fail($"guid match failure {guid}:{pair.Value}");
+                        }
+                    }
+                }
+
+                if (File.Exists("./db/map.db"))
+                {
+                    File.Delete("./db/map.db");
+                }
+
+                if(Directory.Exists("./db"))
+                {
+                    Directory.Delete("./db");
+                }
+            }
+            catch(Exception ex)
+            {
+                Assert.Fail($"General failure: {ex.Message}");
+            }
         }
 
         [TestMethod]

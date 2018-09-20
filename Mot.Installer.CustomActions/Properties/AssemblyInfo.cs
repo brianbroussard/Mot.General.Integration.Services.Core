@@ -1,15 +1,15 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TransformerService")]
-[assembly: AssemblyDescription("HL7 and other gateway interface for MOTALL and motNext")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Medicine-On-Time, LLC")]
-[assembly: AssemblyProduct("TransformerService")]
-[assembly: AssemblyCopyright("Copyright ©  2018 by Peter H. Jenney")]
+[assembly: AssemblyTitle("Mot.Installer.CustomActions")]
+[assembly: AssemblyDescription("")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("Mot.Installer.CustomActions")]
+[assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("1de6c337-cabc-4237-b3ca-0bb4a8c00a50")]
+[assembly: Guid("0de901ef-1af9-45cb-be53-e8dc66663553")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.130.12")]
-[assembly: AssemblyFileVersion("1.0.130.12")]
+[assembly: AssemblyVersion("1.0.9.0")]
+[assembly: AssemblyFileVersion("1.0.9.0")]

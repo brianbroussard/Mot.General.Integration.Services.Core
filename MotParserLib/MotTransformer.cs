@@ -138,18 +138,6 @@ namespace Mot.Parser.InterfaceLib
                 var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                 var settings = configFile.AppSettings.Settings;
 
-                /*
-                settings["ListenerPort"].Value = ListenerPort.ToString();
-                settings["GatewayPort"].Value = GatewayPort.ToString();
-                settings["GatewayAddress"].Value = GatewayAddress;
-                settings["WinMonitorDirectory"].Value = WinMonitorDirectory;
-                settings["NixMonitorDirectory"].Value = NixMonitorDirectory;
-                settings["WatchFileSystem"].Value = WatchFileSystem.ToString().ToLower();
-                settings["WatchSocket"].Value = WatchSocket.ToString().ToLower();
-                settings["AllowZeroTQ"].Value = AllowZeroTQ.ToString().ToLower();
-                settings["DefaultStoreLoc"].Value = DefaultStoreLoc;
-                */
-
                 if(IsNewUserName)
                 {
                     settings["UserName"].Value = MotAccessSecurity.EncodeString(UserName);

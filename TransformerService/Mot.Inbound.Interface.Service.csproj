@@ -6,13 +6,14 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1DE6C337-CABC-4237-B3CA-0BB4A8C00A50}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TransformerService</RootNamespace>
-    <AssemblyName>TransformerService</AssemblyName>
+    <RootNamespace>Mot.Inbound.Interface.Service</RootNamespace>
+    <AssemblyName>Mot.Inbound.Interface.Service</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile />
     <AssemblyVersion>1.0.12.12</AssemblyVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -25,7 +26,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -139,4 +139,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>move logs ..
+del -y $(TargetDir)*.pdb
+heat.exe dir $(TargetDir) -sreg -scom -dr InterfaceDir -cg InterfaceFilesGroup -gg -g1 -sfrag -srd -var "var.InterfaceFilesPath" -out $(SolutionDir)Mot.Inbound.Service.Setup\InterfaceFilesNew.wxs
+move ..\logs .
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>
