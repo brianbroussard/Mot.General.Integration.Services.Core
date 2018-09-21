@@ -57,7 +57,7 @@ namespace Mot.Common.Interface.Lib
                 _fieldList.Add(new Field("Phone1", "", 10, true, 'w'));
                 _fieldList.Add(new Field("Phone2", "", 10, false, 'n'));
                 _fieldList.Add(new Field("WorkPhone", "", 10, false, 'n'));
-                _fieldList.Add(new Field("RxSys_LocID", "", 10, true, 'w'));
+                _fieldList.Add(new Field("RxSys_LocID", "", 36, true, 'w'));
                 _fieldList.Add(new Field("Room", "", 10, true, 'w'));
                 _fieldList.Add(new Field("Comments", "", 32767, false, 'n'));
                 _fieldList.Add(new Field("CycleDate", "", 10, false, 'n'));

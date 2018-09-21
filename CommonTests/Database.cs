@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mot.Common.Interface.Lib;
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace CommonTests
 {
@@ -38,7 +39,7 @@ namespace CommonTests
 
                 using (var db = new MotGuidMapper())
                 {
-                    for(var i = 0; i< 1024; i++)
+                    for (var i = 0; i < 1024; i++)
                     {
                         var guid = Guid.NewGuid();
                         var id = db.GetNext(guid);
@@ -49,17 +50,17 @@ namespace CommonTests
 
                 using (var db = new MotGuidMapper())
                 {
-                    foreach(var pair in log)
+                    foreach (var pair in log)
                     {
                         var id = db.GetId(pair.Value);
                         var guid = db.GetGuid(pair.Key);
 
-                        if(id != pair.Key)
+                        if (id != pair.Key)
                         {
                             Assert.Fail($"id match failure {id}:{pair.Key}");
                         }
 
-                        if(guid != pair.Value)
+                        if (guid != pair.Value)
                         {
                             Assert.Fail($"guid match failure {guid}:{pair.Value}");
                         }
@@ -71,12 +72,12 @@ namespace CommonTests
                     File.Delete("./db/map.db");
                 }
 
-                if(Directory.Exists("./db"))
+                if (Directory.Exists("./db"))
                 {
                     Directory.Delete("./db");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Fail($"General failure: {ex.Message}");
             }
@@ -168,9 +169,57 @@ namespace CommonTests
             var encrypted = MotAccessSecurity.EncodeString(original);
             var decrypted = MotAccessSecurity.DecodeString(encrypted);
 
-            if(decrypted != original)
+            if (decrypted != original)
             {
                 Assert.Fail($"Decryption failure.  Expected {original} and got {decrypted}");
+            }
+        }
+
+        [TestMethod]
+        public void ForceIdOverflowWithGuid()
+        {
+            // This will force a record rejection bu issuing a Guid as an ID
+            // Note that the motNext gatewaty returns a 6 (success) even though it fails
+
+            var patientId = Guid.NewGuid().ToString();
+            var prescriberId = Guid.NewGuid().ToString();
+            var facilityId = Guid.NewGuid().ToString();
+
+            using (var localTcpClient = new TcpClient("localhost", 24042))
+            {
+                using (var stream = localTcpClient.GetStream())
+                {
+                    try
+                    {
+                        var facility = new MotFacilityRecord("Add");
+                        facility.LocationName = "Banzai Institute";
+                        facility.LocationID = facilityId;
+
+                        var doc = new MotPrescriberRecord("Add");
+                        doc.PrescriberID = prescriberId;
+                        doc.DEA_ID = "AD1234567";
+                        doc.LastName = "Lizardo";
+                        doc.FirstName = "Emillio";
+
+                        var patient = new MotPatientRecord("Add");
+                        patient.PatientID = patientId;
+                        patient.FirstName = "Buckaroo";
+                        patient.LastName = "Banzai";
+                        patient.PrimaryPrescriberID = prescriberId;
+                        patient.DOB = DateTime.Now;
+                        patient.CycleDate = DateTime.Now;
+                        patient.CycleDays = 30;
+                        patient.LocationID = facilityId;
+
+                        facility.Write(stream);
+                        doc.Write(stream);
+                        patient.Write(stream);
+                    }
+                    catch (Exception ex)
+                    {
+                        Assert.Fail(ex.Message);
+                    }
+                }
             }
         }
     }
