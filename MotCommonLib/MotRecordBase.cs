@@ -49,7 +49,7 @@ namespace Mot.Common.Interface.Lib
         {
             using (var Stream = LocalTcpClient.GetStream())
             {
-                var obj = new motStoreRecord("Add", boolAutoTruncate)
+                var obj = new MotStoreRecord("Add", boolAutoTruncate)
                 {
                     ID = "1001",
                     Name = "Phred's Pharmacy",
@@ -282,7 +282,10 @@ namespace Mot.Common.Interface.Lib
 
                 record += "</Record>";
 
-                if (dataLen > 0) LocalWriteQueue.Add(type, record);
+                if (dataLen > 0)
+                {
+                    LocalWriteQueue.Add(type, record);
+                }
             }
             catch (Exception ex)
             {
@@ -300,7 +303,10 @@ namespace Mot.Common.Interface.Lib
         {
             try
             {
-                if (LocalWriteQueue == null) throw new ArgumentNullException($"Invalid Queue");
+                if (LocalWriteQueue == null)
+                {
+                    throw new ArgumentNullException($"Invalid Queue");
+                }
 
                 LocalWriteQueue.Write(stream);
                 LocalWriteQueue.Clear();
@@ -322,7 +328,10 @@ namespace Mot.Common.Interface.Lib
 
             try
             {
-                if (LocalWriteQueue == null) throw new ArgumentNullException($"Invalid Queue");
+                if (LocalWriteQueue == null)
+                {
+                    throw new ArgumentNullException($"Invalid Queue");
+                }
 
                 LocalWriteQueue.Write(socket);
                 LocalWriteQueue.Clear();
@@ -341,7 +350,10 @@ namespace Mot.Common.Interface.Lib
         /// <param name="stream"></param>
         public void Commit(NetworkStream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
 
             WriteQueue(stream);
         }
@@ -353,7 +365,10 @@ namespace Mot.Common.Interface.Lib
         /// <param name="socket"></param>
         public void Commit(MotSocket socket)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
 
             WriteQueue(socket);
         }
@@ -366,12 +381,18 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         protected string NormalizeDate(string origDate)
         {
-            if (string.IsNullOrEmpty(origDate)) return string.Empty;
+            if (string.IsNullOrEmpty(origDate))
+            {
+                return string.Empty;
+            }
 
             // Extract the date pard
             var dateOnly = origDate.Split(' ');
 
-            if (DateTime.TryParseExact(dateOnly[0], datePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)) return dt.ToString("yyyy-MM-dd"); // return MOT Legacy Gateway Format
+            if (DateTime.TryParseExact(dateOnly[0], datePatterns, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt))
+            {
+                return dt.ToString("yyyy-MM-dd"); // return MOT Legacy Gateway Format
+            }
 
             //DateFormatError = true;
             dateOnly[0] = "BADDATE";
@@ -383,7 +404,10 @@ namespace Mot.Common.Interface.Lib
         {
             DateTime dateOut;
 
-            if (date == null) return DateTime.Parse("1970-01-01");
+            if (date == null)
+            {
+                return DateTime.Parse("1970-01-01");
+            }
 
             try
             {
@@ -408,9 +432,12 @@ namespace Mot.Common.Interface.Lib
         {
             if (string.IsNullOrEmpty(val)) return string.Empty;
 
-            char[] junk = {'-', '.', ',', ' ', ';', ':', '(', ')'};
+            char[] junk = { '-', '.', ',', ' ', ';', ':', '(', ')' };
 
-            while (val?.IndexOfAny(junk) > -1) val = val.Remove(val.IndexOfAny(junk), 1);
+            while (val?.IndexOfAny(junk) > -1)
+            {
+                val = val.Remove(val.IndexOfAny(junk), 1);
+            }
 
             return val;
         }
@@ -423,26 +450,45 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         protected string ValidateDea(string deaId)
         {
-            if (string.IsNullOrEmpty(deaId)) return string.Empty;
+            if (string.IsNullOrEmpty(deaId))
+            {
+                return string.Empty;
+            }
 
             // DEA Number Format is 2 letters, 6 numbers, & 1 check digit (CC-NNNNNNN) 
             // The first letter is a code identifying the type of registrant (see below)
             // The second letter is the first letter of the registrant's last name
             deaId = NormalizeString(deaId);
 
-            if (deaId.Length == 13 && deaId.Substring(9, 4) == "0000") return deaId.Substring(0, 9);
+            if (deaId.Length == 13 && deaId.Substring(9, 4) == "0000")
+            {
+                return deaId.Substring(0, 9);
+            }
 
             if (UseStrongValidation)
             {
-                if (deaId.Length < 9) throw new FormatException("REJECTED: Invalid DEA Number, minimum length is 9. Received " + deaId.Length + " in " + deaId);
+                if (deaId.Length < 9)
+                {
+                    throw new FormatException("REJECTED: Invalid DEA Number, minimum length is 9. Received " + deaId.Length + " in " + deaId);
+                }
 
-                if (deaId.Length > 9) throw new FormatException("REJECTED: Invalid DEA Number, maximum length is 9. Received " + deaId.Length + " in " + deaId);
+                if (deaId.Length > 9)
+                {
+                    throw new FormatException("REJECTED: Invalid DEA Number, maximum length is 9. Received " + deaId.Length + " in " + deaId);
+                }
 
-                if (deaId[1] != '9' && !char.IsLetter(deaId[1])) throw new FormatException("REJECTED: Invalid DEA Number, the id " + deaId.Substring(0, 2) + " in " + deaId + " is incorrect");
+                if (deaId[1] != '9' && !char.IsLetter(deaId[1]))
+                {
+                    throw new FormatException("REJECTED: Invalid DEA Number, the id " + deaId.Substring(0, 2) + " in " + deaId + " is incorrect");
+                }
 
                 for (var i = 2; i < 7; i++)
+                {
                     if (!char.IsNumber(deaId[i]))
+                    {
                         throw new FormatException("REJECTED: Invalid DEA Number, the trailing 6 characters must be digits, not " + deaId.Substring(2) + " in " + deaId);
+                    }
+                }
             }
 
             return deaId;
@@ -468,7 +514,9 @@ namespace Mot.Common.Interface.Lib
 
             //  There are rules for fields that are required in add/change/delete.  Test them here
             if (fieldSet != null)
+            {
                 foreach (var t in fieldSet)
+                {
                     // required == true, when == 'k', _table action == '*', tagData == empty -> Exception
                     // required == true, when == 'a', _table action == 'change'  -> Pass
                     // required == true, when == 'a', _table action == 'add', tagData == live data -> Pass
@@ -476,6 +524,7 @@ namespace Mot.Common.Interface.Lib
                     // required == true, when == 'c', _table_action == 'change', tagData == empty -> Exception
 
                     if (t.Required && (t.When == f.TagData.ToLower()[0] || t.When == 'k')) // look for a,c,k
+                    {
                         if (string.IsNullOrEmpty(t.TagData))
                         {
                             if (t.TagName == "RxSys_LocID")
@@ -505,6 +554,9 @@ namespace Mot.Common.Interface.Lib
                                 EventLogger.Error(errorString);
                             }
                         }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -587,12 +639,18 @@ namespace Mot.Common.Interface.Lib
         /// <param name="logRecord"></param>
         protected void Write(NetworkStream stream, List<Field> fieldSet, bool logRecord = false)
         {
-            if (DontSend) return;
+            if (DontSend)
+            {
+                return;
+            }
 
             var record = "<Record>";
             var dataLen = 0;
 
-            if (IsEmpty) return;
+            if (IsEmpty)
+            {
+                return;
+            }
 
             if (stream == null || fieldSet == null)
             {
@@ -606,25 +664,41 @@ namespace Mot.Common.Interface.Lib
 
                 foreach (var tag in fieldSet)
                 {
-                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001")) tag.TagData = "";
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
+                    {
+                        tag.TagData = "";
+                    }
 
                     record += "<" + tag.TagName + ">" + tag.TagData + "</" + tag.TagName + ">";
 
                     // If there's no data other than Table and Action we should ignore it.
-                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION") dataLen += tag.TagData.Length;
+                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION")
+                    {
+                        dataLen += tag.TagData.Length;
+                    }
                 }
 
                 record += "</Record>";
 
                 if (dataLen > 0)
                 {
+                    byte[] buf = new byte[32];
+                    stream.ReadTimeout = 10000;
+
                     // Push it to the port
                     stream.Write(Encoding.UTF8.GetBytes(record), 0, record.Length);
+                    var len = stream.Read(buf, 0, 32);
 
-                    if (SendEof) stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
+                    if (SendEof)
+                    {
+                        stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
+                    }
                 }
 
-                if (logRecord) EventLogger.Info(record);
+                if (logRecord)
+                {
+                    EventLogger.Info(record);
+                }
             }
             catch (Exception ex)
             {
@@ -661,14 +735,23 @@ namespace Mot.Common.Interface.Lib
 
                 foreach (var tag in fieldSet)
                 {
-                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001")) tag.TagData = "";
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
+                    {
+                        tag.TagData = "";
+                    }
 
                     record += "<" + tag.TagName + ">" + tag.TagData + "</" + tag.TagName + ">";
 
                     // If there's no data other than Table and Action we should ignore it.
-                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION") dataLen += tag.TagData.Length;
+                    if (tag.TagName.ToUpper() != "TABLE" && tag.TagName.ToUpper() != "ACTION")
+                    {
+                        dataLen += tag.TagData.Length;
+                    }
 
-                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001")) tag.TagData = "";
+                    if (tag.TagName.ToUpper().Contains("DATE") && tag.TagData.Contains("0001"))
+                    {
+                        tag.TagData = "";
+                    }
                 }
 
                 record += "</Record>";
@@ -678,10 +761,16 @@ namespace Mot.Common.Interface.Lib
                     // Push it to the port
                     socket.Write(record);
 
-                    if (SendEof) socket.Write("<EOF/>");
+                    if (SendEof)
+                    {
+                        socket.Write("<EOF/>");
+                    }
                 }
 
-                if (logRecord) EventLogger.Info(record);
+                if (logRecord)
+                {
+                    EventLogger.Info(record);
+                }
             }
             catch (Exception ex)
             {
@@ -698,15 +787,33 @@ namespace Mot.Common.Interface.Lib
         /// <param name="data"></param>
         public void Write(NetworkStream stream, string data)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (stream == null)
+            {
+                throw new ArgumentNullException(nameof(stream));
+            }
 
-            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
-            if (IsEmpty) return;
+            if (IsEmpty)
+            {
+                return;
+            }
 
             try
             {
+                byte[] buf = new byte[32];
+                stream.ReadTimeout = 10000;
+
                 stream.Write(Encoding.UTF8.GetBytes(data), 0, data.Length);
+                var len = stream.Read(buf, 0, 32);
+
+                if (SendEof)
+                {
+                    stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
+                }
             }
             catch (Exception ex)
             {
@@ -723,11 +830,20 @@ namespace Mot.Common.Interface.Lib
         /// <param name="data"></param>
         public void Write(MotSocket socket, string data)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+            if (socket == null)
+            {
+                throw new ArgumentNullException(nameof(socket));
+            }
 
-            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (data == null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
 
-            if (IsEmpty) return;
+            if (IsEmpty)
+            {
+                return;
+            }
 
             try
             {
@@ -754,7 +870,10 @@ namespace Mot.Common.Interface.Lib
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing) DefaultSocket?.Dispose();
+            if (disposing)
+            {
+                DefaultSocket?.Dispose();
+            }
         }
     }
 }

@@ -257,8 +257,12 @@ namespace Mot.Common.Interface.Lib
                 var hostList = Dns.GetHostAddresses(value);
 
                 foreach (var h in hostList)
+                {
                     if (h.AddressFamily == AddressFamily.InterNetwork)
+                    {
                         _internalAddress = h.ToString();
+                    }
+                }
 
                 _openForListening = false;
             }
@@ -268,7 +272,7 @@ namespace Mot.Common.Interface.Lib
         ///     <c>TCP_TIMEOUT</c>
         ///     Property to set the default I/O timeout values for the instance
         /// </summary>
-        public int TcpTimeout { get; set; } = 5000;
+        public int TcpTimeout { get; set; } = 10000;
 
         /// <summary>
         ///     <c>StringArgCallback</c>
@@ -442,8 +446,8 @@ namespace Mot.Common.Interface.Lib
                     {
                         if (localStream.CanRead)
                         {
-                            localStream.ReadTimeout = 500;
-                            localStream.WriteTimeout = 500;
+                            localStream.ReadTimeout = TcpTimeout;
+                            localStream.WriteTimeout = TcpTimeout;
 
                             RemoteEndPoint = tcpClient.Client.RemoteEndPoint;
                             _localEndPoint = tcpClient.Client.LocalEndPoint;
@@ -493,7 +497,10 @@ namespace Mot.Common.Interface.Lib
                                 if (!_doBinaryIo)
                                 {
                                     var resp = StringArgCallback?.Invoke(_stringIoBuffer);
-                                    if (!string.IsNullOrEmpty(resp)) localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                                    if (!string.IsNullOrEmpty(resp))
+                                    {
+                                        localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                                    }
                                 }
                                 else
                                 {
@@ -620,7 +627,10 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public void SecureListenAsync()
         {
-            if (_x509Certificate == null) throw new ArgumentNullException($"Missing X509 Certificate");
+            if (_x509Certificate == null)
+            {
+                throw new ArgumentNullException($"Missing X509 Certificate");
+            }
 
             while (_serviceRunning)
             {
@@ -655,7 +665,10 @@ namespace Mot.Common.Interface.Lib
                         _eventLogger.Info($"Accepted and Authenticated TLS connection from remote endpoint: {RemoteEndPoint}");
 
 
-                        if (Read() > 0) StringArgCallback?.Invoke(_stringIoBuffer);
+                        if (Read() > 0)
+                        {
+                            StringArgCallback?.Invoke(_stringIoBuffer);
+                        }
 
                         NetSslStream.Close();
                         _localTcpClient.Close();
@@ -838,7 +851,17 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         private static bool DefaultProtocolProcessor(byte[] buffer)
         {
-            return buffer.Length > 0;
+            if(buffer[0] == 0x06)
+            {
+                return true;
+            }
+
+            if(Encoding.ASCII.GetString(buffer).ToLower() == "ok")
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -946,23 +969,28 @@ namespace Mot.Common.Interface.Lib
             try
             {
                 var buffer = new byte[256];
+                var len = 0;
+                var retval = false;
 
                 if (UseSsl)
                 {
                     NetSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                    NetSslStream.Read(buffer, 0, buffer.Length);
+                    len = NetSslStream.Read(buffer, 0, buffer.Length);
                 }
                 else
                 {
                     NetStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
-                    NetStream.Read(buffer, 0, buffer.Length);
+                    len = NetStream.Read(buffer, 0, buffer.Length);
                 }
 
-                var retVal = ByteArgProtocolProcessor != null && (bool) ByteArgProtocolProcessor?.Invoke(buffer);
+                if (len > 0)
+                {
+                    retval = ByteArgProtocolProcessor != null && (bool)ByteArgProtocolProcessor?.Invoke(buffer);
+                }
 
                 SocketMutex.ReleaseMutex();
 
-                return retVal;
+                return retval;
             }
             catch (SocketException sx)
             {
