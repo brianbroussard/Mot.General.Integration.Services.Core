@@ -35,6 +35,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installers", "Installers", 
 EndProject
 Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "Mot.Inbound.Service.Setup", "Mot.Inbound.Service.Setup\Mot.Inbound.Service.Setup.wixproj", "{7D8E265C-521B-4B75-B784-9701AB2A5998}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -197,6 +199,18 @@ Global
 		{7D8E265C-521B-4B75-B784-9701AB2A5998}.Release|x64.Build.0 = Release|x64
 		{7D8E265C-521B-4B75-B784-9701AB2A5998}.Release|x86.ActiveCfg = Release|x86
 		{7D8E265C-521B-4B75-B784-9701AB2A5998}.Release|x86.Build.0 = Release|x86
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|x64.Build.0 = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Debug|x86.Build.0 = Debug|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|x64.ActiveCfg = Release|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|x64.Build.0 = Release|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|x86.ActiveCfg = Release|Any CPU
+		{1B079AFB-2E1C-48F4-8688-48F23E9A00F4}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

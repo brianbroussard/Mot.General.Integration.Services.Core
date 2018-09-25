@@ -2,8 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.119.13</AssemblyVersion>
-    <FileVersion>1.0.119.13</FileVersion>
+    <AssemblyVersion>1.0.124.13</AssemblyVersion>
+    <FileVersion>1.0.124.13</FileVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>

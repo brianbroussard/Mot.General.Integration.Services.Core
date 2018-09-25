@@ -45,7 +45,7 @@ namespace Mot.Common.Interface.Lib
             {
                 _fieldList.Add(new Field("Table", "Prescriber", 10, true, 'a'));
                 _fieldList.Add(new Field("Action", tableAction, 10, true, 'a'));
-                _fieldList.Add(new Field("RxSys_DocID", "", 10, true, 'k'));
+                _fieldList.Add(new Field("RxSys_DocID", "", 36, true, 'k'));
                 _fieldList.Add(new Field("LastName", "", 30, true, 'a'));
                 _fieldList.Add(new Field("FirstName", "", 20, true, 'a'));
                 _fieldList.Add(new Field("MiddleInitial", "", 2, false, 'n'));

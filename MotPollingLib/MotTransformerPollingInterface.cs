@@ -50,6 +50,9 @@ namespace Mot.Polling.Interface.Lib
                 GatewayIp = appSettings["GatewayIp"];
                 GatewayPort = Convert.ToInt32(appSettings["GatewayPort"] ?? "24042");
 
+                UserName = appSettings["Username"] ?? "None";
+                Password = appSettings["Password"] ?? "None;";
+
                 //
                 // If there is a username & password and its the first use, encode them and put
                 // them back into the config file.

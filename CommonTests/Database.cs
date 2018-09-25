@@ -84,36 +84,30 @@ namespace CommonTests
         }
 
         [TestMethod]
-        public async Task<bool> SupervisorLogin()
+        public void SupervisorLogin()
         {
-            var retval = true;
-
-            await Task.Run(() =>
+            try
             {
-                try
+                var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
+                using (var test = new DataSet())
                 {
-                    var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
-                    using (var test = new DataSet())
+                    var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
+                    if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
                     {
-                        var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
-                        if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
-                        {
-                            var _supportsSynMed = true;
-                        }
+                        var _supportsSynMed = true;
                     }
                 }
-                catch (Exception ex)
-                {
-                    Assert.Fail($"Faild at SupervisorLogin with {ex.Message}");
-                }
-            });
-
-            return retval;
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Faild at SupervisorLogin with {ex.Message}");
+            }
         }
+
         [TestMethod]
         public void NullConstructor()
         {
-            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"C:\motNext\Tests\Sqlite\Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
+            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"C/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
             try
             {
@@ -175,13 +169,15 @@ namespace CommonTests
             }
         }
 
+
         [TestMethod]
         public void ForceIdOverflowWithGuid()
         {
             // This will force a record rejection bu issuing a Guid as an ID
             // Note that the motNext gatewaty returns a 6 (success) even though it fails
 
-            var patientId = Guid.NewGuid().ToString();
+            var patientId1 = Guid.NewGuid().ToString();
+            var patientId2 = Guid.NewGuid().ToString();
             var prescriberId = Guid.NewGuid().ToString();
             var facilityId = Guid.NewGuid().ToString();
 
@@ -194,26 +190,69 @@ namespace CommonTests
                         var facility = new MotFacilityRecord("Add");
                         facility.LocationName = "Banzai Institute";
                         facility.LocationID = facilityId;
-
-                        var doc = new MotPrescriberRecord("Add");
-                        doc.PrescriberID = prescriberId;
-                        doc.DEA_ID = "AD1234567";
-                        doc.LastName = "Lizardo";
-                        doc.FirstName = "Emillio";
-
-                        var patient = new MotPatientRecord("Add");
-                        patient.PatientID = patientId;
-                        patient.FirstName = "Buckaroo";
-                        patient.LastName = "Banzai";
-                        patient.PrimaryPrescriberID = prescriberId;
-                        patient.DOB = DateTime.Now;
-                        patient.CycleDate = DateTime.Now;
-                        patient.CycleDays = 30;
-                        patient.LocationID = facilityId;
-
                         facility.Write(stream);
+
+                        var doc = new MotPrescriberRecord("Add")
+                        {
+                            PrescriberID = prescriberId,
+                            DEA_ID = "AD1234567",
+                            LastName = "Lizardo",
+                            FirstName = "Emillio"
+                        };
+
                         doc.Write(stream);
-                        patient.Write(stream);
+
+                        using (var AddBuckaroo = new MotPatientRecord("Add"))
+                        {
+                            AddBuckaroo.PatientID = patientId1;
+                            AddBuckaroo.FirstName = "Buckaroo";
+                            AddBuckaroo.LastName = "Banzai";
+                            AddBuckaroo.PrimaryPrescriberID = prescriberId;
+                            AddBuckaroo.DOB = DateTime.Now;
+                            AddBuckaroo.CycleDate = DateTime.Now;
+                            AddBuckaroo.CycleDays = 30;
+                            AddBuckaroo.LocationID = facilityId;
+
+                            AddBuckaroo.Write(stream);
+                        }
+
+                        var AddPenny = new MotPatientRecord("Add")
+                        {
+                            PatientID = patientId2,
+                            FirstName = "Penny",
+                            LastName = "Priddy",
+                            PrimaryPrescriberID = prescriberId,
+                            DOB = DateTime.Now,
+                            CycleDate = DateTime.Now,
+                            CycleDays = 30,
+                            LocationID = facilityId,
+                        };
+                     
+                        AddPenny.Write(stream);
+
+                        using (var deletePenny = new MotPatientRecord("Delete"))
+                        {
+                            deletePenny.PatientID = patientId2;
+                            deletePenny.Write(stream);
+                        }
+
+                        using (var deleteBuckaroo = new MotPatientRecord("Delete"))
+                        {
+                            deleteBuckaroo.PatientID = patientId1;
+                            deleteBuckaroo.Write(stream);
+                        }
+
+                        using (var deleteLizardo = new MotPrescriberRecord("Delete"))
+                        {
+                            deleteLizardo.PrescriberID = prescriberId;
+                            deleteLizardo.Write(stream);
+                        }
+
+                        using (var deleteFacility = new MotFacilityRecord("Delete"))
+                        {
+                            deleteFacility.LocationID = facilityId;
+                            deleteFacility.Write(stream);
+                        }
                     }
                     catch (Exception ex)
                     {
