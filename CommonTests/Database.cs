@@ -181,7 +181,7 @@ namespace CommonTests
             var prescriberId = Guid.NewGuid().ToString();
             var facilityId = Guid.NewGuid().ToString();
 
-            using (var localTcpClient = new TcpClient("localhost", 24042))
+            using (var localTcpClient = new TcpClient("proxyplayground.medicineontime.com", 24042))
             {
                 using (var stream = localTcpClient.GetStream())
                 {

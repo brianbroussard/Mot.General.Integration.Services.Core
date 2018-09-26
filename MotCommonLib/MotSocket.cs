@@ -276,7 +276,7 @@ namespace Mot.Common.Interface.Lib
 
         /// <summary>
         ///     <c>StringArgCallback</c>
-        ///     Callback delegate returning void taking a string argument used to call parsers
+        ///     Callback delegate returning string taking a string argument used to call parsers
         /// </summary>
         public StringStringDelegate StringArgCallback { get; set; }
 
@@ -438,7 +438,7 @@ namespace Mot.Common.Interface.Lib
                 Thread.Sleep(50);
 
                 Thread.CurrentThread.Name = "IAsyncHandler (" + Thread.CurrentThread.ManagedThreadId + ")";
-                var localListener = (TcpListener) asyncResult.AsyncState;
+                var localListener = (TcpListener)asyncResult.AsyncState;
 
                 using (var tcpClient = localListener.EndAcceptTcpClient(asyncResult))
                 {
@@ -460,6 +460,15 @@ namespace Mot.Common.Interface.Lib
                             {
                                 _byteIoBuffer = new byte[512];
                                 _stringIoBuffer = "";
+
+                                // Handle a touch
+                                if (!localStream.DataAvailable)
+                                {
+                                    var ret = $"Medicine-On-Time Gateway Interface {DateTime.UtcNow.ToString()}";
+                                    localStream.Write(Encoding.UTF8.GetBytes(ret), 0, ret.Length);
+                                    TcpClientConnected.Set();
+                                    return;
+                                }
 
                                 while (localStream.DataAvailable)
                                 {
@@ -555,7 +564,7 @@ namespace Mot.Common.Interface.Lib
         {
             try
             {
-                var secureListener = (TcpListener) asyncResult.AsyncState;
+                var secureListener = (TcpListener)asyncResult.AsyncState;
 
                 using (var tcpClient = secureListener.EndAcceptTcpClient(asyncResult))
                 {
@@ -573,6 +582,16 @@ namespace Mot.Common.Interface.Lib
                             _stringIoBuffer = "";
 
                             int bytesIn;
+
+                            if (sslStream.Length == 0)
+                            {
+                                // Handle a touch
+                                var ret = $"Medicine-On-Time SSL Gateway Interface {DateTime.UtcNow.ToString()}";
+                                sslStream.Write(Encoding.UTF8.GetBytes(ret), 0, ret.Length);
+                                TcpClientConnected.Set();
+                                return;
+                            }
+
                             do
                             {
                                 bytesIn = sslStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
@@ -603,7 +622,10 @@ namespace Mot.Common.Interface.Lib
                             StringArgCallback?.Invoke(_stringIoBuffer);
                             var resp = StringArgCallback?.Invoke(_stringIoBuffer);
 
-                            if (!string.IsNullOrEmpty(resp)) sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                            if (!string.IsNullOrEmpty(resp))
+                            {
+                                sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
+                            }
                         }
 
                         //SslStream.Close();
@@ -655,7 +677,7 @@ namespace Mot.Common.Interface.Lib
                 {
                     using (_localTcpClient = _messageTrigger.AcceptTcpClient())
                     {
-                        NetSslStream = new SslStream(_localTcpClient.GetStream(), false) {ReadTimeout = TcpTimeout, WriteTimeout = TcpTimeout};
+                        NetSslStream = new SslStream(_localTcpClient.GetStream(), false) { ReadTimeout = TcpTimeout, WriteTimeout = TcpTimeout };
 
                         RemoteEndPoint = _localTcpClient.Client.RemoteEndPoint;
                         _localEndPoint = _localTcpClient.Client.LocalEndPoint;
@@ -667,9 +689,10 @@ namespace Mot.Common.Interface.Lib
 
                         if (Read() > 0)
                         {
-                            StringArgCallback?.Invoke(_stringIoBuffer);
+                            var ret = StringArgCallback?.Invoke(_stringIoBuffer);
+                            NetSslStream.Write(Encoding.UTF8.GetBytes(ret), 0, ret.Length);
                         }
-
+                       
                         NetSslStream.Close();
                         _localTcpClient.Close();
                     }
@@ -703,6 +726,7 @@ namespace Mot.Common.Interface.Lib
             _serviceRunning = true;
 
             while (_serviceRunning)
+            {
                 try
                 {
                     using (var tcpClient = _messageTrigger.AcceptTcpClient())
@@ -717,7 +741,11 @@ namespace Mot.Common.Interface.Lib
 
                             _eventLogger.Debug($"Accepted connection from remote endpoint {RemoteEndPoint}");
 
-                            if (Read() > 0) StringArgCallback?.Invoke(_stringIoBuffer);
+                            if (Read() > 0)
+                            {
+                                var ret = StringArgCallback?.Invoke(_stringIoBuffer);
+                                NetStream.Write(Encoding.UTF8.GetBytes(ret), 0, ret.Length);
+                            }                       
                         }
                     }
                 }
@@ -740,6 +768,7 @@ namespace Mot.Common.Interface.Lib
                 {
                     Console.WriteLine(ex.Message);
                 }
+            }
         }
 
         /// <summary>
@@ -751,7 +780,10 @@ namespace Mot.Common.Interface.Lib
         {
             var totalBytes = 0;
 
-            if (SocketMutex == null) return 0;
+            if (SocketMutex == null)
+            {
+                return 0;
+            }
 
             SocketMutex.WaitOne();
 
@@ -763,43 +795,43 @@ namespace Mot.Common.Interface.Lib
                 _stringIoBuffer = "";
 
                 int bytesIn;
+
                 if (UseSsl)
+                {
                     do
                     {
                         bytesIn = NetSslStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
-
-                        ByteArgCallback?.Invoke(_byteIoBuffer);
-
                         _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                         totalBytes += bytesIn;
+
                     } while (bytesIn > 0);
+                }
                 else
+                {
                     while (NetStream.DataAvailable)
                     {
                         bytesIn = NetStream.Read(_byteIoBuffer, 0, _byteIoBuffer.Length);
-
-                        ByteArgCallback?.Invoke(_byteIoBuffer);
-
                         _stringIoBuffer += Encoding.UTF8.GetString(_byteIoBuffer, 0, bytesIn);
                         totalBytes += bytesIn;
                     }
-
-                SocketMutex.ReleaseMutex();
+                }
 
                 return totalBytes;
             }
-            catch (IOException iox)
+            catch (IOException iox)// timeout
             {
-                SocketMutex.ReleaseMutex();
                 _eventLogger.Error("read() failed: {0}", iox.Message);
                 throw;
-                // timeout
+
             }
-            catch (Exception ex)
+            catch (Exception ex) // Error
+            {
+                _eventLogger.Error("read() failed: {0}", ex.Message);
+                throw;
+            }
+            finally
             {
                 SocketMutex.ReleaseMutex();
-                _eventLogger.Error("read() failed: {0}", ex.Message);
-                throw; // new Exception("read() failed: " + ex.Message);
             }
         }
 
@@ -812,7 +844,10 @@ namespace Mot.Common.Interface.Lib
         /// <returns>The number of bytes read</returns>
         public int Read(ref byte[] byteBuffer, int index, int count)
         {
-            if (SocketMutex == null) return 0;
+            if (SocketMutex == null)
+            {
+                return 0;
+            }
 
             SocketMutex.WaitOne();
 
@@ -831,14 +866,15 @@ namespace Mot.Common.Interface.Lib
                     ByteArgCallback?.Invoke(_byteIoBuffer);
                 }
 
-                SocketMutex.ReleaseMutex();
-
                 return readCount;
             }
             catch
             {
-                SocketMutex.ReleaseMutex();
                 return 0;
+            }
+            finally
+            {
+                SocketMutex.ReleaseMutex();
             }
         }
 
@@ -851,12 +887,12 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         private static bool DefaultProtocolProcessor(byte[] buffer)
         {
-            if(buffer[0] == 0x06)
+            if (buffer[0] == 0x06)
             {
                 return true;
             }
 
-            if(Encoding.ASCII.GetString(buffer).ToLower() == "ok")
+            if (Encoding.ASCII.GetString(buffer).ToLower() == "ok")
             {
                 return true;
             }
@@ -876,16 +912,22 @@ namespace Mot.Common.Interface.Lib
             try
             {
                 if (UseSsl)
+                {
                     NetSslStream.Write(streamData, 0, streamData.Length);
+                }
                 else
+                {
                     NetStream.Write(streamData, 0, streamData.Length);
+                }
             }
             catch (Exception ex)
             {
                 _eventLogger.Error($"Error writing byte return values: {ex.Message}");
             }
-
-            SocketMutex.ReleaseMutex();
+            finally
+            {
+                SocketMutex.ReleaseMutex();
+            }
         }
 
         /// <summary>
@@ -900,16 +942,22 @@ namespace Mot.Common.Interface.Lib
             try
             {
                 if (UseSsl)
+                {
                     NetSslStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
+                }
                 else
+                {
                     NetStream.Write(Encoding.UTF8.GetBytes(streamData), 0, streamData.Length);
+                }
             }
             catch (Exception ex)
             {
                 _eventLogger.Error($"Error writing string return values: {ex.Message}");
             }
-
-            SocketMutex.ReleaseMutex();
+            finally
+            {
+                SocketMutex.ReleaseMutex();
+            }
         }
 
         /// <summary>
@@ -937,22 +985,22 @@ namespace Mot.Common.Interface.Lib
                     NetStream.Read(buffer, 0, buffer.Length);
                 }
 
-                SocketMutex.ReleaseMutex();
-                return ByteArgProtocolProcessor != null && (bool) ByteArgProtocolProcessor?.Invoke(buffer);
+                return ByteArgProtocolProcessor != null && (bool)ByteArgProtocolProcessor?.Invoke(buffer);
             }
             catch (IOException iox) // timeout
             {
-                SocketMutex.ReleaseMutex();
                 _eventLogger.Error($"Error write() failed: {iox.Message}");
                 return false;
             }
             catch (Exception ex)
             {
                 var errorMsg = $"Error write() failed: {ex.Message}";
-
-                SocketMutex.ReleaseMutex();
                 _eventLogger.Error(errorMsg);
                 throw new Exception(errorMsg);
+            }
+            finally
+            {
+                SocketMutex.ReleaseMutex();
             }
         }
 
@@ -988,34 +1036,32 @@ namespace Mot.Common.Interface.Lib
                     retval = ByteArgProtocolProcessor != null && (bool)ByteArgProtocolProcessor?.Invoke(buffer);
                 }
 
-                SocketMutex.ReleaseMutex();
-
                 return retval;
             }
             catch (SocketException sx)
             {
-                SocketMutex.ReleaseMutex();
-
-                if (sx.ErrorCode == 10053) _eventLogger.Warn($"Write() SocketException. Type = {sx.GetType().Name}, {sx.Message}");
+                if (sx.ErrorCode == 10053)
+                {
+                    _eventLogger.Warn($"Write() SocketException. Type = {sx.GetType().Name}, {sx.Message}");
+                }
 
                 _eventLogger.Error($"Write() Exception. Type = {sx.GetType().Name}, {sx.Message}");
                 return false;
             }
             catch (IOException iox)
             {
-                SocketMutex.ReleaseMutex();
-
                 _eventLogger.Error($"Write() Exception. Type = {iox.GetType().Name}, {iox.Message}");
-
                 return false;
             }
             catch (Exception ex)
             {
-                SocketMutex.ReleaseMutex();
-
                 var errorMsg = $"Write() failed: {ex.Message}";
                 _eventLogger.Error(errorMsg);
                 throw new Exception(errorMsg);
+            }
+            finally
+            {
+                SocketMutex.ReleaseMutex();
             }
         }
 
@@ -1039,9 +1085,13 @@ namespace Mot.Common.Interface.Lib
             try
             {
                 if (UseSsl)
+                {
                     NetSslStream.Flush();
+                }
                 else
+                {
                     NetStream.Flush();
+                }
             }
             catch (Exception ex)
             {
@@ -1056,11 +1106,15 @@ namespace Mot.Common.Interface.Lib
         public void Close()
         {
             if (_serviceRunning)
+            {
                 try
                 {
                     _serviceRunning = false;
 
-                    if (_openForListening) _messageTrigger.Stop();
+                    if (_openForListening)
+                    {
+                        _messageTrigger.Stop();
+                    }
 
                     _localTcpClient?.Close();
                     NetStream?.Close();
@@ -1069,6 +1123,7 @@ namespace Mot.Common.Interface.Lib
                 {
                     throw new Exception($"Socket close failure {ex.Message}");
                 }
+            }
         }
 
         /// <summary>
@@ -1149,6 +1204,7 @@ namespace Mot.Common.Interface.Lib
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 try
                 {
                     if (_x509Store != null)
@@ -1200,6 +1256,7 @@ namespace Mot.Common.Interface.Lib
                 {
                     _eventLogger.Error($"Error disposing socket: {ex.Message}");
                 }
+            }
         }
 #pragma warning disable 1591
         public NetworkStream NetStream;

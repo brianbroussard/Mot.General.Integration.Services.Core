@@ -212,7 +212,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "RxSys_PatID");
+                SetField(_fieldList, value ?? throw new ArgumentException("Patient record must have an ID"), "RxSys_PatID");
             }
         }
 
@@ -439,7 +439,7 @@ namespace Mot.Common.Interface.Lib
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    SetField(_fieldList, value?.ToUpper(), "State");
+                    SetField(_fieldList, !string.IsNullOrEmpty(value) ? value.Substring(0,2).ToUpper() : "XX", "State");
                 }
             }
         }
@@ -641,7 +641,7 @@ namespace Mot.Common.Interface.Lib
                     value = 0;
                 }
 
-                SetField(_fieldList, Convert.ToString(value), "CycleType");
+                SetField(_fieldList, value.ToString(), "CycleType");
             }
         }
 
@@ -668,7 +668,7 @@ namespace Mot.Common.Interface.Lib
                     value = 0;
                 }
 
-                SetField(_fieldList, Convert.ToString(value), "Status");
+                SetField(_fieldList, value.ToString(), "Status");
             }
         }
          
@@ -708,7 +708,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "Allergies");
+                SetField(_fieldList, value ?? string.Empty, "Allergies");
             }
         }
 
@@ -728,7 +728,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "Diet");
+                SetField(_fieldList, value ?? string.Empty, "Diet");
             }
         }
 
@@ -748,7 +748,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "DxNotes");
+                SetField(_fieldList, value ?? string.Empty, "DxNotes");
             }
         }
 
@@ -768,7 +768,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "TreatmentNotes");
+                SetField(_fieldList, value ?? string.Empty, "TreatmentNotes");
             }
         }
 
@@ -811,7 +811,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, Convert.ToString(value), "Height");
+                SetField(_fieldList, value.ToString(), "Height");
             }
         }
 
@@ -831,7 +831,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, Convert.ToString(value), "Weight");
+                SetField(_fieldList, value.ToString(), "Weight");
             }
         }
 
@@ -851,7 +851,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "ResponsibleName");
+                SetField(_fieldList, value ?? string.Empty, "ResponsibleName");
             }
         }
 
@@ -871,7 +871,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "InsName");
+                SetField(_fieldList, value ?? string.Empty, "InsName");
             }
         }
 
@@ -891,7 +891,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "InsPNo");
+                SetField(_fieldList, value ?? string.Empty, "InsPNo");
             }
         }
 
@@ -911,7 +911,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "AltInsName");
+                SetField(_fieldList, value ?? string.Empty, "AltInsName");
             }
         }
 
@@ -931,7 +931,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "AltInsPNo");
+                SetField(_fieldList, value ?? string.Empty, "AltInsPNo");
             }
         }
 
@@ -951,7 +951,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "MCareNum");
+                SetField(_fieldList, value ?? string.Empty, "MCareNum");
             }
         }
 
@@ -971,7 +971,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "MCaidNum");
+                SetField(_fieldList, value ?? string.Empty, "MCaidNum");
             }
         }
 
@@ -1015,7 +1015,7 @@ namespace Mot.Common.Interface.Lib
 
             set
             {
-                SetField(_fieldList, value, "ChartOnly");
+                SetField(_fieldList, value ?? "0", "ChartOnly");
             }
         }
 
@@ -1058,7 +1058,7 @@ namespace Mot.Common.Interface.Lib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += $"\nEmail: {value}\n";
+                f.TagData += $"\nEmail: {value ?? "none"}\n";
             }
         }
 
@@ -1073,7 +1073,7 @@ namespace Mot.Common.Interface.Lib
             set
             {
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
-                f.TagData += $"\nIM: {value}\n";
+                f.TagData += $"\nIM: {value ?? "none"}\n";
             }
         }
     }

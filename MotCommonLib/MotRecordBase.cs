@@ -430,7 +430,10 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         protected string NormalizeString(string val)
         {
-            if (string.IsNullOrEmpty(val)) return string.Empty;
+            if (string.IsNullOrEmpty(val))
+            {
+                return string.Empty;
+            }
 
             char[] junk = { '-', '.', ',', ' ', ';', ':', '(', ')' };
 

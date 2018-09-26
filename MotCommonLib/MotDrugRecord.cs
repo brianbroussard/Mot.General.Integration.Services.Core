@@ -234,7 +234,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_DrugID");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Drug record must have an ID"), "RxSys_DrugID");
         }
 
         /// <summary>
@@ -296,7 +296,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? String.Empty, "TradeName");
+            set => SetField(_fieldList, value ?? string.Empty, "TradeName");
         }
 
         /// <summary>
@@ -403,7 +403,7 @@ namespace Mot.Common.Interface.Lib
             {
                 if ((value < 2 && value > 7) && value != 99)
                 {
-                    throw new Exception("Drug Schedule must be 2-7");
+                    throw new ArgumentException("Drug Schedule must be 2-7");
                 }
 
                 SetField(_fieldList, Convert.ToString(value), "DrugSchedule");

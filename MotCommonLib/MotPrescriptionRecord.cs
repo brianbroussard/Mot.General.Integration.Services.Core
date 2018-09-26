@@ -253,7 +253,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_RxNum");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Prescription record must have an ID"), "RxSys_RxNum");
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_PatID");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Prescription record must have a a patient ID"), "RxSys_PatID");
         }
 
         /// <summary>
@@ -463,7 +463,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, NormalizeString(value ?? "MissingName"), "DoseScheduleName");
+            set => SetField(_fieldList, NormalizeString(value ?? "Undefined"), "DoseScheduleName");
         }
 
         /// <summary>
@@ -480,7 +480,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? " ", "Comments");
+            set => SetField(_fieldList, value ?? string.Empty, "Comments");
         }
 
         /// <summary>

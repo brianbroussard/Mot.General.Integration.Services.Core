@@ -214,7 +214,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_DocID");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Prescriber record must have an ID"), "RxSys_DocID");
         }
 
         /// <summary>
@@ -337,7 +337,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value?.ToUpper() ?? String.Empty, "State");
+            set => SetField(_fieldList, value?.ToUpper() ?? string.Empty, "State");
         }
 
         /// <summary>
@@ -420,7 +420,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, ValidateDea(value ?? String.Empty), "DEA_ID");
+            set => SetField(_fieldList, ValidateDea(value ?? string.Empty), "DEA_ID");
         }
 
         /// <summary>
@@ -437,7 +437,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? String.Empty, "TPID");
+            set => SetField(_fieldList, value ?? string.Empty, "TPID");
         }
 
         /// <summary>
@@ -453,7 +453,7 @@ namespace Mot.Common.Interface.Lib
                 return !string.IsNullOrEmpty(f?.TagData) ? f.TagData : "None";
             }
 
-            set => SetField(_fieldList, value, "Specialty");
+            set => SetField(_fieldList, value ?? string.Empty, "Specialty");
         }
 
         /// <summary>
@@ -469,7 +469,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? String.Empty, "Fax");
+            set => SetField(_fieldList, value ?? string.Empty, "Fax");
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? String.Empty, "PagerInfo");
+            set => SetField(_fieldList, value ?? string.Empty, "PagerInfo");
         }
 
         /// <summary>
@@ -500,7 +500,7 @@ namespace Mot.Common.Interface.Lib
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
                 if (f?.TagData != null)
                 {
-                    f.TagData += "\nEmail: " + value;
+                    f.TagData += "\nEmail: " + value ?? "none";
                 }
             }
         }
@@ -517,7 +517,7 @@ namespace Mot.Common.Interface.Lib
                 var f = _fieldList?.Find(x => x.TagName.ToLower().Contains(("comments")));
                 if (f != null)
                 {
-                    f.TagData += "\nIM: " + value;
+                    f.TagData += "\nIM: " + value ?? "none";
                 }
             }
         }

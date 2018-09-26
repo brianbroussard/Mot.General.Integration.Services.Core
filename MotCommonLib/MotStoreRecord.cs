@@ -202,7 +202,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? string.Empty, "RxSys_StoreID");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Store record must have an ID"), "RxSys_StoreID");
         }
 
         /// <summary>
@@ -303,7 +303,7 @@ namespace Mot.Common.Interface.Lib
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    SetField(_fieldList, value.ToUpper(), "State");
+                    SetField(_fieldList, !string.IsNullOrEmpty(value) ? value.Substring(0,2).ToUpper() : "XX", "State");
                 }
             }
         }
@@ -384,7 +384,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, ValidateDea(value), "DEANum");
+            set => SetField(_fieldList, ValidateDea(value ?? "XX0000000"), "DEANum");
         }
 
         /// <summary>
@@ -401,11 +401,9 @@ namespace Mot.Common.Interface.Lib
 
                 if (f != null)
                 {
-                    f.TagData += string.Format("\nWebsite: {0}\n", value);
+                    f.TagData += $"\nWebsite: {value ?? "none"}\n";
                 }
-
             }
-
         }
 
         /// <summary>
@@ -422,7 +420,7 @@ namespace Mot.Common.Interface.Lib
 
                 if (f != null)
                 {
-                    f.TagData += $"\nEmail: {value}\n";
+                    f.TagData += $"\nEmail: {value ?? "none"}\n";
                 }
             }
         }

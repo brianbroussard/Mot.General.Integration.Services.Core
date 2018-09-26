@@ -175,7 +175,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? string.Empty, "RxSys_LocID");
+            set => SetField(_fieldList, value ?? throw new ArgumentException("Location record must have an ID"), "RxSys_LocID");
         }
 
         /// <summary>
@@ -319,7 +319,7 @@ namespace Mot.Common.Interface.Lib
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    SetField(_fieldList, value.ToUpper(), "State");
+                    SetField(_fieldList, !string.IsNullOrEmpty(value) ? value.Substring(0,2).ToUpper() : "XX", "State");
                 }
             }
         }
@@ -409,7 +409,7 @@ namespace Mot.Common.Interface.Lib
 
                 SetField(_fieldList, Convert.ToString(value), "CycleDays");
             }
-        }
+        } 
 
         /// <summary>
         /// Gets or sets the type of the cycle.
