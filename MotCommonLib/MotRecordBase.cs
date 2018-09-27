@@ -633,6 +633,21 @@ namespace Mot.Common.Interface.Lib
             return true;
         }
 
+        private bool CheckReturnValue(byte[] rawReturn)
+        {
+            if (rawReturn[0] == '\x6')
+            {
+                return true;
+            }
+
+            if (Encoding.ASCII.GetString(rawReturn).ToLower().Substring(0, 2) == "ok")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         ///     <c>Write</c>
         ///     Pushes the current set of fields to the passed stream after formatting
@@ -695,6 +710,11 @@ namespace Mot.Common.Interface.Lib
                     if (SendEof)
                     {
                         stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
+                    }
+
+                    if(!CheckReturnValue(buf))
+                    {
+                        throw new InvalidOperationException();
                     }
                 }
 
@@ -762,7 +782,10 @@ namespace Mot.Common.Interface.Lib
                 if (dataLen > 0)
                 {
                     // Push it to the port
-                    socket.Write(record);
+                    if(!socket.Write(record))
+                    {
+                        throw new InvalidOperationException();
+                    }
 
                     if (SendEof)
                     {
@@ -817,6 +840,11 @@ namespace Mot.Common.Interface.Lib
                 {
                     stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
                 }
+
+                if (!CheckReturnValue(buf))
+                {
+                    throw new InvalidOperationException();
+                }
             }
             catch (Exception ex)
             {
@@ -830,7 +858,7 @@ namespace Mot.Common.Interface.Lib
         ///     Write string data directly to the socket
         /// </summary>
         /// <param name="socket"></param>
-        /// <param name="data"></param>
+        /// <param name="data"></caparam>
         public void Write(MotSocket socket, string data)
         {
             if (socket == null)
@@ -850,7 +878,10 @@ namespace Mot.Common.Interface.Lib
 
             try
             {
-                socket.Write(data);
+                if(!socket.Write(data))
+                {
+                    throw new InvalidOperationException();
+                }
             }
             catch (Exception ex)
             {

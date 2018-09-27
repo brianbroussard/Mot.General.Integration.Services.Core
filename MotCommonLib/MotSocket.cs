@@ -887,12 +887,12 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         private static bool DefaultProtocolProcessor(byte[] buffer)
         {
-            if (buffer[0] == 0x06)
+            if (buffer[0] == '\x6')
             {
                 return true;
             }
 
-            if (Encoding.ASCII.GetString(buffer).ToLower() == "ok")
+            if (Encoding.ASCII.GetString(buffer).ToLower().Substring(0,2) == "ok")
             {
                 return true;
             }

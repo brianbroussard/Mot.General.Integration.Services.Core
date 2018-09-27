@@ -4,13 +4,13 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Mot.Common.Interface.Lib;
 using Mot.Listener.Interface.Lib;
-
+using System.Net.Sockets;
 
 namespace ListenerTests
 {
     [TestClass]
     public class ListenerTests
-    {      
+    {
 
         public string callback(string data)
         {
@@ -30,14 +30,14 @@ namespace ListenerTests
                     hl7Listener.Go();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Assert.Fail(ex.Message);    
+                Assert.Fail(ex.Message);
             }
 
             try
             {
-                using(var fsListener = new FilesystemListener(_path, callback))
+                using (var fsListener = new FilesystemListener(_path, callback))
                 {
                     fsListener.Go();
                 }
@@ -47,7 +47,7 @@ namespace ListenerTests
                     fsListener.Go();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Fail(ex.Message);
             }
@@ -64,7 +64,7 @@ namespace ListenerTests
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Illegal aocket address {ex.Message}");   
+                Console.WriteLine($"Illegal aocket address {ex.Message}");
             }
 
             try
@@ -108,6 +108,57 @@ namespace ListenerTests
             catch
             {
                 Console.WriteLine("Trapped null callback parameter");
+            }
+        }
+
+        public string Parse(string val)
+        {
+            return "Ok";
+        }
+
+        [TestMethod]
+        public void ConfirmReturnValues()
+        {
+            try
+            {
+                var locId = Guid.NewGuid().ToString();
+
+                using (var testSession = new TcpClient("proxyplayground.medicineontime.com", 24042))
+                {
+                    var loc = new MotFacilityRecord("Add")
+                    {
+                        LocationID = locId,
+                        LocationName = "The Banxzai Institute",
+                        Address1 = "1 Banzai Blvd",
+                        City = "Fort Lee",
+                    };
+
+                    using (var stream = testSession.GetStream())
+                    {
+                        loc.Write(stream);
+
+                        loc = new MotFacilityRecord("Change")
+                        {
+                            LocationID = locId,
+                            LocationName = "The Banxzai Institute",
+                            Address1 = "1010101 Banzai Blvd",
+                            City = "Fort Lee",
+                        };
+
+                        loc.Write(stream);
+
+                        loc = new MotFacilityRecord("Delete")
+                        {
+                            LocationID = locId
+                        };
+
+                        loc.Write(stream);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
             }
         }
     }
