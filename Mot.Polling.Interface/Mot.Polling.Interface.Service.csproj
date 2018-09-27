@@ -81,6 +81,9 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
     <None Include="specs\McKesson ODBC MOT View Definitions.xlsx" />
   </ItemGroup>

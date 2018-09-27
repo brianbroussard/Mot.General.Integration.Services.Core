@@ -214,9 +214,8 @@ namespace Mot.Parser.InterfaceLib
                 {
                     using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
                     {
-                        EventLogger.Info(p.ResponseMessage);
+                        EventLogger.Debug(p.ResponseMessage);
                         responseMessage = p.ResponseMessage;
-                        Responses.Add(responseMessage);
                     }
                 }
             }
@@ -236,9 +235,7 @@ namespace Mot.Parser.InterfaceLib
         public void Start()
         {
             try
-            {
-                Responses = new List<string>();
-
+            {                
                 if (WatchSocket)
                 {
                     SocketListener = new Hl7SocketListener(ListenerPort, Parse)
