@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Net.Http;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mot.Common.Interface.Lib;
@@ -7,9 +8,45 @@ using Mot.Parser.InterfaceLib;
 
 namespace ParserTests
 {
+
     [TestClass]
     public class ParserTests
     {
+        public static string GetLorum(int amount)
+        {
+            // build the JSON request URL
+            var requestUrl = $"http://loripsum.net/api/{amount}/long/plaintext";
+
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(requestUrl)))
+                    {
+                        request.Headers.Add("Accept", "application/json");
+
+                        using (var response = client.SendAsync(request).Result)
+                        {
+                            response.EnsureSuccessStatusCode();
+                            var text = response.Content.ReadAsStringAsync().Result;
+                            return text.Substring(text.IndexOf('.') + 2);
+                        }
+                    }
+                }
+            }
+            catch (HttpRequestException hex)
+            {
+                Console.WriteLine(hex.Message);
+                throw;
+                //return default(T);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
         private const string TaggedStore =
             @"<Record><Table>Store</Table><Action>Add</Action><RxSys_StoreID>169252</RxSys_StoreID><StoreName>Southcare Pharmacy</StoreName><Address1>6499 38th Avenue N</Address1><Address2>Suite A1 St. Petersburg</Address2><City>St. Petersburg</City><State>FL</State><Zip>33710</Zip><Phone></Phone><Fax></Fax><DEANum></DEANum></Record>";
         private const string TaggedLocation =
@@ -173,71 +210,120 @@ namespace ParserTests
         class recordTypeTests
         {
             [TestMethod]
-            static void DrugRecord()
+            public void PioneerRxProblems()
             {
-                MotDrugRecord r;
-                MotSocket p;
+                var rec1 = $@"<record>
+                                <table>rx</table>
+                                <action>C</action>
+                                <rxsys_rxnum>9596</rxsys_rxnum>
+                                <rxsys_newrxnum>16234</rxsys_newrxnum>
+                                <status>100</status>
+                             </record> ";
+
+                var rec2 = $@"<record>
+                                <table>rx</table>
+                                <action>A</action>
+                                <rxsys_rxnum>16234</rxsys_rxnum>
+                                <rxsys_docid>abffc5e6-55d3-40f2-9e13-1e306fe87196</rxsys_docid>
+                                <rxsys_patid>66130aee-9b5a-419a-b7ca-c9a2d749e995</rxsys_patid>
+                                <rxsys_drugid>0b1f1f37-57c5-40d8-b5cc-575a22fe03c3</rxsys_drugid>
+                                <sig>TAKE THREE TABLETS  BY MOUTH DAILY.</sig>
+                                <rxstartdate>2018-09-18</rxstartdate>
+                                <rxstopdate>2019-09-18</rxstopdate>
+                                <refills>2</refills>
+                                <qtydispensed>90.00</qtydispensed>
+                                <status>1</status>
+                                <doseschedulename>T3TD.</doseschedulename>
+                            </record>";
 
                 try
                 {
-                    p = new MotSocket("localhost", 24042);
-                    r = new MotDrugRecord("Add");
+                    using (var s = new MotSocket("localhost", 24042))
+                    {
+                        using (var p = new MotParser(s, rec1, InputDataFormat.Tagged))
+                        {
+                            Console.WriteLine(p.ResponseMessage);
+                        }
 
-                    // Null is a valid value
-                    r.RxSys_DrugID = null;
-                    r.LabelCode = null;
-                    r.ProductCode = null;
-                    r.TradeName = null;
-                    r.Strength = 900000;
-                    r.Unit = null;
-                    r.RxOTC = null;
-                    r.DoseForm = null;
-                    r.Route = null;
-                    r.DrugSchedule = 0;
-                    r.VisualDescription = null;
-                    r.DrugName = null;
-                    r.ShortName = null;
-                    r.NDCNum = null;
-                    r.SizeFactor = 0;
-                    r.Template = null;
-                    r.DefaultIsolate = 0;
-                    r.ConsultMsg = null;
-                    r.GenericFor = null;
-                    r.Write(p);
+                        using (var p = new MotParser(s, rec2, InputDataFormat.Tagged))
+                        {
+                            Console.WriteLine(p.ResponseMessage);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Assert.Fail(ex.Message);
+                }
+            }
 
-                    // Now use some actual values
-                    r.RxSys_DrugID = "ABDC12579";
-                    r.LabelCode = "Mumble";
-                    r.ProductCode = "1234";
-                    r.TradeName = "ALPHAFROG@ 120 MG Tablet";
-                    r.Strength = 12.5;
-                    r.Unit = "MG";
-                    r.RxOTC = "R";
-                    r.DoseForm = "Tablet";
-                    r.Route = "Oral";
-                    r.DrugSchedule = 6;
-                    r.VisualDescription = "RND/RED/TAB";
-                    r.DrugName = "ALPHAFROG@ 120 MG";
-                    r.ShortName = "HAL 120MG";
-                    r.NDCNum = "00023-0337-01";
-                    r.SizeFactor = 5;
-                    r.Template = "C";
-                    r.DefaultIsolate = 0;
-                    r.ConsultMsg = "Don't set your hair on fire";
-                    r.GenericFor = "N/A";
-                    r.Write(p);
+            [TestMethod]
+            public void DrugRecord()
+            {             
+                try
+                {
+                    using (var p = new MotSocket("localhost", 24042))
+                    {
+                        var r = new MotDrugRecord("Add")
+                        {
+                            // Null is a valid value
+                            RxSys_DrugID = null,
+                            LabelCode = null,
+                            ProductCode = null,
+                            TradeName = null,
+                            Strength = 900000,
+                            Unit = null,
+                            RxOTC = null,
+                            DoseForm = null,
+                            Route = null,
+                            DrugSchedule = 0,
+                            VisualDescription = null,
+                            DrugName = null,
+                            ShortName = null,
+                            NDCNum = null,
+                            SizeFactor = 0,
+                            Template = null,
+                            DefaultIsolate = 0,
+                            ConsultMsg = null,
+                            GenericFor = null
+                        };
 
-                    // Change the record slightly
-                    r.SetField("Action", "Change");
-                    r.SetField("TradeName", "BetaDog");
-                    r.SetField("DrugName", "BETADOG@ 12MG");
-                    r.SetField("ProductCode", null);
-                    r.SetField("GenericFor", null);
-                    r.Write(p);
+                        r.Write(p);
 
-                    // Delete the ecord
-                    r.SetField("Action", "Delete");
-                    r.Write(p);
+                        // Now use some actual values
+                        r.RxSys_DrugID = Guid.NewGuid().ToString();
+                        r.LabelCode = GetLorum(2);
+                        r.ProductCode = GetLorum(2);
+                        r.TradeName = GetLorum(2);
+                        r.Strength = 12.5;
+                        r.Unit = GetLorum(2);
+                        r.RxOTC = GetLorum(2);
+                        r.DoseForm = GetLorum(2);
+                        r.Route = GetLorum(2);
+                        r.DrugSchedule = 6;
+                        r.VisualDescription = GetLorum(2);
+                        r.DrugName = GetLorum(2);
+                        r.ShortName = GetLorum(2);
+                        r.NDCNum = GetLorum(2);
+                        r.SizeFactor = 5;
+                        r.Template = GetLorum(2);
+                        r.DefaultIsolate = 0;
+                        r.ConsultMsg = GetLorum(2);
+                        r.GenericFor = GetLorum(2);
+                        r.Write(p);
+
+                        // Change the record slightly
+                        r.SetField("Action", "Change");
+                        r.SetField("TradeName", GetLorum(2));
+                        r.SetField("DrugName", GetLorum(2));
+                        r.SetField("ProductCode", null);
+                        r.SetField("GenericFor", null);
+                        r.Write(p);
+
+                        // Delete the ecord
+                        r.SetField("Action", "Delete");
+                        r.Write(p);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -475,7 +561,7 @@ DONUT, FRED~25731~SPRINGFIELD RETIREMENT CASTLE~~2~201~13~00904791559~~IBUPROFEN
 ";
                 try
                 {
-                    var  p = new MotSocket("localhost", 24042);
+                    var p = new MotSocket("localhost", 24042);
                     var __test = new MotParser(p, __parada_record, false);
                 }
                 catch (Exception ex)

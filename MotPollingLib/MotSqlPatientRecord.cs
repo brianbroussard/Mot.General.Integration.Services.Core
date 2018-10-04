@@ -213,20 +213,20 @@ namespace Mot.Polling.Interface.Lib
             {
                 // Load the translaton table -- Database Column Name to Gateway Tag Name  
                 TranslationTable.Add("Patient_ID", "RxSys_PatID");
-                TranslationTable.Add("Patient_Location_Code", "RxSys_LocID");
+                //TranslationTable.Add("Patient_Location_Code", "RxSys_LocID");
                 TranslationTable.Add("Primary_Prescriber_ID", "RxSys_PrimaryDoc");
                 TranslationTable.Add("Last_Name", "LastName");
                 TranslationTable.Add("First_Name", "FirstName");
                 TranslationTable.Add("Middle_Initial", "MiddleInitial");
                 TranslationTable.Add("Address_Line_1", "Address1");
-                TranslationTable.Add("Address_Line_2", "Address1");
+                TranslationTable.Add("Address_Line_2", "Address2");
                 TranslationTable.Add("City", "City");
                 TranslationTable.Add("State_Code", "State");
                 TranslationTable.Add("Zip_Code", "Zip");
-                TranslationTable.Add("Zip_Plus_4", "Zip_Plus_4");
+                TranslationTable.Add("Zip_Plus_4", "Zip");
                 TranslationTable.Add("Telephone_Number", "Phone1");
-                TranslationTable.Add("Area_Code", "AreaCode");
-                TranslationTable.Add("Extension", "WorkPhone");
+                TranslationTable.Add("Area_Code", "Phone1");
+                TranslationTable.Add("Extension", "Phone2");
                 TranslationTable.Add("SSN", "SSN");
                 TranslationTable.Add("Birth_Date", "DOB"); // SqlDateTime
                 TranslationTable.Add("Deceased_Date", "Comments"); // SqlDateTime
@@ -301,9 +301,9 @@ namespace Mot.Polling.Interface.Lib
                         }
 
                         // Now get the note fields
-                        GetAllergies(patientId);
-                        GetDiagnosis(patientId);
-                        GetNotes(patientId);
+                       // GetAllergies(patientId);
+                       // GetDiagnosis(patientId);
+                        //GetNotes(patientId);
 
                         // Finally,  write the recort to the Gateway
                         try

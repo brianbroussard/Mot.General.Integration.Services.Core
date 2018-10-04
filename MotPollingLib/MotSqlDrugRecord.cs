@@ -34,6 +34,10 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("NARCOTIC_CODE", "DrugSchedule");
                 TranslationTable.Add("VisualDescription", "VisualDescription");
                 TranslationTable.Add("NDC_CODE", "NDCNum");
+                TranslationTable.Add("COLOR_CODE", "VisualDescription");
+                TranslationTable.Add("ITEM_TYPE", "VisualDescription");
+                TranslationTable.Add("SHAPE_CODE", "VisualDescription");
+                TranslationTable.Add("PACKAGE_CODE", "ProdCode");
                 TranslationTable.Add("ROUTE_OF_ADMINISTRATION", "Route");
 
                 var recordSet = Db.ExecuteQuery("SELECT * FROM vItem;");
@@ -54,15 +58,15 @@ namespace Mot.Polling.Interface.Lib
                                 {
                                     case "ITEM_TYPE":
                                         itemType = val;
-                                        break;
+                                        continue;
 
                                     case "COLOR_CODE":
                                         itemColor = val;
-                                        break;
+                                        continue;
 
                                     case "SHAPE_CODE":
                                         itemShape = val;
-                                        break;
+                                        continue;
 
                                     default:
                                         break;
@@ -85,8 +89,6 @@ namespace Mot.Polling.Interface.Lib
                                     _drug.Write(stream);
                                 }
                             }
-
-                            Mutex.ReleaseMutex();
                         }
                         catch (Exception ex)
                         {
