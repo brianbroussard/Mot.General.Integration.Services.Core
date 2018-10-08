@@ -18,7 +18,7 @@ namespace CommonTests
         // Change these to the machine you want to hit
         string targetIp = "localhost";
         int targetPort = 24042;
-        
+
         // Set to false to generate new sql records with a fresh timestamp
         bool CreatedRecords = false;
 
@@ -31,7 +31,7 @@ namespace CommonTests
 
         public void SetupSqlServer()
         {
-            if(GetPlatformOs.Current() != PlatformOs.Windows)
+            if (GetPlatformOs.Current() != PlatformOs.Windows)
             {
                 dataSource = sqlServerIp;
             }
@@ -41,78 +41,13 @@ namespace CommonTests
             }
         }
 
-
-        public string GetLorum(int amount)
-        {
-            // build the JSON request URL
-            var requestUrl = $"http://loripsum.net/api/{amount}/long/plaintext";
-
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(requestUrl)))
-                    {
-                        request.Headers.Add("Accept", "application/json");
-
-                        using (var response = client.SendAsync(request).Result)
-                        {
-                            response.EnsureSuccessStatusCode();
-                            var text = response.Content.ReadAsStringAsync().Result;
-                            return text.Substring(text.IndexOf('.') + 2);
-                        }
-                    }
-                }
-            }
-            catch (HttpRequestException hex)
-            {
-                Console.WriteLine(hex.Message);
-                throw;
-                //return default(T);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-        }
-
-
-        // ------- Format Utilities
-        string FullTrim(string val)
-        {
-            if (string.IsNullOrEmpty(val))
-            {
-                return string.Empty;
-            }
-
-            char[] junk = { ' ', '-', '.', ',', ' ', ';', ':', '(', ')', '?', '*', '!' };
-
-            while (val?.IndexOfAny(junk) > -1)
-            {
-                val = val.Remove(val.IndexOfAny(junk), 1);
-            }
-
-            return val;
-        }
-
-        double DRand(int m)
-        {
-            return new Random((int)DateTime.Now.Ticks & 0x0000FFFF).NextDouble() * m;
-        }
-
-        int IRand()
-        {
-            return new Random((int)DateTime.Now.Ticks & 0x0000FFFF).Next();
-        }
-
         // ---- Real Work
 
         public void CreateSqlRecords()
         {
             SetupSqlServer();
 
-            if(CreatedRecords == true)
+            if (CreatedRecords == true)
             {
                 return;
             }
@@ -125,31 +60,31 @@ namespace CommonTests
                     {
                         CreatedRecords = true;
 
-                        var docId = IRand(); 
-                        var patId = IRand();
-                        var facId = FullTrim(GetLorum(1).Substring(0, 2)).ToUpper();
+                        var docId = RandomDataGenerator.Integer();
+                        var patId = RandomDataGenerator.Integer();
+                        var facId = RandomDataGenerator.TrimString(2).ToUpper();
                         var storeId = "PHARMASERVE1";
-                        var scripId = IRand();
-                        var drugId = IRand();
-                       
+                        var scripId = RandomDataGenerator.Integer();
+                        var drugId = RandomDataGenerator.Integer();
+
                         // Prescriber
                         var sql = $"INSERT INTO dbo.vPrescriber VALUES(" +
                                   $"'{docId}', " +                                                  // Prescriber_ID
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Last_Name
-                                  $"'{FullTrim(GetLorum(1).Substring(0,15)).ToUpper()}', " +        // First_Name
-                                  $"'{FullTrim(GetLorum(1).Substring(0,1)).ToUpper()}', " +         // Middle_Initial
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_1
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_2
-                                  $"'{FullTrim(GetLorum(1).Substring(0,20)).ToUpper()}', " +        // City
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Last_Name
+                                  $"'{RandomDataGenerator.TrimString(15).ToUpper()}', " +        // First_Name
+                                  $"'{RandomDataGenerator.TrimString(1).ToUpper()}', " +         // Middle_Initial
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Address_Line_1
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Address_Line_2
+                                  $"'{RandomDataGenerator.TrimString(20).ToUpper()}', " +        // City
                                   $"'MA', " +                                                       // State_Code
                                   $"'02165', " +                                                    // Zip_Code
                                   $"'1234', " +                                                     // Zip_Plus_4
                                   $"'617', " +                                                      // Area_Code
                                   $"'9696072', " +                                                  // Telephone_Number
                                   $"'00', " +                                                       // Exchange
-                                  $"'{GetLorum(2).Substring(0,2).ToUpper()}0123456', " +            // DEA_Number
+                                  $"'{RandomDataGenerator.String(2).ToUpper()}0123456', " +            // DEA_Number
                                   $"'123456', " +                                                   // DEA_Suffix
-                                  $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +        // Prescriber_Type
+                                  $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +        // Prescriber_Type
                                   $"'1', " +                                                        // Active_Flag
                                   $"DEFAULT);";                                                     // MSSQLTS
 
@@ -158,23 +93,22 @@ namespace CommonTests
                         // Prescriber Note
                         sql = $"INSERT INTO dbo.vPrescriberNote VALUES(" +
                               $"'{docId}', " +
-                              $"'{IRand()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 30)).ToUpper()}', " +
+                              $"'{RandomDataGenerator.Integer()}', " +
+                              $"'{RandomDataGenerator.TrimString(10).ToUpper()}', " +
+                              $"'{RandomDataGenerator.TrimString(30).ToUpper()}', " +
                               $"'{DateTime.Now}', " +
-                              $"'{GetLorum(20)}');";
+                              $"'{RandomDataGenerator.String()}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
-
 
 
                         sql = $"INSERT INTO dbo.vMOTLocation VALUES(" +
                                   $"'{facId}', " +
                                   $"'{storeId}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,64)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,40)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,40)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +
+                                  $"'{RandomDataGenerator.TrimString(64).ToUpper()}', " +
+                                  $"'{RandomDataGenerator.TrimString(40).ToUpper()}', " +
+                                  $"'{RandomDataGenerator.TrimString(40).ToUpper()}', " +
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +
                                   $"'NH', " +
                                   $"'03049', " +
                                   $"'6034659622', " +
@@ -182,19 +116,19 @@ namespace CommonTests
 
                         motSqlServer.ExecuteNonQuery(sql);
 
-                        var ndc = FullTrim(GetLorum(1).Substring(0, 11)).ToUpper();
+                        var ndc = RandomDataGenerator.TrimString(11).ToUpper();
 
                         // Drug
                         sql = $"INSERT INTO dbo.vItem " +
                              $"VALUES('{drugId}', " +                                       //[ITEM_ID]
                              $"'1', " +                                                     //[ITEM_VERSION]
                              $"'{ndc}', " +    //[NDC_CODE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 2)).ToUpper()}', " +     //[PACKAGE_CODE]
-                             $"'{DRand(100)}', " +                                          //[PACKAGE_SIZE]
+                             $"'{RandomDataGenerator.TrimString(2).ToUpper()}', " +     //[PACKAGE_CODE]
+                             $"'{RandomDataGenerator.Double(100)}', " +                                          //[PACKAGE_SIZE]
                              $"'1', " +                                                     //[CURRENT_ITEM_VERSION]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 3)).ToUpper()}', " +     //[ITEM_TYPE]
-                             $"'{GetLorum(1).Substring(0, 40)}', " +                        //[ITEM_NAME]
-                             $"'{IRand()}', " +                                             //[KDC_NUMBER]
+                             $"'{RandomDataGenerator.TrimString(3).ToUpper()}', " +     //[ITEM_TYPE]
+                             $"'{RandomDataGenerator.String(40)}', " +                        //[ITEM_NAME]
+                             $"'{RandomDataGenerator.Integer()}', " +                                             //[KDC_NUMBER]
                              $"'10', " +                                                    //[GPI_GROUP_CODE]
                              $"'8', " +                                                     //[GPI_CLASS_CODE]
                              $"'22', " +                                                    //[GPI_SUBCLASS_CODE]
@@ -202,32 +136,32 @@ namespace CommonTests
                              $"'92', " +                                                    //[GPI_NAME_EXTENSION_CODE]
                              $"'33', " +                                                    //[GPI_DOSAGE_FORM_CODE]
                              $"'102', " +                                                   //[GPI_STRENGTH_CODE]
-                             $"'{IRand()}', " +                                             //[HRI_NUMBER]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 7)).ToUpper()}', " +     //[DOSAGE_SIGNA_CODE]
-                             $"'{GetLorum(1).Substring(0, 80)}', " +                        //[INSTRUCTION_SIGNA_STRING]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[FORM_TYPE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 3)).ToUpper()}', " +     //[ROUTE_OF_ADMINISTRATION]
-                             $"'{IRand()}', " +                                             //[ALTERNATE_MANUFACTURER_ID]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 13)).ToUpper()}', " +    //[UPC]
-                             $"'{DRand(10).ToString().Substring(0,15)}', " +                //[STRENGTH]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[COLOR_CODE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[FLAVOR_CODE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[SHAPE_CODE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +    //[PRODUCT_MARKING]
+                             $"'{RandomDataGenerator.Integer()}', " +                                             //[HRI_NUMBER]
+                             $"'{RandomDataGenerator.TrimString(7).ToUpper()}', " +     //[DOSAGE_SIGNA_CODE]
+                             $"'{RandomDataGenerator.String(80)}', " +                        //[INSTRUCTION_SIGNA_STRING]
+                             $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +     //[FORM_TYPE]
+                             $"'{RandomDataGenerator.TrimString(3).ToUpper()}', " +     //[ROUTE_OF_ADMINISTRATION]
+                             $"'{RandomDataGenerator.Integer()}', " +                                             //[ALTERNATE_MANUFACTURER_ID]
+                             $"'{RandomDataGenerator.TrimString(13).ToUpper()}', " +    //[UPC]
+                             $"'{RandomDataGenerator.Double(10).ToString().Substring(0, 15)}', " +                //[STRENGTH]
+                             $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +     //[COLOR_CODE]
+                             $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +     //[FLAVOR_CODE]
+                             $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +     //[SHAPE_CODE]
+                             $"'{RandomDataGenerator.TrimString(10).ToUpper()}', " +    //[PRODUCT_MARKING]
                              $"'6', " +                                                     //[NARCOTIC_CODE]
-                             $"'{DRand(100)}', " +                                             //[UNIT_SIZE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 2)).ToUpper()}', " +     //[UNIT_OF_MEASURE]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 5)).ToUpper()}', " +     //[NDC_Manufacturer_Number]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +    //[Manufacturer_Abbreviation]
+                             $"'{RandomDataGenerator.Double(100)}', " +                                             //[UNIT_SIZE]
+                             $"'{RandomDataGenerator.TrimString(2).ToUpper()}', " +     //[UNIT_OF_MEASURE]
+                             $"'{RandomDataGenerator.TrimString(5).ToUpper()}', " +     //[NDC_Manufacturer_Number]
+                             $"'{RandomDataGenerator.TrimString(10).ToUpper()}', " +    //[Manufacturer_Abbreviation]
                              $"DEFAULT);";                                                  //[MSSQLTS]                                                                                             
 
-                             motSqlServer.ExecuteNonQuery(sql);
+                        motSqlServer.ExecuteNonQuery(sql);
 
                         // Drug Caution
                         sql = $"INSERT INTO dbo.vItemCaution VALUES(" +
-                              $"'{IRand()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0,4)).ToUpper()}', " +
-                              $"'{GetLorum(1).Substring(0,255)}');";
+                              $"'{RandomDataGenerator.Integer()}', " +
+                              $"'{RandomDataGenerator.TrimString(4).ToUpper()}', " +
+                              $"'{RandomDataGenerator.String(255)}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
 
@@ -235,21 +169,21 @@ namespace CommonTests
                         // Patient
                         sql = $"INSERT INTO dbo.vPatient VALUES(" +
                                   $"'{patId}', " +                                                  // Patient_ID
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Last_Name
-                                  $"'{FullTrim(GetLorum(1).Substring(0,15)).ToUpper()}', " +        // First_Name
-                                  $"'{FullTrim(GetLorum(1).Substring(0,1)).ToUpper()}', " +         // Middle_Initial
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_1   
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_2
-                                  $"'{FullTrim(GetLorum(1).Substring(0,20)).ToUpper()}', " +        // City
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Last_Name
+                                  $"'{RandomDataGenerator.TrimString(15).ToUpper()}', " +        // First_Name
+                                  $"'{RandomDataGenerator.TrimString(1).ToUpper()}', " +         // Middle_Initial
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Address_Line_1   
+                                  $"'{RandomDataGenerator.TrimString(25).ToUpper()}', " +        // Address_Line_2
+                                  $"'{RandomDataGenerator.TrimString(20).ToUpper()}', " +        // City
                                   $"'NH', " +                                                       // State_Code
                                   $"'02165', " +                                                    // Zip_Code
                                   $"'1234', " +                                                     // Zip_Plus_4
                                   $"'{facId}', " +         // Patient_Location_Code
                                   $"'{docId}', " +                                                  // Primary_Prescriber_ID
-                                  $"'{IRand()}', " +                                                // SSN
+                                  $"'{RandomDataGenerator.Integer()}', " +                                                // SSN
                                   $"'{DateTime.Now.ToString()}', " +                                // BirthDate
                                   $"'{DateTime.Now.ToString()}', " +                                // Deceased_Date
-                                  $"'{GetLorum(1).Substring(0, 1).ToUpper()}', " +                  // Sex
+                                  $"'{RandomDataGenerator.String(1).ToUpper()}', " +                  // Sex
                                   $"DEFAULT, " +                                                    // MSSQLTS
                                   $"'617', " +                                                      // Area_Code
                                   $"'3324531', " +                                                  // Telephone_Number
@@ -260,22 +194,22 @@ namespace CommonTests
                         // Patient Note
                         sql = $"INSERT INTO dbo.vPatientNote VALUES(" +
                               $"'{patId}', " +
-                              $"'{IRand()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 30)).ToUpper()}', " +
+                              $"'{RandomDataGenerator.Integer()}', " +
+                              $"'{RandomDataGenerator.TrimString(10).ToUpper()}', " +
+                              $"'{RandomDataGenerator.TrimString(30).ToUpper()}', " +
                               $"'{DateTime.Now}', " +
-                              $"'{GetLorum(20)}');";
+                              $"'{RandomDataGenerator.String()}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
 
                         // Patient Allergy
                         sql = $"INSERT INTO dbo.vPatientAllergy VALUES(" +
                               $"'{patId}', " +
-                              $"'{IRand()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 3)).ToUpper()}', " +
-                              $"'{GetLorum(1).Substring(0, 80)}', " +
-                              $"'{GetLorum(1).Substring(0, 70)}', " +
-                              $"'{IRand()}', " +
+                              $"'{RandomDataGenerator.Integer()}', " +
+                              $"'{RandomDataGenerator.TrimString(3).ToUpper()}', " +
+                              $"'{RandomDataGenerator.String(80)}', " +
+                              $"'{RandomDataGenerator.String(70)}', " +
+                              $"'{RandomDataGenerator.Integer()}', " +
                               $"'{DateTime.Now}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
@@ -283,45 +217,45 @@ namespace CommonTests
                         // Patient Diagnosis
                         sql = $"INSERT INTO dbo.vPatientDiagnosis VALUES(" +
                               $"'{patId}', " +
-                              $"'{GetLorum(1).Substring(0, 70)}', " +
-                              $"'{GetLorum(1).Substring(0, 80)}', " +
+                              $"'{RandomDataGenerator.String(70)}', " +
+                              $"'{RandomDataGenerator.String(80)}', " +
                               $"'{DateTime.Now}', " +
                               $"'{DateTime.Now}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
 
-                        var refills = IRand();
+                        var refills = RandomDataGenerator.Integer();
 
                         sql = $"INSERT INTO dbo.vRx VALUES(" +
                               $"'{patId}', " +                                                          // Patient_ID
                               $"'{scripId}', " +                                                        // Rx_ID
                               $"'99999', " +                                                            // External_Rx_ID
                               $"'{docId}', " +                                                          // Prescriber_ID
-                              $"'{FullTrim(GetLorum(1).Substring(0,7)).ToUpper()}', " +                 // Dosage_Signa_Code
-                              $"'{GetLorum(20).Substring(0,255)}', " +                                  // Decoded_Dosage_Signa
-                              $"'{GetLorum(2).Substring(0,80)}', " +                                    // Signa_String
-                              $"'{GetLorum(20).Substring(0, 255)}', " +                                 // Instruction_Signa_Text
+                              $"'{RandomDataGenerator.TrimString(7).ToUpper()}', " +                 // Dosage_Signa_Code
+                              $"'{RandomDataGenerator.String(255)}', " +                                  // Decoded_Dosage_Signa
+                              $"'{RandomDataGenerator.String(80)}', " +                                    // Signa_String
+                              $"'{RandomDataGenerator.String(255)}', " +                                 // Instruction_Signa_Text
                               $"'{DateTime.Now.ToString()}', " +                                        // Date_Written
                               $"'{DateTime.Now.ToString()}', " +                                        // Dispense_Date
                               $"'{DateTime.Now.ToString()}', " +                                        // Last_Dispense_Stop_Date
                               $"'{refills}', " +                                                        // Total_Refiles_Authorized
                               $"'{refills - 10}', " +                                                   // Total_Refills_Used
-                              $"'{IRand()}', " +                                                        // Dispensed_Item_ID
+                              $"'{RandomDataGenerator.Integer()}', " +                                                        // Dispensed_Item_ID
                               $"'32', " +                                                               // Dispensed_Item_Version
                               $"'{ndc}', " +                                                            // NDC_Code
-                              $"'{DRand(100)}', " +                                                     // Quantity_Dispensed
-                              $"'{IRand()}', " +                                                        // Writen_For_Item_ID
+                              $"'{RandomDataGenerator.Double(100)}', " +                                                     // Quantity_Dispensed
+                              $"'{RandomDataGenerator.Integer()}', " +                                                        // Writen_For_Item_ID
                               $"'12', " +                                                               // Written_For_Item_Version
                               $"'1', " +                                                                // Script_Status
                               $"'{DateTime.Now.ToString()}', " +                                        // Prescription_Expiration_Date
                               $"'{docId}', " +                                                          // Responsible_Prescriber_ID
                               $"'{DateTime.Now.ToString()}', " +                                        // Discontinue_Date
-                              $"'{DRand(10)}', " +                                                      // Quantity_Written
-                              $"'{DRand(10)}', " +                                                      // Total_Qty_Used
-                              $"'{DRand(10)}', " +                                                      // Total_Qty_Authorized
+                              $"'{RandomDataGenerator.Double(10)}', " +                                                      // Quantity_Written
+                              $"'{RandomDataGenerator.Double(10)}', " +                                                      // Total_Qty_Used
+                              $"'{RandomDataGenerator.Double(10)}', " +                                                      // Total_Qty_Authorized
                               $"'30', " +                                                               // Days_Supply_Written
                               $"'20', " +                                                               // Days_Supply_Remaining
-                              $"'{GetLorum(1).Substring(0,3).ToUpper()}', " +                           // Script_Origin_Indicater
+                              $"'{RandomDataGenerator.String(3).ToUpper()}', " +                           // Script_Origin_Indicater
                               $"DEFAULT);";                                                             // MSSQLTS
 
                         motSqlServer.ExecuteNonQuery(sql);
@@ -329,11 +263,11 @@ namespace CommonTests
                         // Rx Note
                         sql = $"INSERT INTO dbo.vRxNote VALUES(" +
                               $"'{scripId}', " +
-                              $"'{IRand()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +
-                              $"'{FullTrim(GetLorum(1).Substring(0, 30)).ToUpper()}', " +
+                              $"'{RandomDataGenerator.Integer()}', " +
+                              $"'{RandomDataGenerator.TrimString(10).ToUpper()}', " +
+                              $"'{RandomDataGenerator.TrimString(30).ToUpper()}', " +
                               $"'{DateTime.Now}', " +
-                              $"'{GetLorum(20)}');";
+                              $"'{RandomDataGenerator.String()}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
                     }
@@ -378,14 +312,14 @@ namespace CommonTests
             }
         }
 
-        
+
         public void QueryPatient()
         {
             try
             {
                 if (!CreatedRecords)
                 {
-                   CreateSqlRecords();
+                    CreateSqlRecords();
                 }
 
                 var mutex = new Mutex();
@@ -416,7 +350,7 @@ namespace CommonTests
             }
         }
 
-       
+
         public void QueryRx()
         {
             try
@@ -454,7 +388,7 @@ namespace CommonTests
             }
         }
 
-       
+
         public void QueryFacility()
         {
             try
@@ -492,7 +426,7 @@ namespace CommonTests
             }
         }
 
-        
+
         public void QueryDoc()
         {
             try
@@ -530,7 +464,7 @@ namespace CommonTests
             }
         }
 
-       
+
         public void QueryDrug()
         {
             try
@@ -579,7 +513,7 @@ namespace CommonTests
                 QueryDrug();
                 QueryRx();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Fail(ex.Message);
             }
