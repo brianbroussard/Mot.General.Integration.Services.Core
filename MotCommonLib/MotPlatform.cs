@@ -41,7 +41,7 @@ namespace Mot.Common.Interface.Lib
 
     public static class GetPlatformOs
     {
-        public static PlatformOs Go()
+        public static PlatformOs Current()
         {
             // just worry about Nix and Win for now
             if (RuntimeInformation.OSDescription.Contains("Unix"))

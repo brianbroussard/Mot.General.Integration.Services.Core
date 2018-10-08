@@ -36,6 +36,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using NLog;
@@ -712,9 +713,12 @@ namespace Mot.Common.Interface.Lib
                         stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
                     }
 
-                    if(!CheckReturnValue(buf))
+                    //File.AppendAllText("./err.out", record+"\n");
+
+                    if (!CheckReturnValue(buf))
                     {
-                        throw new InvalidOperationException();
+                        EventLogger.Error($"This caused a write failure\n{record}");
+                        throw new Exception("There was a write failure reported by gateway");
                     }
                 }
 

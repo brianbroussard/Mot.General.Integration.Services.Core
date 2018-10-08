@@ -91,7 +91,21 @@ namespace Mot.Polling.Interface.Lib
             if (disposing)
             {
                 var appSettings = ConfigurationManager.AppSettings;
-                appSettings[type.Name] = LastTouch.ToString();
+                try
+                {
+                    var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    var settings = configFile.AppSettings.Settings;
+
+                    appSettings[type.Name] = LastTouch.ToString();
+
+                    configFile.Save(ConfigurationSaveMode.Modified);
+                    ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+                }
+                catch (Exception ex)
+                {
+                    EventLogger.Error($"Failed to save configuration: {ex.Message}");
+                    throw;
+                }
             }
         }
 

@@ -146,10 +146,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>move logs ..
-del -y $(TargetDir)*.pdb
-heat.exe dir $(TargetDir) -sreg -scom -dr InterfaceDir -cg InterfaceFilesGroup -gg -g1 -sfrag -srd -var "var.InterfaceFilesPath" -out $(SolutionDir)Mot.Inbound.Service.Setup\InterfaceFilesNew.wxs
-move ..\logs .
-</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>

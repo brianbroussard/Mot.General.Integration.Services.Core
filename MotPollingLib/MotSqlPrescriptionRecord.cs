@@ -80,7 +80,6 @@ namespace Mot.Polling.Interface.Lib
                 var rxID = string.Empty;
                 int refills = 0, refillsUsed = 0;
 
-
                 // Load the translaton table -- Database Column Name to Gateway Tag Name                
                 TranslationTable.Add("Rx_ID", "RxSys_RxNum");
                 TranslationTable.Add("Patient_ID", "RxSys_PatID");
@@ -102,7 +101,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("QtyPerDose", "QtyPerDose");
                 TranslationTable.Add("Quantity_Dispensed", "QtyDispensed");
 
-                var recordSet = Db.ExecuteQuery($"SELECT * FROM Rx WHERE MSSQLTS > {LastTouch}; ");
+                var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vRx WHERE MSSQLTS > {LastTouch}; ");
 
                 if (ValidTable(recordSet))
                 {

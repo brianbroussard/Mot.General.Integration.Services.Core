@@ -38,10 +38,9 @@ namespace Mot.Polling.Interface.Lib
 
                 if (ValidTable(recordSet))
                 {               
-
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
-                        LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
+                        LastTouch = ByteArrayToHexString((System.Byte[])record["Touchdate"]);
 
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
@@ -53,6 +52,10 @@ namespace Mot.Polling.Interface.Lib
 
                                 switch (column.ColumnName)
                                 {
+                                    case "ZIP":
+                                        val = "0" + val;
+                                        break;
+
                                     default:
                                         break;
                                 }
@@ -77,7 +80,7 @@ namespace Mot.Polling.Interface.Lib
                         }
                         catch (Exception ex)
                         {
-                            EventLogger.Error($"Error processing prescriptin record: {ex.Message}");
+                            EventLogger.Error($"Error processing facility record: {ex.Message}");
                             throw;
                         }
                         finally
@@ -91,8 +94,7 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception ex)
             {
-                throw new RowNotInTableException($"Drug Record Not Found");
-                //throw new Exception("Failed to get Location Record " + ex.Message);
+                throw new RowNotInTableException($"Facility record failure: {ex.Message}");
             }
         }
     }

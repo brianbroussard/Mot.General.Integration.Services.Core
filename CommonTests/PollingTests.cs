@@ -18,6 +18,29 @@ namespace CommonTests
         // Change these to the machine you want to hit
         string targetIp = "localhost";
         int targetPort = 24042;
+        
+        // Set to false to generate new sql records with a fresh timestamp
+        bool CreatedRecords = false;
+
+        // Various ways of accessing the SQL Server instance
+        string sqlServerName = "PROXYPLAYGROUND";
+        string sqlServerIp = "192.168.1.160";
+        int sqlServerPort = 1433;
+
+        string dataSource;
+
+        public void SetupSqlServer()
+        {
+            if(GetPlatformOs.Current() != PlatformOs.Windows)
+            {
+                dataSource = sqlServerIp;
+            }
+            else
+            {
+                dataSource = sqlServerName;
+            }
+        }
+
 
         public string GetLorum(int amount)
         {
@@ -63,7 +86,7 @@ namespace CommonTests
                 return string.Empty;
             }
 
-            char[] junk = { ' ', '-', '.', ',', ' ', ';', ':', '(', ')' };
+            char[] junk = { ' ', '-', '.', ',', ' ', ';', ':', '(', ')', '?', '*', '!' };
 
             while (val?.IndexOfAny(junk) > -1)
             {
@@ -73,9 +96,9 @@ namespace CommonTests
             return val;
         }
 
-        double DRand()
+        double DRand(int m)
         {
-            return new Random((int)DateTime.Now.Ticks & 0x0000FFFF).NextDouble() * 100;
+            return new Random((int)DateTime.Now.Ticks & 0x0000FFFF).NextDouble() * m;
         }
 
         int IRand()
@@ -84,11 +107,10 @@ namespace CommonTests
         }
 
         // ---- Real Work
-        bool CreatedRecords = false;
 
         public void CreateSqlRecords()
         {
-            var dataSource = "PROXYPLAYGROUND";
+            SetupSqlServer();
 
             if(CreatedRecords == true)
             {
@@ -105,31 +127,31 @@ namespace CommonTests
 
                         var docId = IRand(); 
                         var patId = IRand();
-                        var facId = IRand();
-                        var storeId = IRand();
+                        var facId = FullTrim(GetLorum(1).Substring(0, 2)).ToUpper();
+                        var storeId = "PHARMASERVE1";
                         var scripId = IRand();
                         var drugId = IRand();
                        
                         // Prescriber
                         var sql = $"INSERT INTO dbo.vPrescriber VALUES(" +
-                                  $"'{docId}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,15)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,1)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,20)).ToUpper()}', " +
-                                  $"'MA', " +
-                                  $"'02165', " +
-                                  $"'1234', " +
-                                  $"'617', " +
-                                  $"'9696072', " +
-                                  $"'00', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0, 25)).ToUpper()}', " +
-                                  $"'123456', " +
-                                  $"'{GetLorum(2).Substring(0,2).ToUpper()}0123456', " +
-                                  $"'1', " +
-                                  $"DEFAULT);";
+                                  $"'{docId}', " +                                                  // Prescriber_ID
+                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Last_Name
+                                  $"'{FullTrim(GetLorum(1).Substring(0,15)).ToUpper()}', " +        // First_Name
+                                  $"'{FullTrim(GetLorum(1).Substring(0,1)).ToUpper()}', " +         // Middle_Initial
+                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_1
+                                  $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +        // Address_Line_2
+                                  $"'{FullTrim(GetLorum(1).Substring(0,20)).ToUpper()}', " +        // City
+                                  $"'MA', " +                                                       // State_Code
+                                  $"'02165', " +                                                    // Zip_Code
+                                  $"'1234', " +                                                     // Zip_Plus_4
+                                  $"'617', " +                                                      // Area_Code
+                                  $"'9696072', " +                                                  // Telephone_Number
+                                  $"'00', " +                                                       // Exchange
+                                  $"'{GetLorum(2).Substring(0,2).ToUpper()}0123456', " +            // DEA_Number
+                                  $"'123456', " +                                                   // DEA_Suffix
+                                  $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +        // Prescriber_Type
+                                  $"'1', " +                                                        // Active_Flag
+                                  $"DEFAULT);";                                                     // MSSQLTS
 
                         motSqlServer.ExecuteNonQuery(sql);
 
@@ -150,8 +172,8 @@ namespace CommonTests
                                   $"'{facId}', " +
                                   $"'{storeId}', " +
                                   $"'{FullTrim(GetLorum(1).Substring(0,64)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,50)).ToUpper()}', " +
-                                  $"'{FullTrim(GetLorum(1).Substring(0,50)).ToUpper()}', " +
+                                  $"'{FullTrim(GetLorum(1).Substring(0,40)).ToUpper()}', " +
+                                  $"'{FullTrim(GetLorum(1).Substring(0,40)).ToUpper()}', " +
                                   $"'{FullTrim(GetLorum(1).Substring(0,25)).ToUpper()}', " +
                                   $"'NH', " +
                                   $"'03049', " +
@@ -160,16 +182,19 @@ namespace CommonTests
 
                         motSqlServer.ExecuteNonQuery(sql);
 
+                        var ndc = FullTrim(GetLorum(1).Substring(0, 11)).ToUpper();
+
                         // Drug
-                        sql = $"INSERT INTO dbo.vItem VALUES('{drugId}', " +                //[ITEM_ID]
+                        sql = $"INSERT INTO dbo.vItem " +
+                             $"VALUES('{drugId}', " +                                       //[ITEM_ID]
                              $"'1', " +                                                     //[ITEM_VERSION]
-                             $"'{FullTrim(GetLorum(1).Substring(0, 11)).ToUpper()}', " +    //[NDC_CODE]
+                             $"'{ndc}', " +    //[NDC_CODE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 2)).ToUpper()}', " +     //[PACKAGE_CODE]
-                             $"'{DRand()}', " +                                             //[PACKAGE_SIZE]
+                             $"'{DRand(100)}', " +                                          //[PACKAGE_SIZE]
                              $"'1', " +                                                     //[CURRENT_ITEM_VERSION]
                              $"'{FullTrim(GetLorum(1).Substring(0, 3)).ToUpper()}', " +     //[ITEM_TYPE]
                              $"'{GetLorum(1).Substring(0, 40)}', " +                        //[ITEM_NAME]
-                            $"'{IRand()}', " +                                              //[KDC_NUMBER]
+                             $"'{IRand()}', " +                                             //[KDC_NUMBER]
                              $"'10', " +                                                    //[GPI_GROUP_CODE]
                              $"'8', " +                                                     //[GPI_CLASS_CODE]
                              $"'22', " +                                                    //[GPI_SUBCLASS_CODE]
@@ -179,18 +204,18 @@ namespace CommonTests
                              $"'102', " +                                                   //[GPI_STRENGTH_CODE]
                              $"'{IRand()}', " +                                             //[HRI_NUMBER]
                              $"'{FullTrim(GetLorum(1).Substring(0, 7)).ToUpper()}', " +     //[DOSAGE_SIGNA_CODE]
-                             $"'{GetLorum(1).Substring(0, 40)}', " +                        //[INSTRUCTION_SIGNA_STRING]
+                             $"'{GetLorum(1).Substring(0, 80)}', " +                        //[INSTRUCTION_SIGNA_STRING]
                              $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[FORM_TYPE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 3)).ToUpper()}', " +     //[ROUTE_OF_ADMINISTRATION]
                              $"'{IRand()}', " +                                             //[ALTERNATE_MANUFACTURER_ID]
                              $"'{FullTrim(GetLorum(1).Substring(0, 13)).ToUpper()}', " +    //[UPC]
-                             $"'{DRand()}', " +                                             //[STRENGTH]
+                             $"'{DRand(10).ToString().Substring(0,15)}', " +                //[STRENGTH]
                              $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[COLOR_CODE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[FLAVOR_CODE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 4)).ToUpper()}', " +     //[SHAPE_CODE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +    //[PRODUCT_MARKING]
                              $"'6', " +                                                     //[NARCOTIC_CODE]
-                             $"'{DRand()}', " +                                             //[UNIT_SIZE]
+                             $"'{DRand(100)}', " +                                             //[UNIT_SIZE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 2)).ToUpper()}', " +     //[UNIT_OF_MEASURE]
                              $"'{FullTrim(GetLorum(1).Substring(0, 5)).ToUpper()}', " +     //[NDC_Manufacturer_Number]
                              $"'{FullTrim(GetLorum(1).Substring(0, 10)).ToUpper()}', " +    //[Manufacturer_Abbreviation]
@@ -219,7 +244,7 @@ namespace CommonTests
                                   $"'NH', " +                                                       // State_Code
                                   $"'02165', " +                                                    // Zip_Code
                                   $"'1234', " +                                                     // Zip_Plus_4
-                                  $"'{FullTrim(GetLorum(1).Substring(0,1)).ToUpper()}', " +         // Patient_Location_Code
+                                  $"'{facId}', " +         // Patient_Location_Code
                                   $"'{docId}', " +                                                  // Primary_Prescriber_ID
                                   $"'{IRand()}', " +                                                // SSN
                                   $"'{DateTime.Now.ToString()}', " +                                // BirthDate
@@ -265,6 +290,8 @@ namespace CommonTests
 
                         motSqlServer.ExecuteNonQuery(sql);
 
+                        var refills = IRand();
+
                         sql = $"INSERT INTO dbo.vRx VALUES(" +
                               $"'{patId}', " +                                                          // Patient_ID
                               $"'{scripId}', " +                                                        // Rx_ID
@@ -277,21 +304,21 @@ namespace CommonTests
                               $"'{DateTime.Now.ToString()}', " +                                        // Date_Written
                               $"'{DateTime.Now.ToString()}', " +                                        // Dispense_Date
                               $"'{DateTime.Now.ToString()}', " +                                        // Last_Dispense_Stop_Date
-                              $"'{IRand()}', " +                                                        // Total_Refiles_Authorized
-                              $"'{IRand()}', " +                                                        // Total_Refills_Used
+                              $"'{refills}', " +                                                        // Total_Refiles_Authorized
+                              $"'{refills - 10}', " +                                                   // Total_Refills_Used
                               $"'{IRand()}', " +                                                        // Dispensed_Item_ID
                               $"'32', " +                                                               // Dispensed_Item_Version
-                              $"'{GetLorum(2).Substring(0, 11)}', " +                                   // NDC_Code
-                              $"'{DRand()}', " +                                                        // Quantity_Dispensed
+                              $"'{ndc}', " +                                                            // NDC_Code
+                              $"'{DRand(100)}', " +                                                     // Quantity_Dispensed
                               $"'{IRand()}', " +                                                        // Writen_For_Item_ID
                               $"'12', " +                                                               // Written_For_Item_Version
                               $"'1', " +                                                                // Script_Status
                               $"'{DateTime.Now.ToString()}', " +                                        // Prescription_Expiration_Date
                               $"'{docId}', " +                                                          // Responsible_Prescriber_ID
                               $"'{DateTime.Now.ToString()}', " +                                        // Discontinue_Date
-                              $"'{DRand()}', " +                                                        // Quantity_Written
-                              $"'{DRand()}', " +                                                        // Total_Qty_Used
-                              $"'{DRand()}', " +                                                        // Total_Qty_Authorized
+                              $"'{DRand(10)}', " +                                                      // Quantity_Written
+                              $"'{DRand(10)}', " +                                                      // Total_Qty_Used
+                              $"'{DRand(10)}', " +                                                      // Total_Qty_Authorized
                               $"'30', " +                                                               // Days_Supply_Written
                               $"'20', " +                                                               // Days_Supply_Remaining
                               $"'{GetLorum(1).Substring(0,3).ToUpper()}', " +                           // Script_Origin_Indicater
@@ -332,12 +359,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -355,7 +378,7 @@ namespace CommonTests
             }
         }
 
-        [TestMethod]
+        
         public void QueryPatient()
         {
             try
@@ -368,12 +391,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -397,7 +416,7 @@ namespace CommonTests
             }
         }
 
-        [TestMethod]
+       
         public void QueryRx()
         {
             try
@@ -410,12 +429,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -439,7 +454,7 @@ namespace CommonTests
             }
         }
 
-        [TestMethod]
+       
         public void QueryFacility()
         {
             try
@@ -452,12 +467,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -481,7 +492,7 @@ namespace CommonTests
             }
         }
 
-        [TestMethod]
+        
         public void QueryDoc()
         {
             try
@@ -494,12 +505,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -523,7 +530,7 @@ namespace CommonTests
             }
         }
 
-        [TestMethod]
+       
         public void QueryDrug()
         {
             try
@@ -536,12 +543,8 @@ namespace CommonTests
                 var mutex = new Mutex();
                 var gatewayIp = targetIp;
                 var gatewayPort = targetPort;
-                var dataSource = "PROXYPLAYGROUND";
 
-                if (GetPlatformOs.Go() != PlatformOs.Windows)
-                {
-                    dataSource = gatewayIp;
-                }
+                SetupSqlServer();
 
                 using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
                 {
@@ -566,17 +569,30 @@ namespace CommonTests
         }
 
         [TestMethod]
+        public void QueryObjects()
+        {
+            try
+            {
+                QueryDoc();
+                QueryFacility();
+                QueryPatient();
+                QueryDrug();
+                QueryRx();
+            }
+            catch(Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
+        [TestMethod]
         public void StartPharmaserve()
         {
             var mutex = new Mutex();
             var gatewayIp = targetIp;
             var gatewayPort = targetPort;
-            var dataSource = "PROXYPLAYGROUND";
 
-            if (GetPlatformOs.Go() != PlatformOs.Windows)
-            {
-                dataSource = gatewayIp;
-            }
+            SetupSqlServer();
 
             using (var motSqlServer = new MotSqlServer($"Data Source={dataSource};Initial Catalog=McKessonTestDb;User ID=sa;Password=$MOT2018"))
             {

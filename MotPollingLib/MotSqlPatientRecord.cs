@@ -213,7 +213,7 @@ namespace Mot.Polling.Interface.Lib
             {
                 // Load the translaton table -- Database Column Name to Gateway Tag Name  
                 TranslationTable.Add("Patient_ID", "RxSys_PatID");
-                //TranslationTable.Add("Patient_Location_Code", "RxSys_LocID");
+                TranslationTable.Add("Patient_Location_Code", "RxSys_LocID");
                 TranslationTable.Add("Primary_Prescriber_ID", "RxSys_PrimaryDoc");
                 TranslationTable.Add("Last_Name", "LastName");
                 TranslationTable.Add("First_Name", "FirstName");
@@ -228,7 +228,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("Area_Code", "Phone1");
                 TranslationTable.Add("Extension", "Phone2");
                 TranslationTable.Add("SSN", "SSN");
-                TranslationTable.Add("Birth_Date", "DOB"); // SqlDateTime
+                TranslationTable.Add("BirthDate", "DOB"); // SqlDateTime
                 TranslationTable.Add("Deceased_Date", "Comments"); // SqlDateTime
                 TranslationTable.Add("Sex", "Gender");
 
@@ -288,7 +288,7 @@ namespace Mot.Polling.Interface.Lib
                                         val = tmpPhone;
                                         break;
 
-                                    case "Birth_Date":
+                                    case "BirthDate":
                                         val = NormalizeDate(val);
                                         break;
 
@@ -320,7 +320,7 @@ namespace Mot.Polling.Interface.Lib
                         }
                         catch (Exception ex)
                         {
-                            EventLogger.Error($"Failed reading patient record: {ex.Message}");
+                            EventLogger.Error($"Failed processing patient record: {ex.Message}");
                             throw;
                         }
                         finally

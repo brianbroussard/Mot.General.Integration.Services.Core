@@ -107,7 +107,7 @@ namespace CommonTests
         [TestMethod]
         public void NullConstructor()
         {
-            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"C/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
+            var path = (GetPlatformOs.Current() == PlatformOs.Windows) ? $@"C/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
             try
             {
@@ -115,7 +115,7 @@ namespace CommonTests
 
                 Assert.Fail("Allowed to pass null DSN");
 
-                if (GetPlatformOs.Go() == PlatformOs.Windows)
+                if (GetPlatformOs.Current() == PlatformOs.Windows)
                 {
                     var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={_dbaUserName};PWD={_dbaPassword}");
                     Assert.Fail("Allowed to pass null DSN");
@@ -133,13 +133,13 @@ namespace CommonTests
         [TestMethod]
         public void Construct()
         {
-            var path = (GetPlatformOs.Go() == PlatformOs.Windows) ? $@"/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
+            var path = (GetPlatformOs.Current() == PlatformOs.Windows) ? $@"/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
             try
             {
                 var sqlite = new MotDatabaseServer<MotSqliteServer>(path);
 
-                if (GetPlatformOs.Go() == PlatformOs.Windows)
+                if (GetPlatformOs.Current() == PlatformOs.Windows)
                 {
                     // This fails because MOT only has 32 bit drivers and the unit test doesn't seem to want to enable "prefer 32 bit"
                     var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={MotAccessSecurity.DecodeString(_dbaUserName)};PWD={MotAccessSecurity.DecodeString(_dbaPassword)}");

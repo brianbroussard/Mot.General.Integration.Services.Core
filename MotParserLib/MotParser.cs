@@ -172,7 +172,7 @@ namespace Mot.Parser.InterfaceLib
         /// </summary>
         public ParserBase(string inputStream)
         {
-            EventLogger = LogManager.GetLogger("motInboundLib.Parser");
+            EventLogger = LogManager.GetLogger("Mot.Inbound.Lib.Parser");
 
             if (string.IsNullOrEmpty(inputStream))
             {
@@ -193,16 +193,20 @@ namespace Mot.Parser.InterfaceLib
         {
             if (string.IsNullOrEmpty(inboundData))
             {
-                throw new ArgumentNullException($@"inboundData data Null or Empty");
+                throw new ArgumentNullException($"inboundData data Null or Empty");
             }
+
             if (GatewaySocket == null)
             {
-                throw new ArgumentNullException($@"Invalid Socket Reference");
+                throw new ArgumentNullException($"Invalid Socket Reference");
             }
 
             try
             {
-                GatewaySocket.Write(inboundData);
+                if(GatewaySocket.Write(inboundData) == false)
+                {
+                    throw new Exception("Parser recieved a 'failed' response from the gateway");
+                }
 
                 if (SendEof)
                 {
@@ -217,7 +221,7 @@ namespace Mot.Parser.InterfaceLib
             catch (Exception ex)
             {
                 EventLogger.Error($"Failed to write to gateway: {ex.Message}");
-                throw new Exception($"Failed to write to gateway: {ex.Message}");
+                throw; 
             }
         }
 
@@ -246,7 +250,7 @@ namespace Mot.Parser.InterfaceLib
     }
 
     /// <summary>
-    /// <c>motParser</c>
+    /// <c>MotParser</c>
     /// General data format transformation engine
     /// </summary>
     public class MotParser : ParserBase
@@ -628,7 +632,7 @@ namespace Mot.Parser.InterfaceLib
             catch (Exception ex)
             {
                 EventLogger.Error("Parse failure: {0}", ex.Message);
-                throw new Exception("Parse failure: " + ex.Message);
+                throw;
             }
         }
         /// <inheritdoc />
@@ -642,18 +646,19 @@ namespace Mot.Parser.InterfaceLib
             }
             catch
             {
-                EventLogger.Error("motParser failed on input type {0} and data: {1}", inputDataFormat.ToString(), inputStream);
+                EventLogger.Error("MotParser failed on input type {0} and data: {1}", inputDataFormat.ToString(), inputStream);
                 throw;
             }
         }
+
         /// <inheritdoc />
         public MotParser(MotSocket outSocket, string inputStream, bool autoTruncate) : base(inputStream)
         {
-            GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to motParser");
+            GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to MotParser");
 
             if (GatewaySocket.Disposed)
             {
-                throw new ArgumentNullException($@"Disposed Socket passed to motParser");
+                throw new ArgumentNullException($@"Disposed Socket passed to MotParser");
             }
 
             AutoTruncate = autoTruncate;
@@ -664,18 +669,19 @@ namespace Mot.Parser.InterfaceLib
             }
             catch
             {
-                EventLogger.Error("motParser failed on input type {0} and data: {1}", "Best Guess", inputStream);
+                EventLogger.Error("MotParser failed on input type {0} and data: {1}", "Best Guess", inputStream);
                 throw;
             }
         }
+
         /// <inheritdoc />
         public MotParser(MotSocket outSocket, string inputStream, InputDataFormat inputDataFormat, bool debugMode = false, bool allowZeroTQ = false, string defaultStoreLoc = null, bool autoTruncate = false, bool sendEof = false) : base(inputStream)
         {
-            GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to motParser");
+            GatewaySocket = outSocket ?? throw new ArgumentNullException($@"NULL Socket passed to MotParser");
 
             if (GatewaySocket.Disposed)
             {
-                throw new ArgumentNullException($"Disposed Socket passed to motParser");
+                throw new ArgumentNullException($"Disposed Socket passed to MotParser");
             }
 
             SendEof = sendEof;
@@ -690,7 +696,7 @@ namespace Mot.Parser.InterfaceLib
             }
             catch
             {
-                EventLogger.Error($"motParser failed on input type {inputDataFormat} and data: {inputStream}");
+                EventLogger.Error($"MotParser failed on input type {inputDataFormat} and data: {inputStream}");
                 throw;
             }
         }
@@ -805,7 +811,7 @@ namespace Mot.Parser.InterfaceLib
             }
             catch (Exception ex)
             {
-                EventLogger.Error($"motParser failed on input type {inputDataFormat.ToString()} and data: {inputStream}. Error {ex.Message}");
+                EventLogger.Error($"MotParser failed on input type {inputDataFormat.ToString()}\nError {ex.Message}");
                 throw;
             }
         }

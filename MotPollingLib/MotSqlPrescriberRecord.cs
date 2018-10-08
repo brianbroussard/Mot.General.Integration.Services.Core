@@ -42,11 +42,11 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("City", "City");
                 TranslationTable.Add("State_Code", "State");
                 TranslationTable.Add("Zip_Code", "Zip");              // Stored as Integer
-                TranslationTable.Add("Zip_Plus_4", "Zip_Plus_4");       // Stored as Integer
+                TranslationTable.Add("Zip_Plus_4", "Zip");       // Stored as Integer
                 TranslationTable.Add("Area_Code", "AreaCode");         // Stored as Integer
                 TranslationTable.Add("Telephone_Number", "Phone");    // Stored as Integer
                 TranslationTable.Add("DEA_Number", "DEA_ID");
-                TranslationTable.Add("DEA_Suffix", "DEA_SUFIX");
+                //TranslationTable.Add("DEA_Suffix", "DEA_SUFIX");
                 TranslationTable.Add("Prescriber_Type ", "Specialty");
                 TranslationTable.Add("Active_Flag", "Comments");      // 'Y' || 'N'
 
@@ -72,7 +72,7 @@ namespace Mot.Polling.Interface.Lib
                 var val = string.Empty;
                 var tmp = string.Empty;
 
-                DataSet recordSet = Db.ExecuteQuery($"SELECT * FROM vPrescriber WHERE MSSQLTS > {LastTouch};");
+                DataSet recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vPrescriber WHERE MSSQLTS > {LastTouch};");
 
                 if (ValidTable(recordSet))
                 {                              
@@ -89,9 +89,9 @@ namespace Mot.Polling.Interface.Lib
 
                                 switch (column.ColumnName)
                                 {
-                                    // Merge Zip Code
+                                    // Merge Zip Code, it's an int in the DB, so prepend a 0 to make it real
                                     case "Zip_Code":
-                                        tmpZip = val;
+                                        tmpZip = "0" + val;
                                         continue;
 
                                     case "Zip_Plus_4":
@@ -101,22 +101,12 @@ namespace Mot.Polling.Interface.Lib
 
                                     // Merge Phone Number
                                     case "Area_Code":
-                                        tmpPhone = val;
+                                        tmpPhone =  val;
                                         continue;
 
                                     case "Telephone_Number":
                                         tmpPhone += val;
                                         val = tmpPhone;
-                                        break;
-
-                                    // Merge DEA ID
-                                    case "DEA_Number":
-                                        tmpDea = val;
-                                        continue;
-
-                                    case "DEA_Suffix":
-                                        tmpDea += val;
-                                        val = tmpDea;
                                         break;
 
                                     default:
@@ -158,8 +148,7 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (Exception ex)
             {
-                throw new RowNotInTableException($"Prescriber Record Not Found");
-                //throw new Exception($"Failed to add PharmaServe Prescriber Record {ex.Message}");
+                throw new RowNotInTableException($"Prescriber record processing failure: {ex.Message}");
             }
         }
     }

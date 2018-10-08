@@ -45,7 +45,7 @@ namespace Mot.Parser.InterfaceLib
             {
                 EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
                 LoadConfiguration();
-                Platform = GetPlatformOs.Go();
+                Platform = GetPlatformOs.Current();
             }
             catch (Exception ex)
             {
@@ -203,7 +203,7 @@ namespace Mot.Parser.InterfaceLib
         {
             if (data == null)
             {
-                return "Null data";
+                throw new ArgumentNullException($"MotParser::Parse");
             }
 
             string responseMessage;
@@ -221,8 +221,9 @@ namespace Mot.Parser.InterfaceLib
             }
             catch(Exception ex)
             {
-                responseMessage = $"Failed processing, Message: {ex.Message}\nData: {data}";
+                responseMessage = $"Parser failure, Message: {ex.Message}";
                 EventLogger.Error(responseMessage);
+                throw;
             }
 
             return responseMessage;
@@ -247,7 +248,7 @@ namespace Mot.Parser.InterfaceLib
 
                 if (WatchFileSystem)
                 {
-                    FilesystemListener = new FilesystemListener(GetPlatformOs.Go() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse)
+                    FilesystemListener = new FilesystemListener(GetPlatformOs.Current() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse)
                     {
                         RunAsService = true,
                         Listening = true,

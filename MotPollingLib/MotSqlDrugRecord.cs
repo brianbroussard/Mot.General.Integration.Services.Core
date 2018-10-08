@@ -40,7 +40,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("PACKAGE_CODE", "ProdCode");
                 TranslationTable.Add("ROUTE_OF_ADMINISTRATION", "Route");
 
-                var recordSet = Db.ExecuteQuery("SELECT * FROM vItem;");
+                var recordSet = Db.ExecuteQuery("SELECT * FROM vItem WHERE MSSQLTS > {LastTouch};");
 
                 if (ValidTable(recordSet))
                 {
@@ -106,7 +106,7 @@ namespace Mot.Polling.Interface.Lib
             }
             catch (System.InvalidOperationException ex)
             {
-                throw new Exception($"Message from PGS: {ex.Message}\n{ex.StackTrace}");
+                throw new Exception($"Error processing drug record {ex.Message}\n{ex.StackTrace}");
             }
             catch (Exception ex)
             {
