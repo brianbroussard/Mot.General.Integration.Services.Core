@@ -21,7 +21,7 @@ namespace ListenerTests
         [TestMethod]
         public void Construct()
         {
-            var _path = GetPlatformOs.Current() == PlatformOs.Windows ? $@"\motNext\io" : "~/Project/Tests/ListenerTests/io";
+            var _path = GetPlatformOs.Current == PlatformOs.Windows ? $@"\motNext\io" : "~/Project/Tests/ListenerTests/io";
 
             try
             {

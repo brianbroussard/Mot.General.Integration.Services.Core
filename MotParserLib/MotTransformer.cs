@@ -45,7 +45,7 @@ namespace Mot.Parser.InterfaceLib
             {
                 EventLogger = LogManager.GetLogger("Mot.Transformer.Service");
                 LoadConfiguration();
-                Platform = GetPlatformOs.Current();
+                Platform = GetPlatformOs.Current;
             }
             catch (Exception ex)
             {
@@ -248,7 +248,7 @@ namespace Mot.Parser.InterfaceLib
 
                 if (WatchFileSystem)
                 {
-                    FilesystemListener = new FilesystemListener(GetPlatformOs.Current() == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse)
+                    FilesystemListener = new FilesystemListener(GetPlatformOs.Current == PlatformOs.Windows ? WinMonitorDirectory : NixMonitorDirectory, Parse)
                     {
                         RunAsService = true,
                         Listening = true,

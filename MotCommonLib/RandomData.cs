@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Mot.Common.Interface.Lib
 {
-    public static class RandomDataGenerator
+    public static class RandomData
     {
         static List<string> TextCollection = new List<string>();
 

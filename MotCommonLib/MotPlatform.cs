@@ -41,19 +41,33 @@ namespace Mot.Common.Interface.Lib
 
     public static class GetPlatformOs
     {
-        public static PlatformOs Current()
+        public static PlatformOs Current
         {
-            // just worry about Nix and Win for now
-            if (RuntimeInformation.OSDescription.Contains("Unix"))
+            get
             {
-                return PlatformOs.Unix;
-            }
-            else if (RuntimeInformation.OSDescription.Contains("Windows"))
-            {
-                return PlatformOs.Windows;
+                if (RuntimeInformation.OSDescription.Contains("Unix"))
+                {
+                    return PlatformOs.Unix;
+                }
+                else if (RuntimeInformation.OSDescription.Contains("Windows"))
+                {
+                    return PlatformOs.Windows;
+                }
+
+                return PlatformOs.Unknown;
             }
 
-            return PlatformOs.Unknown;
+            set { }
+        }
+
+        static string FullName
+        {
+            get
+            {
+                return RuntimeInformation.OSDescription;
+            }
+
+            set { }
         }
     }
 }
