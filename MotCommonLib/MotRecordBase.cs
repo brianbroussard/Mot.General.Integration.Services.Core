@@ -153,6 +153,8 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public string TableAction;
 
+        public bool _preferAscii { get; set; }
+
         /// <summary>
         ///     ctor
         /// </summary>
@@ -595,43 +597,57 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         protected bool SetField(List<Field> fieldSet, string val, string tag, bool overrideTruncate = false)
         {
-            var logData = string.Empty;
+            var vlen = val.Length;
+            var tlen = tag.Length;
 
-            if (fieldSet == null || val == null || tag == null)
+            try
             {
-                EventLogger.Warn($"Null value in SetField: tag = {tag ?? "tag"}");
-                return false;
-                //throw new ArgumentNullException();
-            }
+                var logData = string.Empty;
 
-            var f = fieldSet?.Find(x => x.TagName.ToLower().Contains(tag.ToLower()));
-
-            if (f == null)
-            {
-                fieldSet.Add(new Field(tag, val, -1, false, 'n', false, true));
-                return false; // Field doesn't exist
-            }
-
-            if (!string.IsNullOrEmpty(val) && val.Length > f.MaxLen)
-            {
-                if (AutoTruncate && overrideTruncate)
+                if (fieldSet == null || string.IsNullOrEmpty(val) || string.IsNullOrEmpty(tag))
                 {
-                    logData = $"Field Overflow at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
-                    EventLogger.Error(logData);
-                    throw new Exception(logData);
+                    EventLogger.Warn($"Null value in SetField: tag = {tag ?? "tag"}");
+                    return false;
                 }
 
-                logData = $"Autotruncated Overflowed Field at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
-                EventLogger.Warn(logData);
+                var f = fieldSet?.Find(x => x.TagName.ToLower().Contains(tag.ToLower()));
 
-                val = val?.Substring(0, f.MaxLen);
+                if (f == null)
+                {
+                    throw new Exception($"{tag} does not exist");
+                    //fieldSet.Add(new Field(tag, val, -1, false, 'n', false, true));
+                    //return false; // Field doesn't exist
+                }
+
+                if (!string.IsNullOrEmpty(val) && val.Length > f.MaxLen)
+                {
+                    if (AutoTruncate && overrideTruncate)
+                    {
+                        logData = $"Field Overflow at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
+                        EventLogger.Error(logData);
+                        throw new Exception(logData);
+                    }
+
+                    logData = $"Autotruncated Overflowed Field at: <{tag}>, Data: {val}. Maxlen = {f.MaxLen} but got: {val.Length}";
+                    EventLogger.Warn(logData);
+
+                    if (val.Length >= f.MaxLen)
+                    {
+                        val = val?.Substring(0, f.MaxLen);
+                    }
+                }
+
+                f.TagData = string.IsNullOrEmpty(val) ? string.Empty : val;
+
+                IsEmpty = false;
+
+                return true;
             }
-
-            f.TagData = string.IsNullOrEmpty(val) ? string.Empty : val;
-
-            IsEmpty = false;
-
-            return true;
+            catch(Exception ex)
+            {
+                EventLogger.Error($"SetField: {ex.Message}, vlen = {vlen} tlen = {tlen}");
+                return false;
+            }
         }
 
         private bool CheckReturnValue(byte[] rawReturn)
@@ -705,7 +721,16 @@ namespace Mot.Common.Interface.Lib
                     stream.ReadTimeout = 10000;
 
                     // Push it to the port
-                    stream.Write(Encoding.UTF8.GetBytes(record), 0, record.Length);
+
+                    if (_preferAscii)
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(record), 0, record.Length);
+                    }
+                    else
+                    {
+                        stream.Write(Encoding.UTF8.GetBytes(record), 0, record.Length);
+                    }
+
                     var len = stream.Read(buf, 0, 32);
 
                     if (SendEof)
@@ -837,7 +862,15 @@ namespace Mot.Common.Interface.Lib
                 byte[] buf = new byte[32];
                 stream.ReadTimeout = 10000;
 
-                stream.Write(Encoding.UTF8.GetBytes(data), 0, data.Length);
+                if (_preferAscii)
+                {
+                    stream.Write(Encoding.ASCII.GetBytes(data), 0, data.Length);
+                }
+                else
+                {
+                    stream.Write(Encoding.UTF8.GetBytes(data), 0, data.Length);
+                }
+
                 var len = stream.Read(buf, 0, 32);
 
                 if (SendEof)

@@ -46,6 +46,7 @@ namespace Mot.Listener.Interface.Lib
         public Logger EventLogger { get; set; }
         public bool DebugMode { get; set; }
         public bool AllowZeroTQ { get; set; }
+        public bool PreferASCII { get; set; } 
 
         public MotSocket GatewaySocket { get; set; }
      
@@ -87,9 +88,9 @@ namespace Mot.Listener.Interface.Lib
             if (UseSsl)
             {
                 new List<string>
-            {
-                $"http://+:{port}/"
-            }.Add($"https://+:{port}/");
+                {
+                    $"http://+:{port}/"
+                }.Add($"https://+:{port}/");
             }
 
             //Hl7FhirListner.StartListener(prefixes, ParseHl7Message);
@@ -110,7 +111,8 @@ namespace Mot.Listener.Interface.Lib
 
                 _listenerSocket = new MotSocket(port, callback)
                 {
-                    UseSsl = UseSsl
+                    UseSsl = UseSsl,
+                    _preferASCII = PreferASCII                    
                 };
             }
             catch (Exception e)

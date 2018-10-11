@@ -22,6 +22,7 @@ namespace Mot.Polling.Interface.Lib
         public void ReadStoreRecords()
         {
             _store.Clear();
+            _store._preferAscii = PreferAscii;
 
             try
             {
@@ -91,10 +92,13 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
-            catch (System.Exception e)
+            catch (RowNotInTableException)
             {
-                throw new RowNotInTableException($"Store Record Not Found");
-                //throw new Exception("Failed to get Store Record " + e.Message);
+                return;  // No records
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

@@ -70,7 +70,7 @@ namespace Mot.Common.Interface.Lib
 
         public static string TrimString(int len)
         {
-            return FullTrim(String().Substring(len));
+            return FullTrim(String().Substring(0,len));
         }
 
         // ------- Format Utilities

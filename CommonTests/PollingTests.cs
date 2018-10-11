@@ -22,6 +22,9 @@ namespace CommonTests
         // Set to false to generate new sql records with a fresh timestamp
         bool CreatedRecords = false;
 
+        // Set char type
+        bool useAscii = true;
+
         // Various ways of accessing the SQL Server instance
         string sqlServerName = "PROXYPLAYGROUND";
         string sqlServerIp = "192.168.1.160";
@@ -76,17 +79,17 @@ namespace CommonTests
                                   $"'{RandomData.TrimString(25).ToUpper()}', " +        // Address_Line_1
                                   $"'{RandomData.TrimString(25).ToUpper()}', " +        // Address_Line_2
                                   $"'{RandomData.TrimString(20).ToUpper()}', " +        // City
-                                  $"'MA', " +                                                       // State_Code
-                                  $"'02165', " +                                                    // Zip_Code
-                                  $"'1234', " +                                                     // Zip_Plus_4
-                                  $"'617', " +                                                      // Area_Code
-                                  $"'9696072', " +                                                  // Telephone_Number
-                                  $"'00', " +                                                       // Exchange
-                                  $"'{RandomData.String(2).ToUpper()}0123456', " +            // DEA_Number
-                                  $"'123456', " +                                                   // DEA_Suffix
-                                  $"'{RandomData.TrimString(4).ToUpper()}', " +        // Prescriber_Type
-                                  $"'1', " +                                                        // Active_Flag
-                                  $"DEFAULT);";                                                     // MSSQLTS
+                                  $"'MA', " +                                           // State_Code
+                                  $"'02165', " +                                        // Zip_Code
+                                  $"'1234', " +                                         // Zip_Plus_4
+                                  $"'617', " +                                          // Area_Code
+                                  $"'9696072', " +                                      // Telephone_Number
+                                  $"'00', " +                                           // Exchange
+                                  $"'{RandomData.String(2).ToUpper()}0123456', " +      // DEA_Number
+                                  $"'123456', " +                                       // DEA_Suffix
+                                  $"'{RandomData.TrimString(4).ToUpper()}', " +         // Prescriber_Type
+                                  $"'1', " +                                            // Active_Flag
+                                  $"DEFAULT);";                                         // MSSQLTS
 
                         motSqlServer.ExecuteNonQuery(sql);
 
@@ -229,7 +232,7 @@ namespace CommonTests
                         sql = $"INSERT INTO dbo.vRx VALUES(" +
                               $"'{patId}', " +                                                          // Patient_ID
                               $"'{scripId}', " +                                                        // Rx_ID
-                              $"'99999', " +                                                            // External_Rx_ID
+                              $"{RandomData.Integer()}, " +                                             // External_Rx_ID
                               $"'{docId}', " +                                                          // Prescriber_ID
                               $"'{RandomData.TrimString(7).ToUpper()}', " +                 // Dosage_Signa_Code
                               $"'{RandomData.String(255)}', " +                                  // Decoded_Dosage_Signa
@@ -267,7 +270,7 @@ namespace CommonTests
                               $"'{RandomData.TrimString(10).ToUpper()}', " +
                               $"'{RandomData.TrimString(30).ToUpper()}', " +
                               $"'{DateTime.Now}', " +
-                              $"'{RandomData.String()}');";
+                              $"'{RandomData.String(512)}');";
 
                         motSqlServer.ExecuteNonQuery(sql);
                     }
@@ -332,6 +335,8 @@ namespace CommonTests
                 {
                     using (var patient = new PollPatient(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
+                        patient.PreferAscii = useAscii;
+
                         try
                         {
                             patient.ReadPatientRecords();
@@ -349,7 +354,6 @@ namespace CommonTests
                 Assert.Fail(ex.Message);
             }
         }
-
 
         public void QueryRx()
         {
@@ -370,6 +374,8 @@ namespace CommonTests
                 {
                     using (var Rx = new PollPrescription(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
+                        Rx.PreferAscii = useAscii;
+
                         try
                         {
                             Rx.ReadPrescriptionRecords();
@@ -387,7 +393,6 @@ namespace CommonTests
                 Assert.Fail(ex.Message);
             }
         }
-
 
         public void QueryFacility()
         {
@@ -408,6 +413,8 @@ namespace CommonTests
                 {
                     using (var facility = new PollFacility(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
+                        facility.PreferAscii = useAscii;
+
                         try
                         {
                             facility.ReadFacilityRecords();
@@ -446,6 +453,8 @@ namespace CommonTests
                 {
                     using (var doc = new PollPrescriber(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
+                        doc.PreferAscii = useAscii;
+
                         try
                         {
                             doc.ReadPrescriberRecords();
@@ -484,6 +493,8 @@ namespace CommonTests
                 {
                     using (var drug = new PollDrug(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
+                        drug.PreferAscii = useAscii;
+
                         try
                         {
                             drug.ReadDrugRecords();

@@ -19,6 +19,7 @@ namespace Mot.Polling.Interface.Lib
         public void ReadFacilityRecords()
         {
             _facility.Clear();
+            _facility._preferAscii = PreferAscii;
 
             try
             {
@@ -37,7 +38,7 @@ namespace Mot.Polling.Interface.Lib
                 var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vMOTLocation WHERE Touchdate > {LastTouch}; ");
 
                 if (ValidTable(recordSet))
-                {               
+                {
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
                         LastTouch = ByteArrayToHexString((System.Byte[])record["Touchdate"]);
@@ -91,6 +92,10 @@ namespace Mot.Polling.Interface.Lib
                         _facility.Clear();
                     }
                 }
+            }
+            catch (RowNotInTableException)
+            {
+                return;  // No records
             }
             catch (Exception ex)
             {

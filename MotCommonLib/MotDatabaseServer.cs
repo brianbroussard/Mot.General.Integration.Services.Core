@@ -418,6 +418,10 @@ namespace Mot.Common.Interface.Lib
             {
                 throw new Exception($"Sql Exception: {dbShortName} ExecuteQuery failed: {ex.Errors}");
             }
+            catch(RowNotInTableException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 if (!ex.Message.Contains("query did not return any data"))

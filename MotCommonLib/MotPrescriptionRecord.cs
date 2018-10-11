@@ -341,7 +341,10 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? "0", "RxSys_DrugID");
+            set
+            {              
+                SetField(_fieldList, value?.Trim() ?? "0", "RxSys_DrugID");
+            }
         }
 
         /// <summary>
@@ -485,7 +488,7 @@ namespace Mot.Common.Interface.Lib
 
         /// <summary>
         /// Gets or sets the refills.
-        /// </summary>
+        /// </summary>Refills
         /// <value>The refills.</value>
         [JsonProperty("Refills", ItemConverterType = typeof(int))]
         [XmlElement("Refills", typeof(int))]
@@ -497,7 +500,15 @@ namespace Mot.Common.Interface.Lib
                 return !string.IsNullOrEmpty(f.TagData) ? Convert.ToInt32(f.TagData) : 0;
             }
 
-            set => SetField(_fieldList, value.ToString(), "Refills");
+            set
+            {
+                if(value > 254)
+                {
+                    value = 254;
+                }
+
+                SetField(_fieldList, value.ToString(), "Refills");
+            }
         }
 
         /// <summary>

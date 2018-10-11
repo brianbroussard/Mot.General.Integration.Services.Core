@@ -19,6 +19,7 @@ namespace Mot.Polling.Interface.Lib
         protected readonly Logger EventLogger;
         protected string GatewayIp { get; set; }
         protected int GatewayPort { get; set; }
+        public bool PreferAscii { get; set; }
         private Type type { get; set; }
 
         public string ByteArrayToHexString(byte[] b)
@@ -62,7 +63,7 @@ namespace Mot.Polling.Interface.Lib
             catch
             {
                 EventLogger.Warn("Failed to get Last Touch Time, defaulting to .Now");
-                LastTouch = "0x00000000";
+                LastTouch = "0x0000000000000000";
             }
         }
 
@@ -96,10 +97,17 @@ namespace Mot.Polling.Interface.Lib
                     var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
                     var settings = configFile.AppSettings.Settings;
 
-                    appSettings[type.Name] = LastTouch.ToString();
+                    if (settings[type.Name] == null)
+                    {
+                        settings.Add(type.Name, LastTouch.ToString());
+                    }
+                    else
+                    {
+                        settings[type.Name].Value = LastTouch.ToString();
+                    }
 
                     configFile.Save(ConfigurationSaveMode.Modified);
-                    ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
+                    //ConfigurationManager.RefreshSection(configFile.AppSettings.SectionInformation.Name);
                 }
                 catch (Exception ex)
                 {

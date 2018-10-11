@@ -13,14 +13,15 @@ namespace Mot.Polling.Interface.Lib
         public PollPrescriber(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort) :
                base(db, mutex, gatewayIp, gatewayPort)
         {
-            _prescriber = new MotPrescriberRecord("Add");
+            _prescriber = new MotPrescriberRecord("Add");         
         }
 
-        public int ReadPrescriberRecords()
+        public void ReadPrescriberRecords()
         {
             try
             {
                 _prescriber.Clear();
+                _prescriber._preferAscii = PreferAscii;
 
                 var tmpPhone = string.Empty;
                 var tmpZip = string.Empty;
@@ -144,11 +145,16 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
 
-                return counter;
+                return;
             }
+            catch (RowNotInTableException)
+            {
+                return;  // No records
+            }
+
             catch (Exception ex)
             {
-                throw new RowNotInTableException($"Prescriber record processing failure: {ex.Message}");
+                throw;
             }
         }
     }

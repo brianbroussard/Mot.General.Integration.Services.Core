@@ -10,15 +10,16 @@ namespace Mot.Polling.Interface.Lib
 	public class Pharmaserve : IDisposable
 	{
 		public int RefreshRate { get; set; }
+        public bool PreferAscii { get; set; }
 
-		private MotSqlServer MotSqlServer { get; set; }
+        private MotSqlServer MotSqlServer { get; set; }
 		private readonly Mutex _mutex;
 
 		private string GatewayIp { get; set; }
 		private int GatewayPort { get; set; }
 
 		private Logger EventLogger { get; set; }
-
+        
 		private volatile bool KeepRunning = true;
 		Thread _waitForPrescriber;
 		Thread _waitForPrescription;
@@ -91,8 +92,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -121,6 +123,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
 				while (KeepRunning)
 				{
@@ -151,8 +154,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -181,8 +185,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollFacility(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -211,8 +216,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollStore(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -241,8 +247,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollTQ(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -272,8 +279,9 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollDrug(MotSqlServer, _mutex, GatewayIp, GatewayPort);
+                p.PreferAscii = this.PreferAscii;
 
-				while (KeepRunning)
+                while (KeepRunning)
 				{
 					try
 					{
@@ -283,7 +291,6 @@ namespace Mot.Polling.Interface.Lib
 					{
 						;
 					}
-
 
 					Thread.Sleep(RefreshRate);
 				}

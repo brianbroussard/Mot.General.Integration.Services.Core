@@ -141,6 +141,7 @@ namespace Mot.Polling.Interface.Lib
                 _motDatabaseServer = new MotSqlServer(_connectString);
 
 				_pharmaserve = new Pharmaserve(_motDatabaseServer, GatewayIp, GatewayPort);
+                _pharmaserve.PreferAscii = this.PreferAscii;
 				_pharmaserve.RefreshRate = RefreshRate;
 				_pharmaserve.Go();
                 

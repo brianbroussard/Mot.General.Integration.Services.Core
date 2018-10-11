@@ -14,6 +14,7 @@ namespace Mot.Polling.Interface.Lib
             base(db, mutex, gatewayIp, gatewayPort)
         {
             _scrip = new MotPrescriptionRecord("Add");
+            _scrip._preferAscii = PreferAscii;
         }
 
         private void GetNotes(string rxID)
@@ -63,9 +64,13 @@ namespace Mot.Polling.Interface.Lib
 
                 _scrip.SetField("Comments", notes, true);
             }
+            catch (RowNotInTableException)
+            {
+                return;  // No records
+            }
             catch (Exception ex)
             {
-                EventLogger.Error($"Failed to get Rx notes: {ex.Message}");
+                EventLogger.Error($"Failed getting Rx notes: {ex.Message}");
                 throw;
             }
         }
@@ -86,7 +91,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("Prescriber_ID", "RxSys_DocID");
                 TranslationTable.Add("Dispensed_Item_ID", "RxSys_DrugID");
 
-                TranslationTable.Add("NDC_Code", "NDCNum");
+                TranslationTable.Add("NDC_Code", "DrugID");
                 TranslationTable.Add("Instruction_Signa_Text", "Sig");
                 TranslationTable.Add("Dispense_Date", "RxStartDate");
                 TranslationTable.Add("Last_Dispense_Stop_Date", "RxStopDate");
@@ -100,6 +105,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("Dosage_Signa_Code", "DoseScheduleName");
                 TranslationTable.Add("QtyPerDose", "QtyPerDose");
                 TranslationTable.Add("Quantity_Dispensed", "QtyDispensed");
+
 
                 var recordSet = Db.ExecuteQuery($"SELECT * FROM dbo.vRx WHERE MSSQLTS > {LastTouch}; ");
 
@@ -125,26 +131,38 @@ namespace Mot.Polling.Interface.Lib
                                         break;
 
                                     case "Total_Refills_Authorized":
-                                        refills = Convert.ToInt32(val);
+                                        refills = Convert.ToInt32(val ?? "0");
+                                        _scrip.Refills = refills;
                                         continue;
 
                                     case "Total_Refills_Used":
-                                        refillsUsed = Convert.ToInt32(val);
+                                        refillsUsed = Convert.ToInt32(val ?? "0");
 
                                         if (refills >= refillsUsed)
                                         {
                                             refills -= refillsUsed;
-                                            _scrip.SetField("Refills", refills.ToString(), true);
+                                            _scrip.Refills = refills;
                                         }
+                                        break;
 
-                                        continue;
+                                    case "Dispense_Date":
+                                    case "Discontinue_Date":
+                                        val = DateTime.Parse(val).ToString("yyyy-MM-dd");
+                                        break;
 
                                     default:
                                         break;
                                 }
 
                                 // Update the local drug record
-                                _scrip.SetField(tag, val, true);
+                                if (!string.IsNullOrEmpty(val) && !string.IsNullOrEmpty(tag))
+                                {
+                                    _scrip.SetField(tag, val, true);
+                                }
+                                else
+                                {
+                                    EventLogger.Warn($"Empty value trapped: tag = {tag} val = {val}");
+                                }
                             }
                         }
 
@@ -172,10 +190,13 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
-            catch (Exception e)
+            catch (RowNotInTableException)
             {
-                throw new RowNotInTableException($"Prescription Record Not Found");
-                //throw new Exception("Failed to get Scrip Record " + e.Message);
+                return;  // No records
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

@@ -21,6 +21,7 @@ namespace Mot.Polling.Interface.Lib
             try
             {
                 _drug.Clear();
+                _drug._preferAscii = PreferAscii;
 
                 var itemType = string.Empty;
                 var itemColor = string.Empty;
@@ -32,20 +33,23 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("STRENGTH", "Strength");
                 TranslationTable.Add("UNIT_OF_MEASURE", "Unit");
                 TranslationTable.Add("NARCOTIC_CODE", "DrugSchedule");
-                TranslationTable.Add("VisualDescription", "VisualDescription");
                 TranslationTable.Add("NDC_CODE", "NDCNum");
                 TranslationTable.Add("COLOR_CODE", "VisualDescription");
                 TranslationTable.Add("ITEM_TYPE", "VisualDescription");
                 TranslationTable.Add("SHAPE_CODE", "VisualDescription");
                 TranslationTable.Add("PACKAGE_CODE", "ProdCode");
                 TranslationTable.Add("ROUTE_OF_ADMINISTRATION", "Route");
+                TranslationTable.Add("FORM_TYPE", "DoseForm");
 
-                var recordSet = Db.ExecuteQuery("SELECT * FROM vItem WHERE MSSQLTS > {LastTouch};");
 
+                var recordSet = Db.ExecuteQuery($"select * FROM dbo.vItem WHERE MSSQLTS > {LastTouch};");
+                   
                 if (ValidTable(recordSet))
                 {
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
+                        LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
+
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
                         {
@@ -81,7 +85,7 @@ namespace Mot.Polling.Interface.Lib
                         try
                         {
                             Mutex.WaitOne();
-
+                        
                             using (var gw = new TcpClient(GatewayIp, GatewayPort))
                             {
                                 using (var stream = gw.GetStream())
@@ -104,14 +108,14 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
-            catch (System.InvalidOperationException ex)
+            catch (RowNotInTableException)
             {
-                throw new Exception($"Error processing drug record {ex.Message}\n{ex.StackTrace}");
+                return;  // No records
             }
+
             catch (Exception ex)
             {
-                throw new RowNotInTableException($"Drug Record Not Found");
-                //throw new Exception($"Failed to get Drug Record {ex.Message}");
+                throw;
             }
         }
     }

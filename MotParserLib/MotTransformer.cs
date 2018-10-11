@@ -65,6 +65,7 @@ namespace Mot.Parser.InterfaceLib
         protected bool WatchSocket { get; set; }
         protected bool DebugMode { get; set; }
         protected bool AllowZeroTQ { get; set; }
+        protected bool PreferAscii { get; set; }
 
         private bool IsNewUserName { get; set; }
         private bool IsNewPassword { get; set; }
@@ -96,6 +97,8 @@ namespace Mot.Parser.InterfaceLib
                 DebugMode = (appSettings["Debug"] ?? "false") == "true";
                 AllowZeroTQ = (appSettings["AllowZeroTQ"] ?? "false") == "true";
                 DefaultStoreLoc = appSettings["DefaultStoreLoc"] ?? "000000";
+                PreferAscii = (appSettings["PreferASCII"] ?? "false") == "true";
+
                 UserName = appSettings["UserName"] ?? "None";
                 Password = appSettings["Password"] ?? "None";
 
@@ -212,6 +215,8 @@ namespace Mot.Parser.InterfaceLib
             {
                 using (var gatewaySocket = new MotSocket(GatewayAddress, GatewayPort))
                 {
+                    gatewaySocket._preferASCII = this.PreferAscii;
+
                     using (var p = new MotParser(gatewaySocket, data, _inputDataFormat, DebugMode, AllowZeroTQ, DefaultStoreLoc))
                     {
                         EventLogger.Debug(p.ResponseMessage);

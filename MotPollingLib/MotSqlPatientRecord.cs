@@ -88,10 +88,13 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
+            catch (DataException de)
+            {
+                return;  // No records
+            }
             catch (Exception ex)
             {
-                EventLogger.Info($"Failed reading patient allergies: {ex.Message}");
-                //throw;
+                throw;
             }
         }
 
@@ -142,10 +145,13 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
+            catch (DataException de)
+            {
+                return;  // No records
+            }
             catch (Exception ex)
             {
-                EventLogger.Info($"Failed reading patient diagnosis: {ex.Message}");
-                //throw;
+                throw;
             }
         }
 
@@ -200,15 +206,21 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
+            catch (DataException de)
+            {
+                return;  // No records
+            }
             catch (Exception ex)
             {
-                EventLogger.Info($"Failed reading patient notes: {ex.Message}");
-                //throw;
+                throw;
             }
         }
 
         public void ReadPatientRecords()
         {
+            _patient.Clear();
+            _patient._preferAscii = PreferAscii;
+
             try
             {
                 // Load the translaton table -- Database Column Name to Gateway Tag Name  
@@ -226,7 +238,7 @@ namespace Mot.Polling.Interface.Lib
                 TranslationTable.Add("Zip_Plus_4", "Zip");
                 TranslationTable.Add("Telephone_Number", "Phone1");
                 TranslationTable.Add("Area_Code", "Phone1");
-                TranslationTable.Add("Extension", "Phone2");
+                TranslationTable.Add("Extension", "Comments");
                 TranslationTable.Add("SSN", "SSN");
                 TranslationTable.Add("BirthDate", "DOB"); // SqlDateTime
                 TranslationTable.Add("Deceased_Date", "Comments"); // SqlDateTime
@@ -244,7 +256,6 @@ namespace Mot.Polling.Interface.Lib
 
                 var tmpPhone = string.Empty;
                 var tmpZip = string.Empty;
-
                 var patientId = string.Empty;
 
                 var recordSet = Db.ExecuteQuery($"SELECT * FROM vPatient WHERE MSSQLTS > {LastTouch};");
@@ -252,7 +263,7 @@ namespace Mot.Polling.Interface.Lib
                 {
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
-                        LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
+                       LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
 
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
@@ -332,10 +343,13 @@ namespace Mot.Polling.Interface.Lib
                     }
                 }
             }
+            catch (RowNotInTableException)
+            {
+                return;  // No records
+            }
             catch (Exception ex)
             {
-                throw new RowNotInTableException($"Patient Record Not Found");
-                // throw new Exception($"Failed to get Patient Record {ex.Message}");
+                throw;
             }
         }
     }
