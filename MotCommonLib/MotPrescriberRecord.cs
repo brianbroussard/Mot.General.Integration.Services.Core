@@ -469,7 +469,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? string.Empty, "Fax");
+            set => SetField(_fieldList, NormalizeString(value ?? string.Empty), "Fax");
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace Mot.Common.Interface.Lib
                 return f?.TagData;
             }
 
-            set => SetField(_fieldList, value ?? string.Empty, "PagerInfo");
+            set => SetField(_fieldList, NormalizeString(value ?? string.Empty), "PagerInfo");
         }
 
         /// <summary>

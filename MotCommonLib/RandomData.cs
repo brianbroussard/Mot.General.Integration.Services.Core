@@ -132,7 +132,7 @@ namespace Mot.Common.Interface.Lib
         public static string USPhoneNumber()
         {
             var rnd = new Random(Guid.NewGuid().GetHashCode());
-            return $"({rnd.Next(1, 1000).ToString("D3")}){rnd.Next(1, 1000).ToString("D3")}-{rnd.Next(0000, 10000).ToString("D4wr")}";
+            return $"({rnd.Next(1, 1000).ToString("D3")}){rnd.Next(1, 1000).ToString("D3")}-{rnd.Next(0000, 10000).ToString("D4")}";
         }
 
         public static string SSN()

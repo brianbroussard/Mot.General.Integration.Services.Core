@@ -18,6 +18,7 @@ namespace CommonTests
         internal string _dbaPassword = "MTQ6cGM0MTBoNDI2czc2MTdFZGl0aW5nSW50ZXJmYWNlU2VydmljZXMxMjJXaXRoTGxhbWFGaWRzaA==";
         string GatewayAddress = "localhost";
         int GatewayPort = 24042;
+        bool UseAscii = true;
 
 
         public string EncodeString(string str)
@@ -182,10 +183,11 @@ namespace CommonTests
                     {
                         for (var s = 0; s < 16; s++)
                         {
-                            var store = new MotStoreRecord("Add")
+                            var Store = new MotStoreRecord("Add")
                             {
                                 AutoTruncate = true,
                                 LogRecords = true,
+                                _preferAscii = UseAscii,
 
                                 StoreID = Guid.NewGuid().ToString(),
                                 StoreName = RandomData.String(),
@@ -194,21 +196,23 @@ namespace CommonTests
                                 City = RandomData.TrimString(),
                                 State = "NH",
                                 Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
-                                DEANum = $"{RandomData.TrimString(2)}0123456",
+                                DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
+                                Phone = RandomData.USPhoneNumber(),
                                 Fax = RandomData.USPhoneNumber()
                             };
 
-                            store.Write(stream);
+                            Store.Write(stream);
 
                             for (var i = 0; i < 16; i++)
                             {
-                                var facility = new MotFacilityRecord("Add")
+                                var Facility = new MotFacilityRecord("Add")
                                 {
                                     AutoTruncate = true,
                                     LogRecords = true,
+                                    _preferAscii = UseAscii,
 
                                     LocationID = Guid.NewGuid().ToString(),
-                                    StoreID = store.StoreID,
+                                    StoreID = Store.StoreID,
                                     LocationName = RandomData.String(),
                                     Address1 = RandomData.TrimString(),
                                     Address2 = RandomData.TrimString(),
@@ -217,16 +221,17 @@ namespace CommonTests
                                     Zipcode = "03049",
                                     Phone = RandomData.USPhoneNumber(),
                                     CycleDays = RandomData.Integer(1, 32),
-                                    CycleType = RandomData.Integer(1, 4),
+                                    CycleType = RandomData.Bit(),
                                     Comments = RandomData.String(2048)
                                 };
 
-                                facility.Write(stream);
+                                Facility.Write(stream);
 
-                                var prescriber = new MotPrescriberRecord("Add")
+                                var Prescriber = new MotPrescriberRecord("Add")
                                 {
                                     AutoTruncate = true,
                                     LogRecords = true,
+                                    _preferAscii = UseAscii,
 
                                     RxSys_DocID = Guid.NewGuid().ToString(),
                                     LastName = RandomData.TrimString(),
@@ -237,14 +242,14 @@ namespace CommonTests
                                     City = RandomData.TrimString(),
                                     State = "NH",
                                     Zipcode = "03049",
-                                    DEA_ID = $"{RandomData.TrimString(2)}0123456",
+                                    DEA_ID = $"{RandomData.TrimString(2).ToUpper()}0123456",
                                     TPID = RandomData.Integer(100000).ToString(),
                                     Phone = RandomData.USPhoneNumber(),
                                     Comments = RandomData.String(2048),
                                     Fax = RandomData.USPhoneNumber()
                                 };
 
-                                prescriber.Write(stream);
+                                Prescriber.Write(stream);
 
                                 for (var f = 0; f < 16; f++)
                                 {
@@ -252,10 +257,11 @@ namespace CommonTests
                                     var rxId = Guid.NewGuid().ToString();
                                     var drugId = Guid.NewGuid().ToString();
 
-                                    var patient = new MotPatientRecord("Add")
+                                    var Patient = new MotPatientRecord("Add")
                                     {
                                         AutoTruncate = true,
                                         LogRecords = true,
+                                        _preferAscii = UseAscii,
 
                                         PatientID = Guid.NewGuid().ToString(),
                                         LastName = RandomData.TrimString(),
@@ -268,10 +274,11 @@ namespace CommonTests
                                         Zipcode = "03049",
                                         Gender = RandomData.TrimString(1),
                                         CycleDate = RandomData.Date(DateTime.Now.Year),
-                                        CycleDays = 0,
+                                        CycleDays = RandomData.Integer(0,32),
+                                        CycleType = RandomData.Bit(),
                                         AdmitDate = RandomData.Date(),
                                         ChartOnly = RandomData.Bit().ToString(),
-                                        PrimaryPrescriberID = prescriber.PrescriberID,
+                                        PrimaryPrescriberID = Prescriber.PrescriberID,
                                         Phone1 = RandomData.USPhoneNumber(),
                                         Phone2 = RandomData.USPhoneNumber(),
                                         WorkPhone = RandomData.USPhoneNumber(),
@@ -282,14 +289,15 @@ namespace CommonTests
                                         DxNotes = RandomData.String(1024)
                                     };
 
-                                    patient.Write(stream);
+                                    Patient.Write(stream);
 
                                     for (var rx = 0; rx < 8; rx++)
                                     {
-                                        var drug = new MotDrugRecord("Add")
+                                        var Drug = new MotDrugRecord("Add")
                                         {
                                             AutoTruncate = true,
                                             LogRecords = true,
+                                            _preferAscii = UseAscii,
 
                                             DrugID = Guid.NewGuid().ToString(),
                                             DrugName = RandomData.TrimString(),
@@ -297,8 +305,8 @@ namespace CommonTests
                                             ProductCode = RandomData.TrimString(),
                                             LabelCode = RandomData.TrimString(),
                                             TradeName = RandomData.TrimString(),
-                                            DrugSchedule = RandomData.Integer(1, 7),
-                                            Strength = RandomData.Double(10),
+                                            DrugSchedule = RandomData.Integer(2, 8),
+                                            Strength = RandomData.Double(100),
                                             Route = RandomData.TrimString(),
                                             RxOTC = RandomData.Bit() == 1 ? "R" : "O",
                                             VisualDescription = $"{RandomData.TrimString(3)}/{RandomData.TrimString(3)}/{RandomData.TrimString(3)}",
@@ -312,21 +320,25 @@ namespace CommonTests
                                         {
                                             AutoTruncate = true,
                                             LogRecords = true,
+                                            _preferAscii = UseAscii,
 
-                                            PatientID = patient.PatientID,
-                                            PrescriberID = prescriber.PrescriberID,
-                                            DrugID = drug.DrugID,
+                                            PatientID = Patient.PatientID,
+                                            PrescriberID = Prescriber.PrescriberID,
+                                            DrugID = Drug.DrugID,
+                                            RxSys_RxNum = RandomData.Integer(1, 1000000).ToString(),
                                             RxStartDate = RandomData.Date(DateTime.Now.Year),
                                             RxStopDate = RandomData.Date(DateTime.Now.Year),
                                             DoseScheduleName = RandomData.TrimString(),
                                             QtyPerDose = RandomData.Double(10),
+                                            QtyDispensed = RandomData.Integer(1,120),
                                             RxType = RandomData.Integer(1, 21),
                                             DoseTimesQtys = RandomData.DoseTimes(RandomData.Integer(1,25)),
-                                            Isolate = RandomData.Bit().ToString()
-                        
+                                            Isolate = RandomData.Bit().ToString(),
+                                            Refills = RandomData.Integer(1,100),
+                                            Sig = RandomData.String()
                                         };
 
-                                        drug.Write(stream);
+                                        Drug.Write(stream);
                                         Rx.Write(stream);
                                     }
                                 }
