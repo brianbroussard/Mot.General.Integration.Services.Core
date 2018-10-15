@@ -392,7 +392,7 @@ namespace Mot.Common.Interface.Lib
         /// Gets or sets the rx stop date.
         /// </summary>
         /// <value>The rx stop date.</value>
-        [JsonProperty("RxStopDate", ItemConverterType = typeof(DateTime))]
+        [JsonProperty("RxStopDate")]
         [XmlElement("RxStopDate", typeof(DateTime))]
         public DateTime RxStopDate
         {
@@ -406,7 +406,17 @@ namespace Mot.Common.Interface.Lib
             {
                 if (value.ToString("yyyy-MM-dd") != "1970-01-01" &&
                     value.ToString("yyyy-MM-dd") != "0001-01-01")
-                {
+                {                 
+                    if(RxStartDate > DateTime.MinValue)
+                    {
+                        if(value < RxStartDate)
+                        {
+                            EventLogger.Info($"Overrode StopDate. Start: {RxStartDate.ToShortDateString()}, Stop: {value.ToShortDateString()}");
+                            value = RxStartDate;
+                            
+                        }
+                    }
+
                     SetField(_fieldList, NormalizeDate(value.ToString("yyyy-MM-dd") ?? ""), "RxStopDate");
                 }
             }
@@ -416,7 +426,7 @@ namespace Mot.Common.Interface.Lib
         /// Gets or sets the discontinue date.
         /// </summary>
         /// <value>The discontinue date.</value>
-        [JsonProperty("DiscontinueDate", ItemConverterType = typeof(DateTime))]
+        [JsonProperty("DiscontinueDate")]
         [XmlElement("DiscontinueDate", typeof(DateTime))]
         public DateTime DiscontinueDate
         {
@@ -435,6 +445,16 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
+                    if (RxStartDate > DateTime.MinValue)
+                    {
+                        if (value < RxStartDate)
+                        {
+                            EventLogger.Info($"Overrode DCDate. Start: {RxStartDate.ToShortDateString()}, Stop: {value.ToShortDateString()}");
+                            value = RxStartDate;
+
+                        }
+                    }
+
                     SetField(_fieldList, DateTime.MinValue.ToString(), "DiscontinueDate");
                 }
             }
@@ -444,7 +464,7 @@ namespace Mot.Common.Interface.Lib
         /// Gets or sets the discontinue date.
         /// </summary>
         /// <value>The discontinue date.</value>
-        [JsonProperty("DCDate", ItemConverterType = typeof(DateTime))]
+        [JsonProperty("DCDate")]
         [XmlElement("DCDate", typeof(DateTime))]
         public DateTime DCDate
         {

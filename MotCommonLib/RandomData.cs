@@ -143,15 +143,27 @@ namespace Mot.Common.Interface.Lib
 
         public static string DoseTimes(int numTimes = 1)
         {
+            List<string> quarterHours = new List<string>()
+            {
+                "00",
+                "25",
+                "33",
+                "50",
+                "66",
+                "75"
+            };
+
+            var rnd = new Random(Guid.NewGuid().GetHashCode());
+
             var doseTime = $"{RandomData.Integer(0, 25).ToString("D2")}{RandomData.Integer(0, 61).ToString("D2")}" +
-                           $"{RandomData.Integer(0, 13).ToString("D2")}{RandomData.Integer(0, 100).ToString("D2")}";
+                           $"{RandomData.Integer(0, 13).ToString("D2")}{quarterHours[rnd.Next(quarterHours.Count)]}";
 
             if(numTimes > 1)
             {
                 for(var i = 1; i < numTimes; i++)
                 {
                     doseTime += $"{RandomData.Integer(0, 25).ToString("D2")}{RandomData.Integer(0, 61).ToString("D2")}" +
-                                $"{RandomData.Integer(0, 13).ToString("D2")}{RandomData.Integer(0, 100).ToString("D2")}";
+                                $"{RandomData.Integer(0, 13).ToString("D2")}{quarterHours[rnd.Next(quarterHours.Count)]}";
                 }
             }
 
