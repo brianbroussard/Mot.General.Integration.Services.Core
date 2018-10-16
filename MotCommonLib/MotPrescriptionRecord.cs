@@ -412,8 +412,7 @@ namespace Mot.Common.Interface.Lib
                         if(value < RxStartDate)
                         {
                             EventLogger.Info($"Overrode StopDate. Start: {RxStartDate.ToShortDateString()}, Stop: {value.ToShortDateString()}");
-                            value = RxStartDate;
-                            
+                            value = RxStartDate;                           
                         }
                     }
 
@@ -451,7 +450,6 @@ namespace Mot.Common.Interface.Lib
                         {
                             EventLogger.Info($"Overrode DCDate. Start: {RxStartDate.ToShortDateString()}, Stop: {value.ToShortDateString()}");
                             value = RxStartDate;
-
                         }
                     }
 

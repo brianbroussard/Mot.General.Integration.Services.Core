@@ -181,28 +181,28 @@ namespace CommonTests
                 {
                     using (var stream = gateway.GetStream())
                     {
+                        var Store = new MotStoreRecord("Add")
+                        {
+                            AutoTruncate = true,
+                            LogRecords = true,
+                            _preferAscii = UseAscii,
+
+                            StoreID = Guid.NewGuid().ToString(),
+                            StoreName = $"{DateTime.Now.ToShortDateString()}{RandomData.String()}",
+                            Address1 = RandomData.TrimString(),
+                            Address2 = RandomData.TrimString(),
+                            City = RandomData.TrimString(),
+                            State = "NH",
+                            Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
+                            DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
+                            Phone = RandomData.USPhoneNumber(),
+                            Fax = RandomData.USPhoneNumber()
+                        };
+
+                        Store.Write(stream);
+
                         for (var s = 0; s < 16; s++)
                         {
-                            var Store = new MotStoreRecord("Add")
-                            {
-                                AutoTruncate = true,
-                                LogRecords = true,
-                                _preferAscii = UseAscii,
-
-                                StoreID = Guid.NewGuid().ToString(),
-                                StoreName = RandomData.String(),
-                                Address1 = RandomData.TrimString(),
-                                Address2 = RandomData.TrimString(),
-                                City = RandomData.TrimString(),
-                                State = "NH",
-                                Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
-                                DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
-                                Phone = RandomData.USPhoneNumber(),
-                                Fax = RandomData.USPhoneNumber()
-                            };
-
-                            Store.Write(stream);
-
                             for (var i = 0; i < 16; i++)
                             {
                                 var Facility = new MotFacilityRecord("Add")
@@ -286,7 +286,11 @@ namespace CommonTests
                                         SSN = RandomData.SSN(),
                                         Allergies = RandomData.String(1024),
                                         Diet = RandomData.String(1024),
-                                        DxNotes = RandomData.String(1024)
+                                        DxNotes = RandomData.String(1024),
+                                        InsName = RandomData.String(),
+                                        InsPNo = RandomData.Integer().ToString(),
+                                        AltInsName = RandomData.String(),
+                                        AltInsPNo = RandomData.Integer().ToString()
                                     };
 
                                     Patient.Write(stream);
