@@ -24,6 +24,8 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -189,6 +191,30 @@ namespace Mot.Parser.InterfaceLib
 
         }
 
+        private readonly Dictionary<string, string> logFileName = new Dictionary<string, string>()
+        {
+                {"store", "store.txt" },
+                {"rx", "prescription.txt" },
+                {"prescriber", "prescriber.txt" },
+                {"patient", "patient.txt" },
+                {"location", "facility.txt" },
+                {"timesqtys", "doseSchedule.txt" },
+                {"drug", "drug.txt" }
+        };
+       
+
+        
+        void LogTaggedRecord(string data)
+        {
+            if (!Directory.Exists("./recordLog"))
+            {
+                Directory.CreateDirectory("./recordLog");
+            }
+
+            var type = Regex.Match(data.ToLower(), "(?<=(<table>))(\\w|\\d|\n|[().,\\-:;@#$%^&*\\[\\]\"'+–/\\/®°⁰!?{}|`~]| )+?(?=(</table>))");
+            File.AppendAllText($"./recordLog/{logFileName[type.Value.ToLower()]}", $"{DateTime.UtcNow.ToLocalTime()}\r\n{data}\r\n");
+        }
+
         private void WriteBlockToGateway(string inboundData)
         {
             if (string.IsNullOrEmpty(inboundData))
@@ -203,6 +229,11 @@ namespace Mot.Parser.InterfaceLib
 
             try
             {
+                if(DebugMode)
+                {
+                    LogTaggedRecord(inboundData);
+                }
+
                 if(GatewaySocket.Write(inboundData) == false)
                 {
                     throw new Exception("Parser recieved a 'failed' response from the gateway");
