@@ -97,6 +97,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotPatientRecord()
         {
+            recordType = RecordType.Patient;
         }
 
         /// <summary>
@@ -106,6 +107,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="AutoTruncate"></param>
         public MotPatientRecord(string Action, bool AutoTruncate = false)
         {
+            recordType = RecordType.Patient;
             base.AutoTruncate = AutoTruncate;
 
             try
@@ -149,7 +151,7 @@ namespace Mot.Common.Interface.Lib
             AddToQueue("D", _fieldList);
         }
 
-        public void Write(MotSocket socket, bool doLogging = false)
+        public void Write(MotSocket socket)
         {
             try
             {
@@ -159,7 +161,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -170,7 +172,7 @@ namespace Mot.Common.Interface.Lib
             }
         }
 
-        public void Write(NetworkStream stream, bool doLogging = false)
+        public void Write(NetworkStream stream)
         {
             try
             {
@@ -180,7 +182,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, doLogging);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception ex)

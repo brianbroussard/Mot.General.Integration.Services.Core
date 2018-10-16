@@ -67,6 +67,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotStoreRecord()
         {
+            recordType = RecordType.Store;
         }
 
         /// <summary>
@@ -77,6 +78,7 @@ namespace Mot.Common.Interface.Lib
         /// <exception cref="Exception"></exception>
         public MotStoreRecord(string action, bool autoTruncate = false)
         {
+            recordType = RecordType.Store;
             AutoTruncate = autoTruncate;
 
             try
@@ -130,7 +132,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="socket"></param>
         /// <param name="doLogging"></param>
         /// <exception cref="Exception"></exception>
-        public void Write(MotSocket socket, bool doLogging = false)
+        public void Write(MotSocket socket)
         {
             try
             {
@@ -140,7 +142,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -157,7 +159,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="stream"></param>
         /// <param name="logRecords"></param>
         /// <exception cref="Exception"></exception>
-        public void Write(NetworkStream stream, bool logRecords = false)
+        public void Write(NetworkStream stream)
         {
             try
             {
@@ -167,7 +169,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, logRecords);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception ex)

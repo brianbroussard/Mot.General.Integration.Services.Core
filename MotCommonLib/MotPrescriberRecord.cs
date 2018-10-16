@@ -73,6 +73,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotPrescriberRecord()
         {
+            recordType = RecordType.Prescriber;
         }
 
         /// <summary>
@@ -82,6 +83,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="autoTruncate"></param>
         public MotPrescriberRecord(string action, bool autoTruncate = false)
         {
+            recordType = RecordType.Prescriber;
             AutoTruncate = autoTruncate;
 
             try
@@ -138,7 +140,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="doLogging"></param>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="Exception"></exception>
-        public void Write(MotSocket socket, bool doLogging = false)
+        public void Write(MotSocket socket)
         {
             if (socket == null)
             {
@@ -153,7 +155,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -170,7 +172,7 @@ namespace Mot.Common.Interface.Lib
         /// <param name="stream"></param>
         /// <param name="doLogging"></param>
         /// <exception cref="Exception"></exception>
-        public void Write(NetworkStream stream, bool doLogging = false)
+        public void Write(NetworkStream stream)
         {
             try
             {
@@ -180,7 +182,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, doLogging);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception e)

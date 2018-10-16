@@ -83,6 +83,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotDrugRecord()
         {
+            recordType = RecordType.Drug;
         }
 
         /// <summary>
@@ -98,6 +99,7 @@ namespace Mot.Common.Interface.Lib
                 throw new ArgumentNullException(nameof(action));
             }
 
+            recordType = RecordType.Drug;
             AutoTruncate = autoTruncate;
 
             try
@@ -151,7 +153,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -168,7 +170,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="doLogging"></param>
-        public void Write(NetworkStream stream, bool doLogging = false)
+        public void Write(NetworkStream stream)
         {
             try
             {
@@ -178,7 +180,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, doLogging);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception ex)

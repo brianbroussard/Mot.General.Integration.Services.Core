@@ -68,6 +68,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotFacilityRecord()
         {
+            recordType = RecordType.Facility;
         }
 
         /// <summary>
@@ -78,6 +79,7 @@ namespace Mot.Common.Interface.Lib
         /// <exception cref="Exception"></exception>
         public MotFacilityRecord(string action, bool autoTruncate = false)
         {
+            recordType = RecordType.Facility;
             AutoTruncate = autoTruncate;
 
             try
@@ -125,7 +127,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -135,7 +137,7 @@ namespace Mot.Common.Interface.Lib
                 throw new Exception(errorString);
             }
         }
-        public void Write(NetworkStream stream, bool doLogging = false)
+        public void Write(NetworkStream stream)
         {
             try
             {
@@ -145,7 +147,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, doLogging);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception ex)

@@ -1891,7 +1891,7 @@ namespace Mot.HL7.Interface.Lib
                 {
                     using (var stream = localTcpClient.GetStream())
                     {
-                        recBundle.Patient.Write(stream, DebugMode);
+                        recBundle.Patient.Write(stream);
                         recBundle.Patient.SetField("Action", "Change");
 
                         foreach (var order in omp.Orders)
@@ -1956,7 +1956,7 @@ namespace Mot.HL7.Interface.Lib
                         ProcessPatient(rde.Patient, recBundle);
 
                         ProblemLocus = "Patient";
-                        recBundle.Patient.Write(stream, DebugMode);
+                        recBundle.Patient.Write(stream);
 
                         foreach (var order in rde.Orders)
                         {
@@ -2017,7 +2017,7 @@ namespace Mot.HL7.Interface.Lib
                         ProcessHeader(rds.Header, recBundle);
                         ProcessPatient(rds.Patient, recBundle);
 
-                        recBundle.Patient.Write(stream, DebugMode);
+                        recBundle.Patient.Write(stream);
                         recBundle.Patient.SetField("Action", "Change");
 
                         foreach (var order in rds.Orders)

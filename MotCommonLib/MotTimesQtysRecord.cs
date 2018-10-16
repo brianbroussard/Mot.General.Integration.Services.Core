@@ -66,6 +66,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public MotTimesQtysRecord()
         {
+            recordType = RecordType.DoseSchedule;
         }
 
         /// <summary>
@@ -79,6 +80,7 @@ namespace Mot.Common.Interface.Lib
                 throw new ArgumentNullException(nameof(action));
             }
 
+            recordType = RecordType.DoseSchedule;
             AutoTruncate = autoTruncate;
 
             try
@@ -114,7 +116,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="doLogging"></param>
-        public void Write(MotSocket socket, bool doLogging = false)
+        public void Write(MotSocket socket)
         {
             if (socket == null)
             {
@@ -129,7 +131,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(socket, _fieldList, doLogging);
+                    Write(socket, _fieldList);
                 }
             }
             catch (Exception ex)
@@ -146,7 +148,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="doLogging"></param>
-        public void Write(NetworkStream stream, bool doLogging = false)
+        public void Write(NetworkStream stream)
         {
             if (stream == null)
             {
@@ -161,7 +163,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    Write(stream, _fieldList, doLogging);
+                    Write(stream, _fieldList);
                 }
             }
             catch (Exception ex)

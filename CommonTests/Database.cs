@@ -19,6 +19,9 @@ namespace CommonTests
         string GatewayAddress = "localhost";
         int GatewayPort = 24042;
         bool UseAscii = true;
+        bool AutoTruncate = false;
+        bool logRecords = true;
+        int MaxLoops = 8;
 
 
         public string EncodeString(string str)
@@ -181,34 +184,34 @@ namespace CommonTests
                 {
                     using (var stream = gateway.GetStream())
                     {
-                        var Store = new MotStoreRecord("Add")
+                        for (var s = 0; s < 3; s++)
                         {
-                            AutoTruncate = true,
-                            LogRecords = true,
-                            _preferAscii = UseAscii,
+                            var Store = new MotStoreRecord("Add")
+                            {
+                                AutoTruncate = AutoTruncate,
+                                logRecords = true,
+                                _preferAscii = UseAscii,
 
-                            StoreID = Guid.NewGuid().ToString(),
-                            StoreName = $"{DateTime.Now.ToShortDateString()}{RandomData.String()}",
-                            Address1 = RandomData.TrimString(),
-                            Address2 = RandomData.TrimString(),
-                            City = RandomData.TrimString(),
-                            State = "NH",
-                            Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
-                            DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
-                            Phone = RandomData.USPhoneNumber(),
-                            Fax = RandomData.USPhoneNumber()
-                        };
+                                StoreID = Guid.NewGuid().ToString(),
+                                StoreName = $"{DateTime.Now.ToLongTimeString()}{RandomData.String()}",
+                                Address1 = RandomData.TrimString(),
+                                Address2 = RandomData.TrimString(),
+                                City = RandomData.TrimString(),
+                                State = "NH",
+                                Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
+                                DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
+                                Phone = RandomData.USPhoneNumber(),
+                                Fax = RandomData.USPhoneNumber()
+                            };
 
-                        Store.Write(stream);
+                            Store.Write(stream);
 
-                        for (var s = 0; s < 16; s++)
-                        {
-                            for (var i = 0; i < 16; i++)
+                            for (var i = 0; i < MaxLoops; i++)
                             {
                                 var Facility = new MotFacilityRecord("Add")
                                 {
-                                    AutoTruncate = true,
-                                    LogRecords = true,
+                                    AutoTruncate = AutoTruncate,
+                                    logRecords = true,
                                     _preferAscii = UseAscii,
 
                                     LocationID = Guid.NewGuid().ToString(),
@@ -229,8 +232,8 @@ namespace CommonTests
 
                                 var Prescriber = new MotPrescriberRecord("Add")
                                 {
-                                    AutoTruncate = true,
-                                    LogRecords = true,
+                                    AutoTruncate = AutoTruncate,
+                                    logRecords = true,
                                     _preferAscii = UseAscii,
 
                                     RxSys_DocID = Guid.NewGuid().ToString(),
@@ -251,7 +254,7 @@ namespace CommonTests
 
                                 Prescriber.Write(stream);
 
-                                for (var f = 0; f < 16; f++)
+                                for (var f = 0; f < MaxLoops; f++)
                                 {
 
                                     var rxId = Guid.NewGuid().ToString();
@@ -259,8 +262,8 @@ namespace CommonTests
 
                                     var Patient = new MotPatientRecord("Add")
                                     {
-                                        AutoTruncate = true,
-                                        LogRecords = true,
+                                        AutoTruncate = AutoTruncate,
+                                        logRecords = true,
                                         _preferAscii = UseAscii,
 
                                         PatientID = Guid.NewGuid().ToString(),
@@ -299,8 +302,8 @@ namespace CommonTests
                                     {
                                         var Drug = new MotDrugRecord("Add")
                                         {
-                                            AutoTruncate = true,
-                                            LogRecords = true,
+                                            AutoTruncate = AutoTruncate,
+                                            logRecords = true,
                                             _preferAscii = UseAscii,
 
                                             DrugID = Guid.NewGuid().ToString(),
@@ -322,8 +325,8 @@ namespace CommonTests
 
                                         var Rx = new MotPrescriptionRecord("Add")
                                         {
-                                            AutoTruncate = true,
-                                            LogRecords = true,
+                                            AutoTruncate = AutoTruncate,
+                                            logRecords = true,
                                             _preferAscii = UseAscii,
 
                                             PatientID = Patient.PatientID,
@@ -368,7 +371,7 @@ namespace CommonTests
             var prescriberId = Guid.NewGuid().ToString();
             var facilityId = Guid.NewGuid().ToString();
 
-            using (var localTcpClient = new TcpClient("proxyplayground.medicineontime.com", 24042))
+            using (var localTcpClient = new TcpClient("localhost", 24042))
             {
                 using (var stream = localTcpClient.GetStream())
                 {
@@ -377,6 +380,7 @@ namespace CommonTests
                         var facility = new MotFacilityRecord("Add");
                         facility.LocationName = "Banzai Institute";
                         facility.LocationID = facilityId;
+                        facility.logRecords = logRecords;
                         facility.Write(stream);
 
                         var doc = new MotPrescriberRecord("Add")
@@ -399,6 +403,7 @@ namespace CommonTests
                             AddBuckaroo.CycleDate = DateTime.Now;
                             AddBuckaroo.CycleDays = 30;
                             AddBuckaroo.LocationID = facilityId;
+                            AddBuckaroo.logRecords = logRecords;
 
                             AddBuckaroo.Write(stream);
                         }
@@ -413,6 +418,7 @@ namespace CommonTests
                             CycleDate = DateTime.Now,
                             CycleDays = 30,
                             LocationID = facilityId,
+                            logRecords = logRecords
                         };
 
                         AddPenny.Write(stream);

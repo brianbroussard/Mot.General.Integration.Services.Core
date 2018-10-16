@@ -239,10 +239,10 @@ namespace Mot.Parser.InterfaceLib
                 {
                     foreach (var rec in _recordList)
                     {
-                        rec.Patient.Write(stream, DebugMode);
-                        rec.Scrip.Write(stream, DebugMode);
-                        rec.Doc.Write(stream, DebugMode);
-                        rec.Facility.Write(stream, DebugMode);
+                        rec.Patient.Write(stream);
+                        rec.Scrip.Write(stream);
+                        rec.Doc.Write(stream);
+                        rec.Facility.Write(stream);
                     }
                 }
             }
@@ -260,7 +260,8 @@ namespace Mot.Parser.InterfaceLib
                         FirstName = mtsData.FirstName,
                         MiddleInitial = mtsData.MiddleInitial,
                         Room = mtsData.Room,
-                        ResponisbleName = mtsData.RphName
+                        ResponisbleName = mtsData.RphName,
+                        logRecords = DebugMode
                     },
                     Scrip =
                     {
@@ -269,14 +270,16 @@ namespace Mot.Parser.InterfaceLib
                         RxStartDate = mtsData.FillStartDate,
                         Refills = Convert.ToInt32(mtsData.RefillsRemaining ?? "0"),
                         Sig = $"{mtsData.SigDirections}\n{mtsData.ExpandedDirections}",
-                        Comments = mtsData.DrugCautionMessages
+                        Comments = mtsData.DrugCautionMessages,
+                        logRecords = DebugMode
                     },
                     Facility = {LocationID = mtsData.FacilityNum},
                     Doc =
                     {
                         LastName = mtsData.PhysicianLastName,
                         FirstName = mtsData.PhysicianFirstName,
-                        DEA_ID = mtsData.PhyscianDeaCode
+                        DEA_ID = mtsData.PhyscianDeaCode,
+                        logRecords = DebugMode
                     }
                 };
 

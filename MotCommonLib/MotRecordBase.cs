@@ -66,6 +66,17 @@ namespace Mot.Common.Interface.Lib
         }
     */
 
+    public enum RecordType
+    {
+        Store,
+        Prescriber,
+        Prescription,
+        Patient,
+        Facility,
+        DoseSchedule,
+        Drug
+    };
+
     /// <summary>
     ///     <c>Field</c>
     ///     Enhanced property defining data characteristics for Gateway suported data
@@ -125,6 +136,7 @@ namespace Mot.Common.Interface.Lib
         }
     }
 
+  
     /// <summary>
     ///     <c>motRecordBase</c>
     ///     Provides common I/O, Parsing, and Validation metods for derived classes
@@ -137,6 +149,18 @@ namespace Mot.Common.Interface.Lib
             "yyyyMMdd", "yyyyMMd", "yyyyMdd", "yyyyMd", "yyyyddMM", "yyyyddM", "yyyydMM", "yyyydM", "ddMMyyyy", "ddMyyyy", "dMMyyyy", "dMyyyy", "MMddyyyy", "MMdyyyy", "Mddyyyy", "Mdyyyy", "dd/MM/yyyy", "dd/M/yyyy", "d/MM/yyyy", "d/M/yyyy", "MM/dd/yyyy", "MM/dd/yyyy hh:mm:ss tt", "MM/dd/yyyy h:mm:ss tt", "MM/dd/yyyy hh:m:ss tt", "MM/dd/yyyy h:m:ss tt", "MM/dd/yyyyhhmmss", // HL7 Full Date Format 20110802085759
             "yyyyMMddhhmmss", "MM/d/yyyy", "MM/d/yyyy hh:mm:ss tt", "M/dd/yyyy", "M/dd/yyyy hh:mm:ss tt", "M/d/yyyy", "M/d/yyyy hh:mm:ss tt", "yyyy-MM-dd", "yyyy-M-dd", "yyyy-MM-d", "yyyy-M-d", "yyyy-dd-MM", "yyyy-d-MM", "yyyy-dd-M", "yyyy-d-M"
         };
+
+        private readonly Dictionary<RecordType, string> logFileName = new Dictionary<RecordType, string>()
+        {
+                {RecordType.Store, "store.txt" },
+                {RecordType.Prescription, "prescription.txt" },
+                {RecordType.Prescriber, "prescriber.txt" },
+                {RecordType.Patient, "patient.txt" },
+                {RecordType.Facility, "facility.txt" },
+                {RecordType.DoseSchedule, "doseSchedule.txt" },
+                {RecordType.Drug, "drug.txt" }
+        };
+
 
         /// <summary>
         ///     DSN for the target database
@@ -190,7 +214,7 @@ namespace Mot.Common.Interface.Lib
         ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> log records.
         /// </summary>
         /// <value><c>true</c> if log records; otherwise, <c>false</c>.</value>
-        public bool LogRecords { get; set; } = false;
+        public bool logRecords { get; set; } = false;
 
         /// <summary>
         ///     Gets or sets a value indicating whether this <see cref="T:Mot.Common.Interface.Lib.MotRecordBase" /> auto truncate.
@@ -230,6 +254,8 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public bool RelaxTqRequirements { get; set; }
 
+        protected RecordType recordType { get; set; }
+
         /// <summary>
         ///     <c>Dispose</c>
         ///     Direct IDisposable destructor that destroys and nullifies everything
@@ -238,6 +264,16 @@ namespace Mot.Common.Interface.Lib
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        void LogTaggedRecord(string data)
+        {
+            if(!Directory.Exists("./recordLog"))
+            {
+                Directory.CreateDirectory("./recordLog");
+            }
+
+            File.AppendAllText($"./recordLog/{logFileName[recordType]}", $"{DateTime.UtcNow.ToLocalTime()}\r\n{data}\r\n");
         }
 
         /// <summary>
@@ -671,8 +707,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="fieldSet"></param>
-        /// <param name="logRecord"></param>
-        protected void Write(NetworkStream stream, List<Field> fieldSet, bool logRecord = false)
+        protected void Write(NetworkStream stream, List<Field> fieldSet)
         {
             if (DontSend)
             {
@@ -720,7 +755,10 @@ namespace Mot.Common.Interface.Lib
                     byte[] buf = new byte[32];
                     stream.ReadTimeout = 10000;
 
-                    // Push it to the port
+                    if (logRecords)
+                    {
+                        LogTaggedRecord(record);
+                    }
 
                     if (_preferAscii)
                     {
@@ -738,19 +776,12 @@ namespace Mot.Common.Interface.Lib
                         stream.Write(Encoding.UTF8.GetBytes("<EOF/>"), 0, 7);
                     }
 
-                    //File.AppendAllText("./err.out", record+"\n");
-
                     if (!CheckReturnValue(buf))
                     {
                         EventLogger.Error($"This caused a write failure\n{record}");
                         throw new Exception("There was a write failure reported by gateway");
                     }
-                }
-
-                if (logRecord)
-                {
-                    EventLogger.Info(record);
-                }
+                }            
             }
             catch (Exception ex)
             {
@@ -765,8 +796,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         /// <param name="socket"></param>
         /// <param name="fieldSet"></param>
-        /// <param name="logRecord"></param>
-        protected void Write(MotSocket socket, List<Field> fieldSet, bool logRecord = false)
+        protected void Write(MotSocket socket, List<Field> fieldSet)
         {
             if (DontSend) return;
 
@@ -810,21 +840,31 @@ namespace Mot.Common.Interface.Lib
 
                 if (dataLen > 0)
                 {
-                    // Push it to the port
-                    if(!socket.Write(record))
+                    if (logRecords)
                     {
-                        throw new InvalidOperationException();
+                        LogTaggedRecord(record);
+                    }
+
+                    if (!_preferAscii)
+                    {
+                        if (!socket.Write(Encoding.ASCII.GetBytes(record)))
+                        {
+                            throw new InvalidOperationException();
+                        }
+                    }
+                    else
+                    {
+                        // Push it to the port
+                        if (!socket.Write(Encoding.UTF8.GetBytes(record)))
+                        {
+                            throw new InvalidOperationException();
+                        }
                     }
 
                     if (SendEof)
                     {
                         socket.Write("<EOF/>");
                     }
-                }
-
-                if (logRecord)
-                {
-                    EventLogger.Info(record);
                 }
             }
             catch (Exception ex)
@@ -861,6 +901,11 @@ namespace Mot.Common.Interface.Lib
             {
                 byte[] buf = new byte[32];
                 stream.ReadTimeout = 10000;
+
+                if (logRecords)
+                {
+                    LogTaggedRecord(data);
+                }
 
                 if (_preferAscii)
                 {
@@ -915,9 +960,29 @@ namespace Mot.Common.Interface.Lib
 
             try
             {
-                if(!socket.Write(data))
+                if (logRecords)
                 {
-                    throw new InvalidOperationException();
+                    LogTaggedRecord(data);
+                }
+
+                if (_preferAscii)
+                {
+                    if (!socket.Write(Encoding.ASCII.GetBytes(data)))
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                else
+                {
+                    if (!socket.Write(Encoding.UTF8.GetBytes(data)))
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+
+                if (SendEof)
+                {
+                    socket.Write("<EOF/>");
                 }
             }
             catch (Exception ex)
