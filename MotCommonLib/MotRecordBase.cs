@@ -74,7 +74,8 @@ namespace Mot.Common.Interface.Lib
         Patient,
         Facility,
         DoseSchedule,
-        Drug
+        Drug,
+        Unknown
     };
 
     /// <summary>

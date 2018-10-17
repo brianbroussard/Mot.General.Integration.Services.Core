@@ -1,8 +1,0 @@
-version: '3.4'
-
-services:
-  mot.inbound.interface.service:
-    image: ${DOCKER_REGISTRY}motinboundinterfaceservice
-    build:
-      context: .\TransformerService
-      dockerfile: Dockerfile

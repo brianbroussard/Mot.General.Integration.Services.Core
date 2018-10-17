@@ -4,8 +4,8 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>mot-certificate.snk</AssemblyOriginatorKeyFile>
     <ApplicationIcon>MOT_logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.261.12</AssemblyVersion>
-    <FileVersion>1.0.261.12</FileVersion>
+    <AssemblyVersion>1.0.270.12</AssemblyVersion>
+    <FileVersion>1.0.270.12</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>

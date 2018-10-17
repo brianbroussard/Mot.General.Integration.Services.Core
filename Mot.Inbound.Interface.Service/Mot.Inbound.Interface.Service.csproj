@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{1DE6C337-CABC-4237-B3CA-0BB4A8C00A50}</ProjectGuid>
+    <ProjectGuid>{74566B9D-80FA-44B2-AF4F-A7328B0A5A6A}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Mot.Inbound.Interface.Service</RootNamespace>
     <AssemblyName>Mot.Inbound.Interface.Service</AssemblyName>
@@ -14,7 +14,6 @@
     <TargetFrameworkProfile />
     <AssemblyVersion>1.0.12.12</AssemblyVersion>
     <IsWebBootstrapper>false</IsWebBootstrapper>
-    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>

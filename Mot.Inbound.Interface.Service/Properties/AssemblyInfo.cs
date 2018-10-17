@@ -1,14 +1,14 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("TransformerService")]
-[assembly: AssemblyDescription("HL7 and other gateway interface for MOTALL and motNext")]
+[assembly: AssemblyTitle("Mot.Inbound.Interface.Service")]
+[assembly: AssemblyDescription("HL7 and other gateway protocol interface for MOTALL and motNext")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Medicine-On-Time, LLC")]
-[assembly: AssemblyProduct("TransformerService")]
+[assembly: AssemblyProduct("Mot.Inbound.Interface.Service")]
 [assembly: AssemblyCopyright("Copyright ©  2018 by Peter H. Jenney")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -31,5 +31,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.195.12")]
-[assembly: AssemblyFileVersion("1.0.195.12")]
+[assembly: AssemblyVersion("1.0.196.12")]
+[assembly: AssemblyFileVersion("1.0.196.12")]

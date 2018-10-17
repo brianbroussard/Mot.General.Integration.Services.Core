@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Mot.Common.Interface.Lib;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using Microsoft.Data.Sqlite;
+using System.Threading;
 
 namespace CommonTests
 {
@@ -23,7 +25,10 @@ namespace CommonTests
         bool logRecords = true;
         int MaxLoops = 8;
 
+        bool StartCleaning = false;
 
+
+        #region Obfuscator
         public string EncodeString(string str)
         {
             byte[] b = Encoding.UTF8.GetBytes(str);
@@ -35,6 +40,165 @@ namespace CommonTests
             byte[] b = Convert.FromBase64String(str);
             return Encoding.UTF8.GetString(b);
         }
+        #endregion
+        #region CleanupDb
+        private SqliteConnection TestDbConnection;
+        private SqliteCommand TestDbCommand;
+
+        public class TestRecord
+        {
+            public string Id { get; set; }
+            public string RecordId { get; set; }
+            public RecordType RecordType { get; set; }
+            public string Name { get; set; }
+            public DateTime TimeStamp { get; set; }
+        }
+
+        public void WriteTestLogRecord(TestRecord tr)
+        {
+            try
+            {
+                var sql = @"replace into map (Id, RecordId, RecordType, Name, TimeStamp) values (@Id, @RecordId, @RecordType, @Name, @TimeStamp);";
+
+                using (var command = new SqliteCommand(sql, TestDbConnection))
+                {
+                    command.Parameters.AddWithValue("@Id", tr.Id.ToString());
+                    command.Parameters.AddWithValue("@RecordId", tr.RecordId.ToString());
+                    command.Parameters.AddWithValue("@RecordType", (int)tr.RecordType);
+                    command.Parameters.AddWithValue("@Name", tr.Name);
+                    command.Parameters.AddWithValue("@TimeStamp", DateTime.UtcNow.ToString());
+
+                    var val = command.ExecuteNonQuery();
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public RecordType GetRecordTypeFromInt(int rt)
+        {
+            switch (rt)
+            {
+                case 0:
+                    return RecordType.Store;
+                case 1:
+                    return RecordType.Prescriber;
+                case 2:
+                    return RecordType.Prescription;
+                case 3:
+                    return RecordType.Patient;
+                case 4:
+                    return RecordType.Facility;
+                case 5:
+                    return RecordType.DoseSchedule;
+                case 6:
+                    return RecordType.Drug;
+                default:
+                    break;
+            }
+
+            return RecordType.Unknown;
+        }
+
+        public List<TestRecord> GetTestLogRecords(RecordType recordType)
+        {
+            try
+            {
+                var trl = new List<TestRecord>();
+
+                var sql = $"select * from map where RecordType = {(int)recordType};";
+                using (var command = new SqliteCommand(sql, TestDbConnection))
+                {
+                    using (var rdr = command.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            if (rdr["Id"] != DBNull.Value)
+                            {
+                                trl.Add(new TestRecord()
+                                {
+                                    Id = rdr["Id"].ToString(),
+                                    RecordId = rdr["RecordId"].ToString(),
+                                    RecordType = GetRecordTypeFromInt(Convert.ToInt32(rdr["RecordType"])),
+                                    Name = rdr["Name"].ToString(),
+                                    TimeStamp = DateTime.Parse(rdr["TimeStamp"].ToString())
+                                });
+                            }
+                        }
+                    }
+                }
+
+                return trl;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        void CreateDb()
+        {
+            try
+            {
+                var sql = "CREATE TABLE IF NOT EXISTS `map` (`Id` TEXT NOT NULL, `RecordId` TEXT NOT NULL, `RecordType` INTEGER, `Name` TEXT NOT NULL, `TimeStamp` TEXT NOT NULL, PRIMARY KEY(`Id`));";
+
+                using (TestDbConnection = new SqliteConnection(@"Data Source=./db/testrun.db3"))
+                {
+                    TestDbConnection.Open();
+
+                    using (var command = new SqliteCommand(sql, TestDbConnection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public void OpenTestLogDb()
+        {
+            try
+            {
+                if (!Directory.Exists("./db"))
+                {
+                    Directory.CreateDirectory("./db");
+                }
+
+                if (!File.Exists("./db/testrun.db3"))
+                {
+                    CreateDb();
+                }
+
+                TestDbConnection = new SqliteConnection(@"Data Source=./db/testrun.db3");
+                TestDbConnection.Open();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public void CloseTestLogDb()
+        {
+            if (TestDbConnection != null)
+            {
+                TestDbConnection.Close();
+            }
+        }
+
+        public void DestroyTestLogDb()
+        {
+            if (File.Exists("./db/testrun.db3"))
+            {
+                File.Delete("./db/testrun.db3");
+            }
+        }
+        #endregion
 
         [TestMethod]
         public void GuidMatches()
@@ -94,13 +258,16 @@ namespace CommonTests
         {
             try
             {
-                var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
-                using (var test = new DataSet())
+                if (GetPlatformOs.Current == PlatformOs.Windows)
                 {
-                    var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
-                    if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
+                    var _dbServer = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={DecodeString(_dbaUserName)};PWD={DecodeString(_dbaPassword)}");
+                    using (var test = new DataSet())
                     {
-                        var _supportsSynMed = true;
+                        var db = _dbServer.ExecuteQuery(@"SELECT * FROM SYS.SYSTABLE where SYS.SYSTABLE.table_name = 'SynMed2Send'");
+                        if (db.Tables.Count > 0 && db.Tables[0].Rows.Count > 0)
+                        {
+                            var _supportsSynMed = true;
+                        }
                     }
                 }
             }
@@ -175,11 +342,127 @@ namespace CommonTests
             }
         }
 
+        public void CleanDatabase()
+        {
+            if (!StartCleaning)
+            {
+                Thread.Yield();
+
+                while (!StartCleaning)
+                {
+                    Thread.Sleep(10000);
+                }
+            }
+
+            try
+            {
+                OpenTestLogDb();
+
+                using (var gateway = new TcpClient(GatewayAddress, GatewayPort))
+                {
+                    using (var stream = gateway.GetStream())
+                    {
+                        // Delete Rxs
+                        var RxList = GetTestLogRecords(RecordType.Prescription);
+                        foreach (var rx in RxList)
+                        {
+                            var RxToDelete = new MotPrescriptionRecord("Delete")
+                            {
+                                RxSys_RxNum = rx.Name
+                            };
+
+                            RxToDelete.Write(stream);
+                        }
+
+                        // Delete Drugs
+                        var DrugList = GetTestLogRecords(RecordType.Drug);
+                        foreach (var drug in DrugList)
+                        {
+                            var DrugToDelete = new MotDrugRecord("Delete")
+                            {
+                                DrugID = drug.RecordId.ToString()
+                            };
+
+                            DrugToDelete.Write(stream);
+                        }
+
+                        // Delete Patients
+                        var PatientList = GetTestLogRecords(RecordType.Patient);
+                        foreach (var patient in PatientList)
+                        {
+                            var PatientToDelete = new MotPatientRecord("Delete")
+                            {
+                                PatientID = patient.RecordId.ToString()
+                            };
+
+                            PatientToDelete.Write(stream);
+                        }
+
+                        // Delete Facilities
+                        var FacilityList = GetTestLogRecords(RecordType.Facility);
+                        foreach (var facility in FacilityList)
+                        {
+                            var FacilityToDelete = new MotFacilityRecord("Delete")
+                            {
+                                LocationID = facility.RecordId.ToString()
+                            };
+
+                            FacilityToDelete.Write(stream);
+                        }
+
+                        // Delete Prescribers
+                        var PrescriberList = GetTestLogRecords(RecordType.Prescriber);
+                        foreach (var prescriber in PrescriberList)
+                        {
+                            var PrescriberToDelete = new MotPrescriberRecord("Delete")
+                            {
+                                PrescriberID = prescriber.RecordId.ToString()
+                            };
+
+                            PrescriberToDelete.Write(stream);
+                        }
+
+                        // Delete Stores
+                        var StoreList = GetTestLogRecords(RecordType.Store);
+                        foreach (var store in StoreList)
+                        {
+                            var StoreToDelete = new MotStoreRecord("Delete")
+                            {
+                                StoreID = store.RecordId.ToString()
+                            };
+
+                            StoreToDelete.Write(stream);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"Failed to clean database: {ex.Message}");
+            }
+        }
+
         [TestMethod]
+        public void BigRandomTestAndCleanup()
+        {
+            try
+            {
+                RandomDataCycle();
+                CleanDatabase();
+                DestroyTestLogDb();
+            }
+            catch(Exception ex)
+            {
+                Assert.Fail(ex.Message);
+            }
+        }
+
         public void RandomDataCycle()
         {
             try
             {
+                OpenTestLogDb();
+
                 using (var gateway = new TcpClient(GatewayAddress, GatewayPort))
                 {
                     using (var stream = gateway.GetStream())
@@ -206,6 +489,15 @@ namespace CommonTests
 
                             Store.Write(stream);
 
+                            WriteTestLogRecord(new TestRecord()
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                RecordId = new Guid(Store.StoreID).ToString(),
+                                RecordType = RecordType.Store,
+                                Name = Store.StoreName,
+                                TimeStamp = DateTime.UtcNow
+                            });
+
                             for (var i = 0; i < MaxLoops; i++)
                             {
                                 var Facility = new MotFacilityRecord("Add")
@@ -229,6 +521,15 @@ namespace CommonTests
                                 };
 
                                 Facility.Write(stream);
+
+                                WriteTestLogRecord(new TestRecord()
+                                {
+                                    Id = Guid.NewGuid().ToString(),
+                                    RecordId = new Guid(Facility.LocationID).ToString(),
+                                    RecordType = RecordType.Facility,
+                                    Name = Facility.LocationName,
+                                    TimeStamp = DateTime.UtcNow
+                                });
 
                                 var Prescriber = new MotPrescriberRecord("Add")
                                 {
@@ -254,6 +555,15 @@ namespace CommonTests
 
                                 Prescriber.Write(stream);
 
+                                WriteTestLogRecord(new TestRecord()
+                                {
+                                    Id = Guid.NewGuid().ToString(),
+                                    RecordId = new Guid(Prescriber.PrescriberID).ToString(),
+                                    RecordType = RecordType.Prescriber,
+                                    Name = $"{Prescriber.LastName}, {Prescriber.FirstName}, {Prescriber.MiddleInitial}",
+                                    TimeStamp = DateTime.UtcNow
+                                });
+
                                 for (var f = 0; f < MaxLoops; f++)
                                 {
 
@@ -267,6 +577,8 @@ namespace CommonTests
                                         _preferAscii = UseAscii,
 
                                         PatientID = Guid.NewGuid().ToString(),
+                                        LocationID = Facility.LocationID,
+                                        PrimaryPrescriberID = Prescriber.PrescriberID,
                                         LastName = RandomData.TrimString(),
                                         FirstName = RandomData.TrimString(),
                                         MiddleInitial = RandomData.TrimString(1),
@@ -277,11 +589,10 @@ namespace CommonTests
                                         Zipcode = "03049",
                                         Gender = RandomData.TrimString(1),
                                         CycleDate = RandomData.Date(DateTime.Now.Year),
-                                        CycleDays = RandomData.Integer(0,32),
+                                        CycleDays = RandomData.Integer(0, 32),
                                         CycleType = RandomData.Bit(),
                                         AdmitDate = RandomData.Date(),
                                         ChartOnly = RandomData.Bit().ToString(),
-                                        PrimaryPrescriberID = Prescriber.PrescriberID,
                                         Phone1 = RandomData.USPhoneNumber(),
                                         Phone2 = RandomData.USPhoneNumber(),
                                         WorkPhone = RandomData.USPhoneNumber(),
@@ -297,6 +608,15 @@ namespace CommonTests
                                     };
 
                                     Patient.Write(stream);
+
+                                    WriteTestLogRecord(new TestRecord()
+                                    {
+                                        Id = Guid.NewGuid().ToString(),
+                                        RecordId = new Guid(Patient.PatientID).ToString(),
+                                        RecordType = RecordType.Patient,
+                                        Name = $"{Patient.LastName}, {Patient.FirstName}, {Patient.MiddleInitial}",
+                                        TimeStamp = DateTime.UtcNow
+                                    });
 
                                     for (var rx = 0; rx < 8; rx++)
                                     {
@@ -323,6 +643,15 @@ namespace CommonTests
                                             ConsultMsg = RandomData.String()
                                         };
 
+                                        WriteTestLogRecord(new TestRecord()
+                                        {
+                                            Id = Guid.NewGuid().ToString(),
+                                            RecordId = new Guid(Drug.DrugID).ToString(),
+                                            RecordType = RecordType.Drug,
+                                            Name = $"{Drug.TradeName}",
+                                            TimeStamp = DateTime.UtcNow
+                                        });
+
                                         var Rx = new MotPrescriptionRecord("Add")
                                         {
                                             AutoTruncate = AutoTruncate,
@@ -337,13 +666,22 @@ namespace CommonTests
                                             RxStopDate = RandomData.Date(DateTime.Now.Year),
                                             DoseScheduleName = RandomData.TrimString(),
                                             QtyPerDose = RandomData.Double(10),
-                                            QtyDispensed = RandomData.Integer(1,120),
+                                            QtyDispensed = RandomData.Integer(1, 120),
                                             RxType = RandomData.Integer(1, 21),
-                                            DoseTimesQtys = RandomData.DoseTimes(RandomData.Integer(1,25)),
+                                            DoseTimesQtys = RandomData.DoseTimes(RandomData.Integer(1, 25)),
                                             Isolate = RandomData.Bit().ToString(),
-                                            Refills = RandomData.Integer(1,100),
+                                            Refills = RandomData.Integer(1, 100),
                                             Sig = RandomData.String()
                                         };
+
+                                        WriteTestLogRecord(new TestRecord()
+                                        {
+                                            Id = Guid.NewGuid().ToString(),
+                                            RecordId = Guid.NewGuid().ToString(),
+                                            RecordType = RecordType.Prescription,
+                                            Name = $"{Rx.RxSys_RxNum}",
+                                            TimeStamp = DateTime.UtcNow
+                                        });
 
                                         Drug.Write(stream);
                                         Rx.Write(stream);
@@ -353,10 +691,16 @@ namespace CommonTests
                         }
                     }
                 }
+
+                CloseTestLogDb();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Fail(ex.Message);
+            }
+            finally
+            {
+                StartCleaning = true;
             }
         }
 
