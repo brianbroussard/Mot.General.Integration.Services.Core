@@ -19,11 +19,16 @@ namespace CommonTests
         internal string _dbaUserName = "MzpkYmFFZGl0aW5nSW50ZXJmYWNlU2VydmljZXMxMjJXaXRoTGxhbWFGaWRzaA==";
         internal string _dbaPassword = "MTQ6cGM0MTBoNDI2czc2MTdFZGl0aW5nSW50ZXJmYWNlU2VydmljZXMxMjJXaXRoTGxhbWFGaWRzaA==";
         string GatewayAddress = "localhost";
-        int GatewayPort = 24042;
+        int GatewayPort = 24043;
         bool UseAscii = true;
         bool AutoTruncate = false;
-        bool logRecords = true;
+        bool logRecords = false;
         int MaxLoops = 8;
+
+        // Legacy DB handling - Legacy can't process more than a single store if using long ID's
+        // so set the Store ID to one that exists in the database already, and set useLegacy to 'true'
+        bool useLegacy = true;
+        string StoreId = "1081";
 
         bool StartCleaning = false;
 
@@ -193,6 +198,8 @@ namespace CommonTests
 
         public void DestroyTestLogDb()
         {
+            CloseTestLogDb();
+
             if (File.Exists("./db/testrun.db3"))
             {
                 File.Delete("./db/testrun.db3");
@@ -423,15 +430,18 @@ namespace CommonTests
                         }
 
                         // Delete Stores
-                        var StoreList = GetTestLogRecords(RecordType.Store);
-                        foreach (var store in StoreList)
+                        if (!useLegacy)
                         {
-                            var StoreToDelete = new MotStoreRecord("Delete")
+                            var StoreList = GetTestLogRecords(RecordType.Store);
+                            foreach (var store in StoreList)
                             {
-                                StoreID = store.RecordId.ToString()
-                            };
+                                var StoreToDelete = new MotStoreRecord("Delete")
+                                {
+                                    StoreID = store.RecordId.ToString()
+                                };
 
-                            StoreToDelete.Write(stream);
+                                StoreToDelete.Write(stream);
+                            }
                         }
                     }
                 }
@@ -461,6 +471,8 @@ namespace CommonTests
         {
             try
             {
+                string StoreId = "1081";
+
                 OpenTestLogDb();
 
                 using (var gateway = new TcpClient(GatewayAddress, GatewayPort))
@@ -469,35 +481,40 @@ namespace CommonTests
                     {
                         for (var s = 0; s < 3; s++)
                         {
-                            var Store = new MotStoreRecord("Add")
+                            if (!useLegacy)
                             {
-                                AutoTruncate = AutoTruncate,
-                                logRecords = true,
-                                _preferAscii = UseAscii,
+                                var Store = new MotStoreRecord("Add")
+                                {
+                                    AutoTruncate = AutoTruncate,
+                                    logRecords = true,
+                                    _preferAscii = UseAscii,
 
-                                StoreID = Guid.NewGuid().ToString(),
-                                StoreName = $"{DateTime.Now.ToLongTimeString()}{RandomData.String()}",
-                                Address1 = RandomData.TrimString(),
-                                Address2 = RandomData.TrimString(),
-                                City = RandomData.TrimString(),
-                                State = "NH",
-                                Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
-                                DEANum = $"{RandomData.TrimString(2).ToUpper()}0123456",
-                                Phone = RandomData.USPhoneNumber(),
-                                Fax = RandomData.USPhoneNumber()
-                            };
+                                    StoreID = Guid.NewGuid().ToString(),
+                                    StoreName = $"{DateTime.Now.ToLongTimeString()}{RandomData.String()}",
+                                    Address1 = RandomData.TrimString(),
+                                    Address2 = RandomData.TrimString(),
+                                    City = RandomData.TrimString(),
+                                    State = "NH",
+                                    Zipcode = $"{RandomData.Integer(0, 100000).ToString("D5")}-{RandomData.Integer(0, 100000).ToString("D4")}",
+                                    DEANum = RandomData.ShortDEA(),
+                                    Phone = RandomData.USPhoneNumber(),
+                                    Fax = RandomData.USPhoneNumber()
+                                };
 
-                            Store.Write(stream);
+                                Store.Write(stream);
 
-                            WriteTestLogRecord(new TestRecord()
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                RecordId = new Guid(Store.StoreID).ToString(),
-                                RecordType = RecordType.Store,
-                                Name = Store.StoreName,
-                                TimeStamp = DateTime.UtcNow
-                            });
+                                WriteTestLogRecord(new TestRecord()
+                                {
+                                    Id = Guid.NewGuid().ToString(),
+                                    RecordId = new Guid(Store.StoreID).ToString(),
+                                    RecordType = RecordType.Store,
+                                    Name = Store.StoreName,
+                                    TimeStamp = DateTime.UtcNow
+                                });
 
+                                StoreId = Store.StoreID;
+                            }
+                            
                             for (var i = 0; i < MaxLoops; i++)
                             {
                                 var Facility = new MotFacilityRecord("Add")
@@ -507,13 +524,13 @@ namespace CommonTests
                                     _preferAscii = UseAscii,
 
                                     LocationID = Guid.NewGuid().ToString(),
-                                    StoreID = Store.StoreID,
+                                    StoreID = StoreId,
                                     LocationName = RandomData.String(),
                                     Address1 = RandomData.TrimString(),
                                     Address2 = RandomData.TrimString(),
                                     City = RandomData.TrimString(),
                                     State = "NH",
-                                    Zipcode = "03049",
+                                    Zipcode = $"0{RandomData.Integer(1000, 10000)}",
                                     Phone = RandomData.USPhoneNumber(),
                                     CycleDays = RandomData.Integer(1, 32),
                                     CycleType = RandomData.Bit(),
@@ -545,8 +562,8 @@ namespace CommonTests
                                     Address2 = RandomData.TrimString(),
                                     City = RandomData.TrimString(),
                                     State = "NH",
-                                    Zipcode = "03049",
-                                    DEA_ID = $"{RandomData.TrimString(2).ToUpper()}0123456",
+                                    Zipcode = $"0{RandomData.Integer(1000, 10000)}",
+                                    DEA_ID = RandomData.ShortDEA(),
                                     TPID = RandomData.Integer(100000).ToString(),
                                     Phone = RandomData.USPhoneNumber(),
                                     Comments = RandomData.String(2048),
@@ -586,7 +603,7 @@ namespace CommonTests
                                         Address2 = RandomData.TrimString(),
                                         City = RandomData.TrimString(),
                                         State = "NH",
-                                        Zipcode = "03049",
+                                        Zipcode = $"0{RandomData.Integer(1000, 10000)}",
                                         Gender = RandomData.TrimString(1),
                                         CycleDate = RandomData.Date(DateTime.Now.Year),
                                         CycleDays = RandomData.Integer(0, 32),
@@ -628,9 +645,9 @@ namespace CommonTests
 
                                             DrugID = Guid.NewGuid().ToString(),
                                             DrugName = RandomData.TrimString(),
-                                            NDCNum = RandomData.TrimString(),
-                                            ProductCode = RandomData.TrimString(),
-                                            LabelCode = RandomData.TrimString(),
+                                            NDCNum = RandomData.TrimString().ToUpper(),
+                                            ProductCode = RandomData.TrimString().ToUpper(),
+                                            LabelCode = RandomData.TrimString().ToUpper(),
                                             TradeName = RandomData.TrimString(),
                                             DrugSchedule = RandomData.Integer(2, 8),
                                             Strength = RandomData.Double(100),
@@ -652,6 +669,8 @@ namespace CommonTests
                                             TimeStamp = DateTime.UtcNow
                                         });
 
+                                        Drug.Write(stream);
+
                                         var Rx = new MotPrescriptionRecord("Add")
                                         {
                                             AutoTruncate = AutoTruncate,
@@ -661,10 +680,10 @@ namespace CommonTests
                                             PatientID = Patient.PatientID,
                                             PrescriberID = Prescriber.PrescriberID,
                                             DrugID = Drug.DrugID,
-                                            RxSys_RxNum = RandomData.Integer(1, 1000000).ToString(),
+                                            RxSys_RxNum = RandomData.Integer(1, 1000000000).ToString(),
                                             RxStartDate = RandomData.Date(DateTime.Now.Year),
                                             RxStopDate = RandomData.Date(DateTime.Now.Year),
-                                            DoseScheduleName = RandomData.TrimString(),
+                                            DoseScheduleName = RandomData.TrimString().ToUpper(),
                                             QtyPerDose = RandomData.Double(10),
                                             QtyDispensed = RandomData.Integer(1, 120),
                                             RxType = RandomData.Integer(1, 21),
@@ -683,7 +702,6 @@ namespace CommonTests
                                             TimeStamp = DateTime.UtcNow
                                         });
 
-                                        Drug.Write(stream);
                                         Rx.Write(stream);
                                     }
                                 }

@@ -169,5 +169,10 @@ namespace Mot.Common.Interface.Lib
 
             return doseTime;
         }
+
+        public static string ShortDEA()
+        {
+            return $"{RandomData.TrimString(2).ToUpper()}{RandomData.Integer(1000000, 10000000)}";
+        }
     }
 }
