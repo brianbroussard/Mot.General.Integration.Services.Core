@@ -723,6 +723,195 @@ namespace CommonTests
         }
 
         [TestMethod]
+        public void TestReturnValuesFromSocket()
+        {
+            var brokenRecordBadTableType = @"<Record><Table>Foobar</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender></Record>";
+            var brokenRecordBadActionType = @"<Record><Table>Patient</Table><Action>FooBar</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender></Record>";
+            var brokenRecordMissingPrimaryTags = @"<Table>Patient</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender>";
+            var brokenRecordEmpty = @"<record></record>";
+            var brokenRecordMissingClosingTags = @"<Record><Table>Patient</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender>";
+
+
+            using (var s = new MotSocket("localhost", 24042))
+            {
+                s._preferASCII = true;
+
+                try
+                {
+                    var ret = s.Write(brokenRecordBadTableType);
+                    if (ret != false)
+                    {
+                        Assert.Fail("MotSocket Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("MotSocket Successful prror trap for bad table type");
+                }
+
+                try
+                {
+                    var ret = s.Write(brokenRecordBadActionType);
+                    if (ret != false)
+                    {
+                        Assert.Fail("MotSocket Wrong return, should be 0x15, 0xB, or `Error - Invalid Process Type");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("MotSocket Successful prror trap for bad table type");
+                }
+
+                try
+                {
+                    var ret = s.Write(brokenRecordMissingPrimaryTags);
+                    if (ret != false)
+                    {
+                        Assert.Fail("MotSocket Wrong return, should be 0x15, 0xC, or `Error - Missing <record> tags");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("MotSocket Successful prror trap for bad table type");
+                }
+
+                try
+                {
+                    var ret = s.Write(brokenRecordEmpty);
+                    if (ret != false)
+                    {
+                        Assert.Fail("MotSocket Wrong return, should be 0x15, 0xD, or `Error - No data between <record></record> tags");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("MotSocket Successful prror trap for bad table type");
+                }
+
+                try
+                {
+                    var ret = s.Write(brokenRecordMissingClosingTags);
+                    if (ret != false)
+                    {
+                        Assert.Fail("MotSocket Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("MotSocket Successful prror trap for bad table type");
+                }
+            }
+        }
+        private bool CheckReturnValue(byte[] rawReturn)
+        {
+            if (rawReturn[0] == '\x06')
+            {
+                return true;
+            }
+
+            if (Encoding.ASCII.GetString(rawReturn).ToLower().Substring(0, 2) == "ok")
+            {
+                return true;
+            }
+           
+            return false;
+        }
+
+        [TestMethod]
+        public void TestReturnValuesFromStream()
+        {
+            var brokenRecordBadTableType = @"<Record><Table>Foobar</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender></Record>";
+            var brokenRecordBadActionType = @"<Record><Table>Patient</Table><Action>FooBar</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender></Record>";
+            var brokenRecordMissingPrimaryTags = @"<Table>Patient</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender>";
+            var brokenRecordEmpty = @"<record></record>";
+            var brokenRecordMissingClosingTags = @"<Record><Table>Patient</Table><Action>Add</Action><RxSys_PatID>6d9f217b-c2c8-4b44-b617-96a446b6bf11</RxSys_PatID><LastName>Banzai</LastName><FirstName>Buckaroo</FirstName><MiddleInitial></MiddleInitial><Address1></Address1><Address2></Address2><City></City><State></State><Zip></Zip><Phone1></Phone1><Phone2></Phone2><WorkPhone></WorkPhone><RxSys_LocID>5d0504e3-c94a-4697-83d6-473b857d4a89</RxSys_LocID><Room></Room><Comments></Comments><CycleDate>2018-10-16</CycleDate><CycleDays>30</CycleDays><CycleType></CycleType><Status></Status><RxSys_LastDoc></RxSys_LastDoc><RxSys_PrimaryDoc>d23707a2-5eea-407c-9692-a52eeba31f0e</RxSys_PrimaryDoc><RxSys_AltDoc></RxSys_AltDoc><SSN></SSN><Allergies></Allergies><Diet></Diet><DxNotes></DxNotes><TreatmentNotes></TreatmentNotes><DOB>2018-10-16</DOB><Height></Height><Weight></Weight><ResponsibleName></ResponsibleName><InsName></InsName><InsPNo></InsPNo><AltInsName></AltInsName><AltInsPNo></AltInsPNo><MCareNum></MCareNum><MCaidNum></MCaidNum><AdmitDate></AdmitDate><ChartOnly></ChartOnly><Gender></Gender>";
+
+            using (var localTcpClient = new TcpClient("localhost", 24042))
+            {
+                using (var stream = localTcpClient.GetStream())
+                {
+                    byte[] buf = new byte[32];
+                    stream.ReadTimeout = 10000;
+
+                    try
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(brokenRecordBadTableType));
+                        var len = stream.Read(buf, 0, 32);
+
+                        if (CheckReturnValue(buf) == true)
+                        {
+                            Assert.Fail("Stream Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Stream Successful error trap for bad table type");
+                    }
+
+                    try
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(brokenRecordBadActionType));
+                        var len = stream.Read(buf, 0, 32);
+
+                        if (CheckReturnValue(buf) == true)
+                        {
+                            Assert.Fail("Stream Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Stream Successful prror trap for bad table type");
+                    }
+
+                    try
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(brokenRecordMissingPrimaryTags));
+                        var len = stream.Read(buf, 0, 32);
+
+                        if (CheckReturnValue(buf) == true)
+                        {
+                            Assert.Fail("Stream Wrong return, should be 0x15, 0xA, or `Error - Wrong return, should be 0x15, 0xD, or `Error - No data between <record></record> tags");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Stream Successful prror trap for bad table type");
+                    }
+
+                    try
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(brokenRecordEmpty));
+                        var len = stream.Read(buf, 0, 32);
+
+                        if (CheckReturnValue(buf) == true)
+                        {
+                            Assert.Fail("Stream Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Stream Successful prror trap for bad table type");
+                    }
+
+                    try
+                    {
+                        stream.Write(Encoding.ASCII.GetBytes(brokenRecordMissingClosingTags));
+                        var len = stream.Read(buf, 0, 32);
+
+                        if (CheckReturnValue(buf) == true)
+                        {
+                            Assert.Fail("Stream Wrong return, should be 0x15, 0xA, or `Error - Invalid Table Type");
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Stream Successful prror trap for bad table type");
+                    }
+                }
+            }
+        }
+
+        [TestMethod]
         public void ForceIdOverflowWithGuid()
         {
             // This will force a record rejection bu issuing a Guid as an ID

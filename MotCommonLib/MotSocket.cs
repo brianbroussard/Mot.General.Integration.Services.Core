@@ -930,20 +930,49 @@ namespace Mot.Common.Interface.Lib
 
         /// <summary>
         ///     <c>DefaultProtocolProcessor</c>
-        ///     Placholder delegate for processing return values from the Remote endpoint
+        ///     Placeholder delegate for processing return values from the Remote endpoint
         /// </summary>
         /// <param name="buffer"></param>
-        /// <returns></returns>
+        /// <returns>bool true if successful, false if not</returns>
         private static bool DefaultProtocolProcessor(byte[] buffer)
         {
-            if (buffer[0] == '\x6')
+            if (buffer[0] == '\x06')
             {
                 return true;
             }
 
-            if (Encoding.UTF8.GetString(buffer).ToLower().Substring(0, 2) == "ok")
+            if (Encoding.ASCII.GetString(buffer).ToLower().Substring(0, 2) == "ok")
             {
                 return true;
+            }
+            else if (Encoding.ASCII.GetString(buffer).ToLower().Substring(0, 5) == "error")
+            {
+                //_eventLogger.Error(Encoding.ASCII.GetString(buffer);
+                return false;
+            }
+            else if (buffer[0] >= '\x0A' && buffer[0] <= '\x0D')
+            {
+                switch (buffer[0])
+                {
+                    case 0xA:
+                        //_eventLogger.Error("Invalid Table Type");
+                        break;
+
+                    case 0xB:
+                        //_eventLogger.Error("Invalid Process Type");
+                        break;
+
+                    case 0xC:
+                        //_eventLogger.Error("Missing <record> tags");
+                        break;
+
+                    case 0xD:
+                        //_eventLogger.Error("No Data BEtween <record></record>");
+                        break;
+
+                    default:
+                        break;
+                }
             }
 
             return false;

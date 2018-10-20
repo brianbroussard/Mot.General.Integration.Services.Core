@@ -689,7 +689,7 @@ namespace Mot.Common.Interface.Lib
 
         private bool CheckReturnValue(byte[] rawReturn)
         {
-            if (rawReturn[0] == '\x6')
+            if (rawReturn[0] == '\x06')
             {
                 return true;
             }
@@ -697,6 +697,35 @@ namespace Mot.Common.Interface.Lib
             if (Encoding.ASCII.GetString(rawReturn).ToLower().Substring(0, 2) == "ok")
             {
                 return true;
+            }
+
+            if(rawReturn[0] >= '\x0A' && rawReturn[0] <= '\x0D')
+            {
+                switch(rawReturn[0])
+                {
+                    case 0xA:
+                        EventLogger.Error("Invalid Table Type");
+                        break;
+
+                    case 0xB:
+                        EventLogger.Error("Invalid Process Type");
+                        break;
+
+                    case 0xC:
+                        EventLogger.Error("Missing <record> tags");
+                        break;
+
+                    case 0xD:
+                        EventLogger.Error("No Data BEtween <record></record>");
+                        break;
+                }
+
+                return false;
+            }
+
+            if (Encoding.ASCII.GetString(rawReturn).ToLower().Substring(0, 5) == "error")
+            {
+                EventLogger.Error(Encoding.ASCII.GetString(rawReturn));
             }
 
             return false;
