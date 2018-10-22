@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Mot.Common.Interface.Lib;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Sockets;
 using Microsoft.Data.Sqlite;
 using System.Threading;
@@ -71,7 +72,7 @@ namespace CommonTests
                     command.Parameters.AddWithValue("@RecordId", tr.RecordId.ToString());
                     command.Parameters.AddWithValue("@RecordType", (int)tr.RecordType);
                     command.Parameters.AddWithValue("@Name", tr.Name);
-                    command.Parameters.AddWithValue("@TimeStamp", DateTime.UtcNow.ToString());
+                    command.Parameters.AddWithValue("@TimeStamp", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
 
                     var val = command.ExecuteNonQuery();
                 }
@@ -313,13 +314,15 @@ namespace CommonTests
         [TestMethod]
         public void Construct()
         {
-            var path = (GetPlatformOs.Current == PlatformOs.Windows) ? $@"/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
+            var path = (GetPlatformOs.Current == PlatformOs.Windows) ? $@"c:/motNext/Tests/Sqlite/Test.sqlite" : $@"~/Projects/Tests/Sqlite/Test.sqlite";
 
             try
             {
                 var sqlite = new MotDatabaseServer<MotSqliteServer>(path);
 
-                if (GetPlatformOs.Current == PlatformOs.Windows)
+                // Only do the MOT8 test if its a 32 bit platform.  In unit tests it fails otherwise.
+                // ODBC Connection Failed: ERROR [IM014] [Microsoft][ODBC Driver Manager] The specified DSN contains an architecture mismatch between the Driver and Application
+                if (GetPlatformOs.Current == PlatformOs.Windows && IntPtr.Size == 4)
                 {
                     // This fails because MOT only has 32 bit drivers and the unit test doesn't seem to want to enable "prefer 32 bit"
                     var odbc = new MotDatabaseServer<MotOdbcServer>($"dsn=MOT8;UID={MotAccessSecurity.DecodeString(_dbaUserName)};PWD={MotAccessSecurity.DecodeString(_dbaPassword)}");
@@ -461,7 +464,7 @@ namespace CommonTests
                 CleanDatabase();
                 DestroyTestLogDb();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Assert.Fail(ex.Message);
             }
@@ -514,7 +517,7 @@ namespace CommonTests
 
                                 StoreId = Store.StoreID;
                             }
-                            
+
                             for (var i = 0; i < MaxLoops; i++)
                             {
                                 var Facility = new MotFacilityRecord("Add")
@@ -813,7 +816,7 @@ namespace CommonTests
             {
                 return true;
             }
-           
+
             return false;
         }
 
