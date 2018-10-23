@@ -19,7 +19,8 @@ namespace Mot.Polling.Interface.Lib
         protected readonly Logger EventLogger;
         protected string GatewayIp { get; set; }
         protected int GatewayPort { get; set; }
-        public bool PreferAscii { get; set; }
+        public bool UseAscii { get; set; } = true;
+        public int RefreshRate { get; set; } = 60000;  // Default to 1 minute
         private Type type { get; set; }
 
         public string ByteArrayToHexString(byte[] b)
@@ -36,8 +37,7 @@ namespace Mot.Polling.Interface.Lib
             return sb.ToString();
         }
 
-
-        protected MotSqlServerPollerBase(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort)
+        protected MotSqlServerPollerBase(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort, bool useAscii = true)
         {
             type = typeof(T);
 
@@ -50,6 +50,7 @@ namespace Mot.Polling.Interface.Lib
             Mutex = mutex;
             GatewayIp = gatewayIp;
             GatewayPort = gatewayPort;
+            UseAscii = useAscii;
 
             TranslationTable = new Dictionary<string, string>();
             Lookup = new Dictionary<string, string>();
@@ -59,6 +60,16 @@ namespace Mot.Polling.Interface.Lib
             {
                 var appSettings = ConfigurationManager.AppSettings;
                 LastTouch = appSettings[type.Name].ToString();
+
+                if (!string.IsNullOrEmpty(appSettings["RefreshRate"]))
+                {
+                    RefreshRate = Convert.ToInt32(appSettings["RefreshRate"]) * 1000;
+                }
+
+                if (!string.IsNullOrEmpty(appSettings["RefreshRate"]))
+                {
+                    UseAscii = appSettings["UseAscii"].ToLower() == "true";
+                }
             }
             catch
             {
@@ -70,7 +81,7 @@ namespace Mot.Polling.Interface.Lib
         protected bool ValidTable(DataSet dataSet, string tableName = null)
         {
 
-            if(tableName != null)
+            if (tableName != null)
             {
                 if (dataSet.Tables.Count > 0 && dataSet.Tables[tableName].Rows.Count > 0)
                 {
@@ -78,14 +89,14 @@ namespace Mot.Polling.Interface.Lib
                 }
             }
 
-            if(dataSet.Tables.Count > 0 && dataSet.Tables[0].Rows.Count > 0)
+            if (dataSet.Tables.Count > 0 && dataSet.Tables[0].Rows.Count > 0)
             {
                 return true;
             }
 
             return false;
         }
-        
+
 
         protected virtual void Dispose(bool disposing)
         {
@@ -104,6 +115,24 @@ namespace Mot.Polling.Interface.Lib
                     else
                     {
                         settings[type.Name].Value = LastTouch.ToString();
+                    }
+
+                    if (settings["RefreshRate"] == null)
+                    {
+                        settings.Add("RefreshRate", (RefreshRate / 1000).ToString());
+                    }
+                    else
+                    {
+                        settings["RefreshRate"].Value = (RefreshRate / 1000).ToString();
+                    }
+
+                    if (settings["UseAscii"] == null)
+                    {
+                        settings.Add("UseAscii", UseAscii.ToString());
+                    }
+                    else
+                    {
+                        settings["UseAscii"].Value = UseAscii.ToString();
                     }
 
                     configFile.Save(ConfigurationSaveMode.Modified);

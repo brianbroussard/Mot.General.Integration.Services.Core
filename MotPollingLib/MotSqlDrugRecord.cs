@@ -14,6 +14,7 @@ namespace Mot.Polling.Interface.Lib
                base(db, mutex, gatewayIp, gatewayPort)
         {
             _drug = new MotDrugRecord("Add");
+            _drug.UseAscii = UseAscii;
         }
 
         public void ReadDrugRecords()
@@ -21,8 +22,7 @@ namespace Mot.Polling.Interface.Lib
             try
             {
                 _drug.Clear();
-                _drug._preferAscii = PreferAscii;
-
+              
                 var itemType = string.Empty;
                 var itemColor = string.Empty;
                 var itemShape = string.Empty;

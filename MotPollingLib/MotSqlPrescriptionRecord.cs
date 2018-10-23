@@ -14,7 +14,7 @@ namespace Mot.Polling.Interface.Lib
             base(db, mutex, gatewayIp, gatewayPort)
         {
             _scrip = new MotPrescriptionRecord("Add");
-            _scrip._preferAscii = PreferAscii;
+            _scrip.UseAscii = UseAscii;
         }
 
         private void GetNotes(string rxID)
@@ -74,7 +74,6 @@ namespace Mot.Polling.Interface.Lib
                 throw;
             }
         }
-
 
         public void ReadPrescriptionRecords()
         {
@@ -147,7 +146,11 @@ namespace Mot.Polling.Interface.Lib
 
                                     case "Dispense_Date":
                                     case "Discontinue_Date":
-                                        val = DateTime.Parse(val).ToString("yyyy-MM-dd");
+                                        if (!string.IsNullOrEmpty(val))
+                                        {
+                                            val = DateTime.Parse(val).ToString("yyyy-MM-dd");
+                                        }
+
                                         break;
 
                                     default:

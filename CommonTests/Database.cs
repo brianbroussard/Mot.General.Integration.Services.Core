@@ -490,7 +490,7 @@ namespace CommonTests
                                 {
                                     AutoTruncate = AutoTruncate,
                                     logRecords = true,
-                                    _preferAscii = UseAscii,
+                                    UseAscii = UseAscii,
 
                                     StoreID = Guid.NewGuid().ToString(),
                                     StoreName = $"{DateTime.Now.ToLongTimeString()}{RandomData.String()}",
@@ -524,7 +524,7 @@ namespace CommonTests
                                 {
                                     AutoTruncate = AutoTruncate,
                                     logRecords = true,
-                                    _preferAscii = UseAscii,
+                                    UseAscii = UseAscii,
 
                                     LocationID = Guid.NewGuid().ToString(),
                                     StoreID = StoreId,
@@ -555,7 +555,7 @@ namespace CommonTests
                                 {
                                     AutoTruncate = AutoTruncate,
                                     logRecords = true,
-                                    _preferAscii = UseAscii,
+                                    UseAscii = UseAscii,
 
                                     RxSys_DocID = Guid.NewGuid().ToString(),
                                     LastName = RandomData.TrimString(),
@@ -594,7 +594,7 @@ namespace CommonTests
                                     {
                                         AutoTruncate = AutoTruncate,
                                         logRecords = true,
-                                        _preferAscii = UseAscii,
+                                        UseAscii = UseAscii,
 
                                         PatientID = Guid.NewGuid().ToString(),
                                         LocationID = Facility.LocationID,
@@ -644,7 +644,7 @@ namespace CommonTests
                                         {
                                             AutoTruncate = AutoTruncate,
                                             logRecords = true,
-                                            _preferAscii = UseAscii,
+                                            UseAscii = UseAscii,
 
                                             DrugID = Guid.NewGuid().ToString(),
                                             DrugName = RandomData.TrimString(),
@@ -678,7 +678,7 @@ namespace CommonTests
                                         {
                                             AutoTruncate = AutoTruncate,
                                             logRecords = true,
-                                            _preferAscii = UseAscii,
+                                            UseAscii = UseAscii,
 
                                             PatientID = Patient.PatientID,
                                             PrescriberID = Prescriber.PrescriberID,

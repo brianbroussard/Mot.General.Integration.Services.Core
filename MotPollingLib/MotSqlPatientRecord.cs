@@ -15,6 +15,7 @@ namespace Mot.Polling.Interface.Lib
                base(db, mutex, gatewayIp, gatewayPort)
         {
             _patient = new MotPatientRecord("Add");
+            _patient.UseAscii = UseAscii;
         }
 
         public string NormalizeDate(string val)
@@ -219,7 +220,6 @@ namespace Mot.Polling.Interface.Lib
         public void ReadPatientRecords()
         {
             _patient.Clear();
-            _patient._preferAscii = PreferAscii;
 
             try
             {
@@ -263,7 +263,7 @@ namespace Mot.Polling.Interface.Lib
                 {
                     foreach (DataRow record in recordSet.Tables[0].Rows)
                     {
-                       LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
+                        LastTouch = ByteArrayToHexString((System.Byte[])record["MSSQLTS"]);
 
                         // Print the DataType of each column in the table. 
                         foreach (DataColumn column in record.Table.Columns)
@@ -312,9 +312,9 @@ namespace Mot.Polling.Interface.Lib
                         }
 
                         // Now get the note fields
-                       // GetAllergies(patientId);
-                       // GetDiagnosis(patientId);
-                        //GetNotes(patientId);
+                        GetAllergies(patientId);
+                        GetDiagnosis(patientId);
+                        GetNotes(patientId);
 
                         // Finally,  write the recort to the Gateway
                         try

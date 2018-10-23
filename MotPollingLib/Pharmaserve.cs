@@ -9,8 +9,8 @@ namespace Mot.Polling.Interface.Lib
 {
 	public class Pharmaserve : IDisposable
 	{
-		public int RefreshRate { get; set; }
-        public bool PreferAscii { get; set; }
+        public int RefreshRate { get; set; } = 10000;
+        public bool UseAscii { get; set; } = true;
 
         private MotSqlServer MotSqlServer { get; set; }
 		private readonly Mutex _mutex;
@@ -92,7 +92,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{
@@ -123,7 +123,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPatient(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
 				while (KeepRunning)
 				{
@@ -154,7 +154,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollPrescriber(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{
@@ -185,7 +185,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollFacility(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{
@@ -216,7 +216,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollStore(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{
@@ -247,7 +247,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollTQ(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{
@@ -279,7 +279,7 @@ namespace Mot.Polling.Interface.Lib
 			try
 			{
 				var p = new PollDrug(MotSqlServer, _mutex, GatewayIp, GatewayPort);
-                p.PreferAscii = this.PreferAscii;
+                p.UseAscii = this.UseAscii;
 
                 while (KeepRunning)
 				{

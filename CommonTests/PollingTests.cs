@@ -236,37 +236,71 @@ namespace CommonTests
                         var daysSupply = RandomData.Integer(1, 366);
                         var daysRemaining = RandomData.Integer(1, daysSupply);
 
+                        /*
+                                                sql = $"INSERT INTO dbo.vRx VALUES(" +
+                                                      $"'{patId}', " + // Patient_ID
+                                                      $"'{scripId}', " + // Rx_ID
+                                                      $"{RandomData.Integer()}, " + // External_Rx_ID
+                                                      $"'{docId}', " + // Prescriber_ID
+                                                      $"'{RandomData.TrimString(7).ToUpper()}', " + // Dosage_Signa_Code
+                                                      $"'{RandomData.TrimString(255)}', " + // Decoded_Dosage_Signa
+                                                      $"'{RandomData.TrimString(80)}', " + // Signa_String
+                                                      $"'{RandomData.TrimString(255)}', " + // Instruction_Signa_Text
+                                                      $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Date_Written
+                                                      $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Dispense_Date
+                                                      $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Last_Dispense_Stop_Date
+                                                      $"'{refills}', " + // Total_Refiles_Authorized
+                                                      $"'{refillsRemaining}', " + // Total_Refills_Used
+                                                      $"'{RandomData.Integer()}', " + // Dispensed_Item_ID
+                                                      $"'{RandomData.Integer(1, short.MaxValue)}', " + // Dispensed_Item_Version
+                                                      $"'{ndc}', " + // NDC_Code
+                                                      $"'{RandomData.Double(100)}', " + // Quantity_Dispensed
+                                                      $"'{RandomData.Integer()}', " + // Writen_For_Item_ID
+                                                      $"'{RandomData.Integer(1, short.MaxValue)}', " + // Written_For_Item_Version
+                                                      $"'{RandomData.Bit()}', " + // Script_Status
+                                                      $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Prescription_Expiration_Date
+                                                      $"'{docId}', " + // Responsible_Prescriber_ID
+                                                      $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Discontinue_Date
+                                                      $"'{RandomData.Double(10)}', " + // Quantity_Written
+                                                      $"'{RandomData.Double(10)}', " + // Total_Qty_Used
+                                                      $"'{RandomData.Double(10)}', " + // Total_Qty_Authorized
+                                                      $"'{daysSupply}', " + // Days_Supply_Written
+                                                      $"'{daysRemaining}', " + // Days_Supply_Remaining
+                                                      $"'{RandomData.TrimString(3).ToUpper()}', " + // Script_Origin_Indicater
+                                                      $"DEFAULT);"; // MSSQLTS
+                                                */
+
                         sql = $"INSERT INTO dbo.vRx VALUES(" +
-                              $"'{patId}', " + // Patient_ID
-                              $"'{scripId}', " + // Rx_ID
-                              $"{RandomData.Integer()}, " + // External_Rx_ID
-                              $"'{docId}', " + // Prescriber_ID
-                              $"'{RandomData.TrimString(7).ToUpper()}', " + // Dosage_Signa_Code
-                              $"'{RandomData.TrimString(255)}', " + // Decoded_Dosage_Signa
-                              $"'{RandomData.TrimString(80)}', " + // Signa_String
-                              $"'{RandomData.TrimString(255)}', " + // Instruction_Signa_Text
-                              $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Date_Written
-                              $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Dispense_Date
-                              $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Last_Dispense_Stop_Date
-                              $"'{refills}', " + // Total_Refiles_Authorized
-                              $"'{refillsRemaining}', " + // Total_Refills_Used
-                              $"'{RandomData.Integer()}', " + // Dispensed_Item_ID
-                              $"'{RandomData.Integer(1, short.MaxValue)}', " + // Dispensed_Item_Version
-                              $"'{ndc}', " + // NDC_Code
-                              $"'{RandomData.Double(100)}', " + // Quantity_Dispensed
-                              $"'{RandomData.Integer()}', " + // Writen_For_Item_ID
-                              $"'{RandomData.Integer(1, short.MaxValue)}', " + // Written_For_Item_Version
-                              $"'{RandomData.Bit()}', " + // Script_Status
-                              $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Prescription_Expiration_Date
-                              $"'{docId}', " + // Responsible_Prescriber_ID
-                              $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Discontinue_Date
-                              $"'{RandomData.Double(10)}', " + // Quantity_Written
-                              $"'{RandomData.Double(10)}', " + // Total_Qty_Used
-                              $"'{RandomData.Double(10)}', " + // Total_Qty_Authorized
-                              $"'{daysSupply}', " + // Days_Supply_Written
-                              $"'{daysRemaining}', " + // Days_Supply_Remaining
-                              $"'{RandomData.TrimString(3).ToUpper()}', " + // Script_Origin_Indicater
-                              $"DEFAULT);"; // MSSQLTS
+                             $"'{patId}', " + // Patient_ID
+                             $"'{scripId}', " + // Rx_ID
+                             $"{RandomData.Integer()}, " + // External_Rx_ID
+                             $"'{docId}', " + // Prescriber_ID
+                             $"'{RandomData.TrimString(7).ToUpper()}', " + // Dosage_Signa_Code
+                             $"'{RandomData.TrimString(255)}', " + // Decoded_Dosage_Signa
+                             $"'{RandomData.TrimString(80)}', " + // Signa_String
+                             $"'{RandomData.TrimString(255)}', " + // Instruction_Signa_Text
+                             $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Date_Written
+                             $"'{DateTime.Now.ToString(CultureInfo.InvariantCulture)}', " + // Dispense_Date
+                             $"NULL, " + // Last_Dispense_Stop_Date
+                             $"'{refills}', " + // Total_Refiles_Authorized
+                             $"'{refillsRemaining}', " + // Total_Refills_Used
+                             $"'{RandomData.Integer()}', " + // Dispensed_Item_ID
+                             $"'{RandomData.Integer(1, short.MaxValue)}', " + // Dispensed_Item_Version
+                             $"'{ndc}', " + // NDC_Code
+                             $"'{RandomData.Double(100)}', " + // Quantity_Dispensed
+                             $"'{RandomData.Integer()}', " + // Writen_For_Item_ID
+                             $"'{RandomData.Integer(1, short.MaxValue)}', " + // Written_For_Item_Version
+                             $"'{RandomData.Bit()}', " + // Script_Status
+                             $"'{RandomData.Date(2019)}', " + // Prescription_Expiration_Date
+                             $"'{docId}', " + // Responsible_Prescriber_ID
+                             $"NULL, " + // Discontinue_Date
+                             $"'{RandomData.Double(10)}', " + // Quantity_Written
+                             $"'{RandomData.Double(10)}', " + // Total_Qty_Used
+                             $"'{RandomData.Double(10)}', " + // Total_Qty_Authorized
+                             $"'{daysSupply}', " + // Days_Supply_Written
+                             $"'{daysRemaining}', " + // Days_Supply_Remaining
+                             $"'{RandomData.TrimString(3).ToUpper()}', " + // Script_Origin_Indicater
+                             $"DEFAULT);"; // MSSQLTS
 
                         motSqlServer.ExecuteNonQuery(sql);
 
@@ -343,7 +377,7 @@ namespace CommonTests
                 {
                     using (var patient = new PollPatient(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
-                        patient.PreferAscii = useAscii;
+                        patient.UseAscii = useAscii;
 
                         try
                         {
@@ -382,7 +416,7 @@ namespace CommonTests
                 {
                     using (var Rx = new PollPrescription(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
-                        Rx.PreferAscii = useAscii;
+                        Rx.UseAscii = useAscii;
 
                         try
                         {
@@ -421,7 +455,7 @@ namespace CommonTests
                 {
                     using (var facility = new PollFacility(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
-                        facility.PreferAscii = useAscii;
+                        facility.UseAscii = useAscii;
 
                         try
                         {
@@ -461,7 +495,7 @@ namespace CommonTests
                 {
                     using (var doc = new PollPrescriber(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
-                        doc.PreferAscii = useAscii;
+                        doc.UseAscii = useAscii;
 
                         try
                         {
@@ -501,7 +535,7 @@ namespace CommonTests
                 {
                     using (var drug = new PollDrug(motSqlServer, mutex, gatewayIp, gatewayPort))
                     {
-                        drug.PreferAscii = useAscii;
+                        drug.UseAscii = useAscii;
 
                         try
                         {

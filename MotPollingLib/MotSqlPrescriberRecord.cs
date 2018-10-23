@@ -13,7 +13,8 @@ namespace Mot.Polling.Interface.Lib
         public PollPrescriber(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort) :
                base(db, mutex, gatewayIp, gatewayPort)
         {
-            _prescriber = new MotPrescriberRecord("Add");         
+            _prescriber = new MotPrescriberRecord("Add");
+            _prescriber.UseAscii = UseAscii;
         }
 
         public void ReadPrescriberRecords()
@@ -21,7 +22,6 @@ namespace Mot.Polling.Interface.Lib
             try
             {
                 _prescriber.Clear();
-                _prescriber._preferAscii = PreferAscii;
 
                 var tmpPhone = string.Empty;
                 var tmpZip = string.Empty;

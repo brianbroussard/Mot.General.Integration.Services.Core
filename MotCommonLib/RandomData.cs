@@ -14,7 +14,7 @@ namespace Mot.Common.Interface.Lib
         {
             if (!TextCollection.Any())
             {
-                TextCollection = GetLorum(50).ToList();
+                TextCollection = GetLorum(500).ToList();
             }
 
             var rng = new Random();
@@ -82,7 +82,17 @@ namespace Mot.Common.Interface.Lib
 
         public static string TrimString(int len)
         {
-            return FullTrim(String().Substring(0, len));
+            var val = FullTrim(String());
+
+            if(val.Length <= len)
+            {
+                while(val.Length <= len)
+                {
+                    val = FullTrim(String());
+                }
+            }
+
+            return val.Substring(0, len);
         }
 
         // ------- Format Utilities
@@ -115,8 +125,16 @@ namespace Mot.Common.Interface.Lib
 
         public static DateTime Date(int minYear = 1900)
         {
+            var maxYear = DateTime.Now.Year;
+
             var rnd = new Random(Guid.NewGuid().GetHashCode());
-            var year = rnd.Next(minYear, DateTime.Now.Year);
+
+            if(minYear >= maxYear)
+            {
+                maxYear = minYear + 2;
+            }
+
+            var year = rnd.Next(minYear, maxYear);
             var month = rnd.Next(1, 13);
             var days = rnd.Next(1, DateTime.DaysInMonth(year, month) + 1);
 

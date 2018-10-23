@@ -178,7 +178,7 @@ namespace Mot.Common.Interface.Lib
         /// </summary>
         public string TableAction;
 
-        public bool _preferAscii { get; set; }
+        public bool UseAscii { get; set; } = true;
 
         /// <summary>
         ///     ctor
@@ -790,7 +790,7 @@ namespace Mot.Common.Interface.Lib
                         LogTaggedRecord(record);
                     }
 
-                    if (_preferAscii)
+                    if (UseAscii)
                     {
                         stream.Write(Encoding.ASCII.GetBytes(record), 0, record.Length);
                     }
@@ -875,7 +875,7 @@ namespace Mot.Common.Interface.Lib
                         LogTaggedRecord(record);
                     }
 
-                    if (!_preferAscii)
+                    if (!UseAscii)
                     {
                         if (!socket.Write(Encoding.ASCII.GetBytes(record)))
                         {
@@ -937,7 +937,7 @@ namespace Mot.Common.Interface.Lib
                     LogTaggedRecord(data);
                 }
 
-                if (_preferAscii)
+                if (UseAscii)
                 {
                     stream.Write(Encoding.ASCII.GetBytes(data), 0, data.Length);
                 }
@@ -995,7 +995,7 @@ namespace Mot.Common.Interface.Lib
                     LogTaggedRecord(data);
                 }
 
-                if (_preferAscii)
+                if (UseAscii)
                 {
                     if (!socket.Write(Encoding.ASCII.GetBytes(data)))
                     {

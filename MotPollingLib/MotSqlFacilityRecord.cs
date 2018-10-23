@@ -14,13 +14,13 @@ namespace Mot.Polling.Interface.Lib
             base(db, mutex, gatewayIp, gatewayPort)
         {
             _facility = new MotFacilityRecord("Add");
+            _facility.UseAscii = UseAscii;
         }
 
         public void ReadFacilityRecords()
         {
             _facility.Clear();
-            _facility._preferAscii = PreferAscii;
-
+ 
             try
             {
                 // Load the translaton table -- Database Column Name to Gateway Tag Name                

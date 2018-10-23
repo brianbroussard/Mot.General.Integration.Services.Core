@@ -10,7 +10,8 @@ namespace Mot.Polling.Interface.Lib
         public PollTQ(MotSqlServer db, Mutex mutex, string gatewayIp, int gatewayPort) :
                base(db, mutex, gatewayIp, gatewayPort)
         {
-            _tq = new MotTimesQtysRecord("Add");            
+            _tq = new MotTimesQtysRecord("Add");
+            _tq.UseAscii = UseAscii;
         }
 
         //
@@ -19,8 +20,6 @@ namespace Mot.Polling.Interface.Lib
         public void ReadTQRecords()
         {
             _tq.Clear();
-            _tq._preferAscii = PreferAscii;
-
             return;
         }
     }
