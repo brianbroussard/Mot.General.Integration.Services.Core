@@ -112,7 +112,7 @@ namespace Mot.Listener.Interface.Lib
                 _listenerSocket = new MotSocket(port, callback)
                 {
                     UseSsl = UseSsl,
-                    _preferASCII = PreferASCII                    
+                    _useASCII = PreferASCII                    
                 };
             }
             catch (Exception e)

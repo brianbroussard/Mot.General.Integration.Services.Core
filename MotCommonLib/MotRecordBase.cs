@@ -634,6 +634,11 @@ namespace Mot.Common.Interface.Lib
         /// <returns></returns>
         protected bool SetField(List<Field> fieldSet, string val, string tag, bool overrideTruncate = false)
         {
+            if(string.IsNullOrEmpty(val) || string.IsNullOrEmpty(tag))
+            {
+                return false;
+            }
+
             var vlen = val.Length;
             var tlen = tag.Length;
 

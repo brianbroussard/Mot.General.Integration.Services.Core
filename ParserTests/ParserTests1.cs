@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Net.Http;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -93,13 +94,42 @@ namespace ParserTests
             {
                 try
                 {
-                    base.ParseHL7(dataIn);
+                    if (Directory.Exists("../../../HL7TestFiles"))
+                    {
+                        var fileEntries = Directory.GetFiles("../../../HL7TestFiles");
+
+                        foreach (var fileName in fileEntries)
+                        {
+                            using (var fileContent = new StreamReader(fileName))
+                            {
+                                base.ParseHL7(fileContent.ReadToEnd());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        base.ParseHL7(dataIn);
+                    }
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
                     throw;
                 }
+            }
+        }
+
+        [TestMethod]
+        public void HL7Battery()
+        {
+            try
+            {
+                var p = new ParserTester();
+                p.ParseHL7(null);
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail(ex.Message);
             }
         }
 
@@ -147,7 +177,7 @@ namespace ParserTests
         {
             try
             {
-                using (var socket = new MotSocket("192.168.1.160", 24042))
+                using (var socket = new MotSocket("localhost", 24042))
                 {
                     var BytePatient = "4143EEEE48494C5442EE48494C5423EE425259414EEE20EE3339323020452050524F5350454354205244EEEE594F524BEE5041EE313734303637383134EE37313737353734393139EEEEEE53554E4EEE2A2A2A2A2AEEEEEEEEEEEE30EEEEEE4E45574347454F52EEEEEE303831373231343834EEEEEEEEEE313937302D30392D3139EE303030EE30303030EE474C454E4E2048494C54EEEEEEEEEEEEEE303030302D30302D3030EEEEEEEE32343036353538303533E2";
 
@@ -259,7 +289,7 @@ namespace ParserTests
 
             [TestMethod]
             public void DrugRecord()
-            {             
+            {
                 try
                 {
                     using (var p = new MotSocket("localhost", 24042))

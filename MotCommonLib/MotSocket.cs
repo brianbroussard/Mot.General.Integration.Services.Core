@@ -95,7 +95,7 @@ namespace Mot.Common.Interface.Lib
         private X509Store _x509Store;
         private X509Certificate2Collection _x509ValidCollection;
 
-        public bool _preferASCII { get; set; }
+        public bool _useASCII { get; set; }
 
         /// <summary>
         ///     <c>motSocket</c>
@@ -468,7 +468,7 @@ namespace Mot.Common.Interface.Lib
                                 {
                                     var ret = $"Medicine-On-Time Gateway Interface {DateTime.UtcNow.ToString()}";
 
-                                    if (_preferASCII)
+                                    if (_useASCII)
                                     {
                                         localStream.Write(Encoding.ASCII.GetBytes(ret), 0, ret.Length);
                                     }
@@ -519,7 +519,7 @@ namespace Mot.Common.Interface.Lib
                                     var resp = StringArgCallback?.Invoke(_stringIoBuffer);
                                     if (!string.IsNullOrEmpty(resp))
                                     {
-                                        if (_preferASCII)
+                                        if (_useASCII)
                                         {
                                             localStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
                                         }
@@ -606,7 +606,7 @@ namespace Mot.Common.Interface.Lib
                                 // Handle a touch
                                 var ret = $"Medicine-On-Time SSL Gateway Interface {DateTime.UtcNow.ToString()}";
 
-                                if (_preferASCII)
+                                if (_useASCII)
                                 {
                                     sslStream.Write(Encoding.ASCII.GetBytes(ret), 0, ret.Length);
                                 }
@@ -651,7 +651,7 @@ namespace Mot.Common.Interface.Lib
 
                             if (!string.IsNullOrEmpty(resp))
                             {
-                                if (_preferASCII)
+                                if (_useASCII)
                                 {
                                     sslStream.Write(Encoding.ASCII.GetBytes(resp), 0, resp.Length);
                                 }
@@ -724,7 +724,7 @@ namespace Mot.Common.Interface.Lib
                         {
                             var ret = StringArgCallback?.Invoke(_stringIoBuffer);
 
-                            if (_preferASCII)
+                            if (_useASCII)
                             {
                                 NetSslStream.Write(Encoding.ASCII.GetBytes(ret), 0, ret.Length);
                             }
@@ -786,7 +786,7 @@ namespace Mot.Common.Interface.Lib
                             {
                                 var ret = StringArgCallback?.Invoke(_stringIoBuffer);
 
-                                if (_preferASCII)
+                                if (_useASCII)
                                 {
                                     NetStream.Write(Encoding.ASCII.GetBytes(ret), 0, ret.Length);
                                 }
@@ -1021,7 +1021,7 @@ namespace Mot.Common.Interface.Lib
             {
                 if (UseSsl)
                 {
-                    if (_preferASCII)
+                    if (_useASCII)
                     {
                         NetSslStream.Write(Encoding.ASCII.GetBytes(streamData), 0, streamData.Length);
                     }
@@ -1033,7 +1033,7 @@ namespace Mot.Common.Interface.Lib
                 }
                 else
                 {
-                    if (_preferASCII)
+                    if (_useASCII)
                     {
                         NetStream.Write(Encoding.ASCII.GetBytes(streamData), 0, streamData.Length);
                     }
@@ -1115,7 +1115,7 @@ namespace Mot.Common.Interface.Lib
 
                 if (UseSsl)
                 {
-                    if (_preferASCII)
+                    if (_useASCII)
                     {
                         NetSslStream.Write(Encoding.ASCII.GetBytes(streamData), 0, streamData.Length);
                     }
@@ -1131,7 +1131,7 @@ namespace Mot.Common.Interface.Lib
                     //var bytes = Encoding.UTF8.GetBytes(streamData);
                     //var str = Encoding.UTF8.GetString(bytes);
 
-                    if (_preferASCII)
+                    if (_useASCII)
                     {
                         NetStream.Write(Encoding.ASCII.GetBytes(streamData), 0, streamData.Length);
                     }

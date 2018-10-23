@@ -662,7 +662,7 @@ namespace Mot.HL7.Interface.Lib
             //                              Ins/Group
             recBundle.Patient.InsPNo = in1.Get("IN1.2.1") + "/" + in1.Get("IN1.8");
             recBundle.Patient.InsName = in1.Get("IN1.4.1") + "/" + in1.Get("IN1.8");
-         
+
             // No Insurancec Policy Number per se, but there is a group name(1-9) and a group number(1-8) 
             //__recs.__pr.InsPNo = __in1.Get("IN1.1.9") + "-" + __in1.Get("IN1.1.8");
         }
@@ -1698,54 +1698,66 @@ namespace Mot.HL7.Interface.Lib
             ProcessRXE(recBundle, newOrder.RXE);
             ProcessRXO(recBundle, newOrder.RXO);
 
-            foreach (var prt in newOrder.PRT) ProcessPRT(recBundle, prt);
+            if (newOrder.PRT != null)
+            {
+                foreach (var prt in newOrder.PRT)
+                {
+                    ProcessPRT(recBundle, prt);
+                }
+            }
 
             var newTq1Set = true;
 
-            foreach (var tq1 in newOrder.TQ1)
+            if (newOrder.TQ1 != null)
             {
-                var tqDt = 0.00;
-                var tempTq = new MotTimesQtysRecord("Add", AutoTruncate);
-                var tq1RxType = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? Convert.ToInt32(recBundle.Scrip.RxType) : 0;
-
-                tempTq.LocationID = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? recBundle.Location.LocationID : "Home Care";
-                tempTq.DoseTimesQtys = ProcessTQ1(recBundle, tq1, newTq1Set, tq1RxType);
-                tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
-
-                // Sanity Check, TQ1 overrides RXE
-                if (!string.IsNullOrEmpty(tempTq.DoseTimesQtys) && tempTq.DoseTimesQtys.Length >= 4) tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
-
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (recBundle.Scrip.QtyPerDose != 0 && tqDt != 0 && recBundle.Scrip.QtyPerDose != tqDt)
+                foreach (var tq1 in newOrder.TQ1)
                 {
-                    recBundle.Scrip.QtyPerDose = tqDt;
-                }
+                    var tqDt = 0.00;
+                    var tempTq = new MotTimesQtysRecord("Add", AutoTruncate);
+                    var tq1RxType = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? Convert.ToInt32(recBundle.Scrip.RxType) : 0;
 
-                // Match schedule names for good measure, should only happen with the first TQ1
-                if (string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && !string.IsNullOrEmpty(tempTq.DoseScheduleName))
-                {
-                    recBundle.Scrip.DoseScheduleName = tempTq.DoseScheduleName;
-                }
-
-                // This could happen for every TQ1 record
-                if (!string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && string.IsNullOrEmpty(tempTq.DoseScheduleName))
-                {
+                    tempTq.LocationID = !string.IsNullOrEmpty(recBundle.Location.LocationID) ? recBundle.Location.LocationID : "Home Care";
+                    tempTq.DoseTimesQtys = ProcessTQ1(recBundle, tq1, newTq1Set, tq1RxType);
                     tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
+
+                    // Sanity Check, TQ1 overrides RXE
+                    if (!string.IsNullOrEmpty(tempTq.DoseTimesQtys) && tempTq.DoseTimesQtys.Length >= 4) tqDt = Convert.ToDouble(tempTq.DoseTimesQtys?.Substring(4, 4) ?? "00.00");
+
+                    // ReSharper disable once CompareOfFloatsByEqualityOperator
+                    if (recBundle.Scrip.QtyPerDose != 0 && tqDt != 0 && recBundle.Scrip.QtyPerDose != tqDt)
+                    {
+                        recBundle.Scrip.QtyPerDose = tqDt;
+                    }
+
+                    // Match schedule names for good measure, should only happen with the first TQ1
+                    if (string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && !string.IsNullOrEmpty(tempTq.DoseScheduleName))
+                    {
+                        recBundle.Scrip.DoseScheduleName = tempTq.DoseScheduleName;
+                    }
+
+                    // This could happen for every TQ1 record
+                    if (!string.IsNullOrEmpty(recBundle.Scrip.DoseScheduleName) && string.IsNullOrEmpty(tempTq.DoseScheduleName))
+                    {
+                        tempTq.DoseScheduleName = recBundle.Scrip.DoseScheduleName;
+                    }
+
+                    recBundle.TQList.Add(tempTq);
+
+                    if (DebugMode)
+                    {
+                        recBundle.Scrip.Comments += $"({++tq1RecordsProcessed}) Dose Schedule: {recBundle.Scrip.DoseScheduleName}\n";
+                    }
+
+                    newTq1Set = false;
                 }
-
-                recBundle.TQList.Add(tempTq);
-
-                if (DebugMode)
-                {
-                    recBundle.Scrip.Comments += $"({++tq1RecordsProcessed}) Dose Schedule: {recBundle.Scrip.DoseScheduleName}\n";
-                }
-
-                newTq1Set = false;
             }
 
-            foreach (var rxr in newOrder.RXR)
+            if (newOrder.RXR != null)
             {
-                recBundle.Drug.Route = rxr.Get("RXR.1.2");
+                foreach (var rxr in newOrder.RXR)
+                {
+                    recBundle.Drug.Route = rxr.Get("RXR.1.2");
+                }
             }
 
             if (string.IsNullOrEmpty(recBundle.Scrip.Comments))
@@ -1753,14 +1765,20 @@ namespace Mot.HL7.Interface.Lib
                 recBundle.Scrip.Comments += "Patient Notes:";
             }
 
-            foreach (var nte in newOrder.NTE)
+            if (newOrder.NTE != null)
             {
-                recBundle.Scrip.Comments += $"\n  {commentCounter++}) {ProcessNTE(recBundle, nte)}\n";
+                foreach (var nte in newOrder.NTE)
+                {
+                    recBundle.Scrip.Comments += $"\n  {commentCounter++}) {ProcessNTE(recBundle, nte)}\n";
+                }
             }
 
-            foreach (var rxc in newOrder.RXC)
+            if (newOrder.RXC != null)
             {
-                ProcessRXC(recBundle, rxc);
+                foreach (var rxc in newOrder.RXC)
+                {
+                    ProcessRXC(recBundle, rxc);
+                }
             }
 
             // Ugly Kludge but HL7 doesn't seem to have the notion of a store DEA Number -- I'm still looking
@@ -1775,7 +1793,14 @@ namespace Mot.HL7.Interface.Lib
             }
 
             // There's no place but the order to get the location ID, so grab it now
-            recBundle.Patient.LocationID = newOrder.ORC.Get("ORC.21.3") ?? DefaultStoreLocation;
+            if (newOrder.ORC != null)
+            {
+                recBundle.Patient.LocationID = newOrder.ORC.Get("ORC.21.3") ?? DefaultStoreLocation;
+            }
+            else
+            {
+                recBundle.Patient.LocationID = DefaultStoreLocation;
+            }
 
             return true;
         }

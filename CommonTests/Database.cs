@@ -737,7 +737,7 @@ namespace CommonTests
 
             using (var s = new MotSocket("localhost", 24042))
             {
-                s._preferASCII = true;
+                s._useASCII = true;
 
                 try
                 {
