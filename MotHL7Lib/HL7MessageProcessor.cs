@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Xml.Linq;
@@ -245,8 +246,12 @@ namespace Mot.HL7.Interface.Lib
                 // case where systems don't self-identify the value will be specific and screw up if some other system
                 // trys to send anything.  Catch it here and deal with it
                 if (RxSysType != HL7SendingApplication.AutoDiscover && Hl7Event7MessageArgs.Hl7SendingApp != RxSysType)
+                {
                     if (Hl7Event7MessageArgs.Hl7SendingApp == HL7SendingApplication.Unknown)
+                    {
                         Hl7Event7MessageArgs.Hl7SendingApp = RxSysType;
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -271,13 +276,23 @@ namespace Mot.HL7.Interface.Lib
             Hl7Event7MessageArgs.Timestamp = DateTime.Now;
 
             if (isError)
+            {
                 OnError(Hl7Event7MessageArgs);
+            }
             else
+            {
                 OnOutputTextChanged(Hl7Event7MessageArgs);
+            }
 
             switch (_dataInputType)
             {
                 case DataInputType.File:
+                    if(!Directory.Exists("/motNext/io/HL7ReturnMessages"))
+                    {
+                        Directory.CreateDirectory("/motNext/io/HL7ReturnMessages");
+                    }
+
+                    File.WriteAllText($"/motNext/io/HL7ReturnMessages/{DateTime.Now.ToString("yyyyMMdd-hhmmss")}.hl7return", message);
                     break;
 
                 case DataInputType.Socket:
@@ -312,91 +327,105 @@ namespace Mot.HL7.Interface.Lib
             return hl7Xml.Go(data);
         }
 
+        private string[] GetMessageList(string data)
+        {
+            return data.Split(new string[]  {"MSH", "msh", "Msh", "mSh", "msH", "MSh", "mSH"}, StringSplitOptions.RemoveEmptyEntries);
+        }
+
         public void Go(string inputStream = null)
         {
-            if (inputStream != null) Data = inputStream;
-
-            PrepForProcessing();
-
-            try
+            if (inputStream != null)
             {
-                GetMessageType();
-                GetEventCode();
-
-                // Figure out what kind of message it is              
-                // switch (type93.Contains("MALFORMED") ? $"{type91}_{type92}" : type93)
-                switch ($"{MessageType}_{EventCode}")
-                {
-                    case "RDE_O11":
-                    case "RDE_011":
-                        Hl7Event7MessageArgs.Data = Data;
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        ProcessRDEMessage(this, Hl7Event7MessageArgs);
-                        break;
-
-                    case "OMP_O09":
-                    case "OMP_009":
-                    case "OMP_OO9":
-                    case "OMP_0O9":
-                        Hl7Event7MessageArgs.Data = Data;
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        ProcessOMPMessage(this, Hl7Event7MessageArgs);
-                        break;
-
-                    case "RDS_O13":
-                    case "RDS_013":
-                        Hl7Event7MessageArgs.Data = Data;
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        ProcessRDSMessage(this, Hl7Event7MessageArgs);
-                        break;
-
-                    case "ADT_A01":
-                    case "ADT_AO1":
-                    case "ADT_A03":
-                    case "ADT_AO3":
-                    case "ADT_A06":
-                    case "ADT_AO6":
-                    case "ADT_A08":
-                    case "ADT_AO8":
-                    case "ADT_A12":
-                        Hl7Event7MessageArgs.Timestamp = DateTime.Now;
-                        Hl7Event7MessageArgs.Data = Data;
-                        ProcessADTEvent(this, Hl7Event7MessageArgs);
-                        break;
-
-                    default:
-                        EventLogger.Error("Missing or Unhandled Message Type {0}", _msh.Get("MSH.9.3"));
-                        throw new HL7Exception(201, _msh.Get("MSH.9.3") + " - Missing or Unhandled Message Type");
-                }
-
-                var ackMessageOut = new ACK(_msh, Organization, Processor);
-                ResponseMessage = ackMessageOut.AckString;
-                WriteResponse(ResponseMessage);
-
-                if (DebugMode)
-                {
-                    EventLogger.Debug("MessageIn:\n{0}", Data);
-                    EventLogger.Debug("HL7 ACK:\n{0}", ResponseMessage);
-                }
+                Data = inputStream;
             }
-            catch (HL7Exception ex)
+
+            var Messages = GetMessageList(Data);
+
+            foreach (var message in Messages)
             {
-                var errorCode = "AP";
+                PrepForProcessing();
 
-                // Parse the message, look for REJECTED
-                if (ex.Message.Contains("REJECTED")) errorCode = "AR";
+                try
+                {
+                    GetMessageType();
+                    GetEventCode();
 
-                var nakMessageOut = new NAK(_msh, errorCode, Organization, Processor, ex.Message);
-                ResponseMessage = nakMessageOut.NakString;
-                WriteResponse(ResponseMessage, true);
+                    // Figure out what kind of message it is              
+                    // switch (type93.Contains("MALFORMED") ? $"{type91}_{type92}" : type93)
+                    switch ($"{MessageType}_{EventCode}")
+                    {
+                        case "RDE_O11":
+                        case "RDE_011":
+                            Hl7Event7MessageArgs.Data = Data;
+                            Hl7Event7MessageArgs.Timestamp = DateTime.Now;
+                            ProcessRDEMessage(this, Hl7Event7MessageArgs);
+                            break;
 
-                EventLogger.Error("HL7 NAK: {0}", ResponseMessage);
-                EventLogger.Error("Failed Message: {0} Failed Reason: {1}", Data, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                var nakOut = new NAK(_msh, "AP", Organization, Processor, "Unknown Processing Error " + ex.Message);
-                ResponseMessage = nakOut.NakString;
+                        case "OMP_O09":
+                        case "OMP_009":
+                        case "OMP_OO9":
+                        case "OMP_0O9":
+                            Hl7Event7MessageArgs.Data = Data;
+                            Hl7Event7MessageArgs.Timestamp = DateTime.Now;
+                            ProcessOMPMessage(this, Hl7Event7MessageArgs);
+                            break;
+
+                        case "RDS_O13":
+                        case "RDS_013":
+                            Hl7Event7MessageArgs.Data = Data;
+                            Hl7Event7MessageArgs.Timestamp = DateTime.Now;
+                            ProcessRDSMessage(this, Hl7Event7MessageArgs);
+                            break;
+
+                        case "ADT_A01":
+                        case "ADT_AO1":
+                        case "ADT_A03":
+                        case "ADT_AO3":
+                        case "ADT_A06":
+                        case "ADT_AO6":
+                        case "ADT_A08":
+                        case "ADT_AO8":
+                        case "ADT_A12":
+                        case "ADT_A31":
+                            Hl7Event7MessageArgs.Timestamp = DateTime.Now;
+                            Hl7Event7MessageArgs.Data = Data;
+                            ProcessADTEvent(this, Hl7Event7MessageArgs);
+                            break;
+
+                        default:
+                            EventLogger.Error("Missing or Unhandled Message Type {0}", _msh.Get("MSH.9.3"));
+                            throw new HL7Exception(201, _msh.Get("MSH.9.3") + " - Missing or Unhandled Message Type");
+                    }
+
+                    var ackMessageOut = new ACK(_msh, Organization, Processor);
+                    ResponseMessage = ackMessageOut.AckString;
+                    WriteResponse(ResponseMessage);
+
+                    if (DebugMode)
+                    {
+                        EventLogger.Debug("MessageIn:\n{0}", Data);
+                        EventLogger.Debug("HL7 ACK:\n{0}", ResponseMessage);
+                    }
+                }
+                catch (HL7Exception ex)
+                {
+                    var errorCode = "AP";
+
+                    // Parse the message, look for REJECTED
+                    if (ex.Message.Contains("REJECTED")) errorCode = "AR";
+
+                    var nakMessageOut = new NAK(_msh, errorCode, Organization, Processor, ex.Message);
+                    ResponseMessage = nakMessageOut.NakString;
+                    WriteResponse(ResponseMessage, true);
+
+                    EventLogger.Error("HL7 NAK: {0}", ResponseMessage);
+                    EventLogger.Error("Failed Message: {0} Failed Reason: {1}", Data, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    var nakOut = new NAK(_msh, "AP", Organization, Processor, "Unknown Processing Error " + ex.Message);
+                    ResponseMessage = nakOut.NakString;
+                }
             }
         }
 
